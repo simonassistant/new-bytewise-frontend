@@ -26,22 +26,21 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue' // <-- Import onMounted
-import { useRouter } from 'vue-router'
-import { useChatbotStore } from '../components/chatbotStore'
+    import { onMounted } from 'vue'
+    import { useRouter } from 'vue-router'
+    import { useChatbotStore } from '../components/chatbotStore'
 
-const router = useRouter()
-const chatbotStore = useChatbotStore()
+    const router = useRouter()
+    const chatbotStore = useChatbotStore()
 
-// When the component is first created, tell the store to load the bots.
-onMounted(() => {
-  chatbotStore.loadBots()
-})
+    onMounted(() => {
+      chatbotStore.loadBots()
+    })
 
-// This function is now much simpler!
-function chooseBot(bot) {
-  // The entire bot object (with name, prompts, model, etc.) is passed to the store
-  chatbotStore.selectBot(bot)
-  router.push('/chat')
-}
+    // This function now pushes to a unique URL for each bot.
+    function chooseBot(bot) {
+      // We navigate to a URL like "/chat/fun" or "/chat/gcap-discussion"
+      // The bot.id comes from your JSON file names.
+      router.push({ name: 'Chat', params: { botId: bot.id } })
+    }
 </script>

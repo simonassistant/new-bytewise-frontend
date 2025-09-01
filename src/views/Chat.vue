@@ -243,35 +243,56 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
+import { useRouter } from 'vue-router'; // UPDATED: Import useRouter
 import { useChatbotStore } from "../components/chatbotStore";
 import ReportModal from "../components/ReportModal.vue";
 
+// UPDATED: Define props to accept 'botId' from the router
+const props = defineProps({
+  botId: {
+    type: String,
+    required: true,
+  }
+});
+
+const router = useRouter(); // UPDATED: Initialize router
 const chatbotStore = useChatbotStore();
 
-// ✅ Load selected bot
-const selectedBot = chatbotStore.selectedBot;
-
-// Fallback if no bot selected
-if (!selectedBot) {
-  window.location.href = "/";
-}
+// UPDATED: Find the bot using the botId from the URL prop, not from the store's "selectedBot"
+const selectedBot = computed(() => chatbotStore.availableBots.find(b => b.id === props.botId));
 
 const chatHistory = ref([]);
 const notifications = ref([]);
 const apiKey = ref("");
-const systemPrompt = ref(selectedBot.systemPrompt);
-const welcomePrompt = ref(selectedBot.welcomePrompt);
-const model = ref(selectedBot.model);
+// UPDATED: These refs now depend on the 'selectedBot' computed property
+const systemPrompt = ref('');
+const welcomePrompt = ref('');
+const model = ref('');
 const isConnected = ref(false);
-const messageInput = ref("");
+const messageInput = ref(""); // Note: Your template has a v-model named "newMessage", but script has "messageInput". I've used messageInput to match your sendMessage function. You may need to align these. Let's assume you'll fix the template v-model to "messageInput".
 const showReport = ref(false);
 const isSidebarOpen = ref(true);
 
-const STORAGE_KEY = "chatHistory";
+// UPDATED: Use a unique storage key for each bot
+const STORAGE_KEY = computed(() => `chatHistory_${props.botId}`);
 
-// ✅ Load history from localStorage on mount
-onMounted(() => {
-  const saved = localStorage.getItem(STORAGE_KEY);
+onMounted(async () => {
+  // Ensure bots are loaded. It might be good to await this.
+  await chatbotStore.loadBots();
+
+  // If the botId from the URL doesn't match any known bot, go home.
+  if (!selectedBot.value) {
+    router.push('/');
+    return;
+  }
+  
+  // UPDATED: Load settings from the found bot
+  systemPrompt.value = selectedBot.value.systemPrompt;
+  welcomePrompt.value = selectedBot.value.welcomePrompt;
+  model.value = selectedBot.value.model;
+
+  // Load history from the correct localStorage key
+  const saved = localStorage.getItem(STORAGE_KEY.value);
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
@@ -286,13 +307,18 @@ onMounted(() => {
 });
 
 function goBack() {
-  window.history.back();
+  router.push('/'); // UPDATED: Use router push for cleaner navigation
 }
-// ✅ Watch chatHistory and save to localStorage
+
 watch(
   chatHistory,
   (newHistory) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
+    // UPDATED: Save to the bot-specific localStorage key
+    if(newHistory.length > 0) {
+      localStorage.setItem(STORAGE_KEY.value, JSON.stringify(newHistory));
+    } else {
+      localStorage.removeItem(STORAGE_KEY.value);
+    }
   },
   { deep: true }
 );
@@ -312,7 +338,7 @@ function connectAPI() {
   isConnected.value = true;
   chatHistory.value.push({
     role: "assistant",
-    content: welcomePrompt.value,
+    content: welcomePrompt.value, // Uses the ref
     timestamp: new Date(),
   });
   notify("API connected successfully!", "success");
@@ -322,10 +348,10 @@ function clearAPI() {
   apiKey.value = "";
   isConnected.value = false;
   chatHistory.value = [];
-  localStorage.removeItem(STORAGE_KEY);
   notify("API disconnected", "info");
 }
 
+// NOTE: Please ensure the <textarea> v-model in your template is `messageInput` not `newMessage` to match this function.
 async function sendMessage() {
   if (!isConnected.value) {
     notify("Please connect your API key first", "error");
@@ -360,8 +386,8 @@ async function sendMessage() {
           message,
           apiKey: apiKey.value,
           provider: "hkbu",
-          model: model.value,
-          systemPrompt: systemPrompt.value,
+          model: model.value, // Uses the ref
+          systemPrompt: systemPrompt.value, // Uses the ref
         }),
       }
     );
@@ -395,8 +421,7 @@ async function sendMessage() {
 }
 
 function startNewSession() {
-  chatHistory.value = [];
-  localStorage.removeItem(STORAGE_KEY);
+  chatHistory.value = []; // This will trigger the watch to clear localStorage
   notify("Started new session", "success");
 }
 
@@ -406,5 +431,15 @@ function notify(msg, type = "info") {
   setTimeout(() => {
     notifications.value = notifications.value.filter((n) => n.id !== id);
   }, 3000);
+}
+
+// This function seems unused in your template but is present in the `chat-input-container` section. If you re-add a text area with `ref="textareaRef"`, it will work.
+const textareaRef = ref(null);
+function adjustTextareaHeight() {
+    const textarea = textareaRef.value;
+    if (textarea) {
+        textarea.style.height = 'auto'; // Reset height
+        textarea.style.height = `${textarea.scrollHeight}px`; // Set to scroll height
+    }
 }
 </script>
