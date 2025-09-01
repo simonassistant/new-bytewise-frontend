@@ -1,11 +1,11 @@
 <template>
-  <!-- WRAPPER: Conditionally render the main view or a loading state -->
   <div v-if="selectedBot" class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800">
-    <!-- Sidebar (no changes inside) -->
+    <!-- Sidebar -->
     <aside
       class="bg-white/90 backdrop-blur shadow-xl flex flex-col transition-all duration-300 overflow-hidden"
       :class="isSidebarOpen ? 'w-80' : 'w-0'"
     >
+      <!-- Header -->
       <div
         v-if="isSidebarOpen"
         class="p-5 border-b bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex justify-between items-center"
@@ -20,7 +20,10 @@
           ✖
         </button>
       </div>
+
+      <!-- Content -->
       <div v-if="isSidebarOpen" class="p-5 space-y-6 flex-1 overflow-y-auto">
+        <!-- API Config -->
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <h3 class="font-semibold text-yellow-800 mb-3">
             🔑 API Configuration
@@ -31,6 +34,21 @@
             placeholder="Paste your API key..."
             class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
           />
+
+          <!-- ADDED: Instruction text with a link -->
+          <p class="text-xs text-gray-600 mt-2">
+            Get your key from the 
+            <a 
+              href="https://genai.hkbu.edu.hk/settings/api-docs" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              class="text-indigo-600 hover:underline"
+            >
+              HKBU Generative AI Platform
+            </a>.
+          </p>
+          <!-- END ADDED -->
+
           <select
             v-model="model"
             class="w-full mt-3 border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
@@ -55,12 +73,8 @@
             </button>
           </div>
         </div>
-        <div>
-          <h3 class="font-semibold mb-2">📝 Welcome Prompt</h3>
-          <div class="bg-gray-100 p-3 rounded-lg text-sm shadow-inner">
-            {{ welcomePrompt }}
-          </div>
-        </div>
+
+        <!-- Prompts -->
         <div>
           <h3 class="font-semibold mb-2">⚙️ System Prompt</h3>
           <div class="bg-gray-100 p-3 rounded-lg text-sm shadow-inner">
@@ -68,6 +82,8 @@
           </div>
         </div>
       </div>
+
+      <!-- Footer -->
       <div
         v-if="isSidebarOpen"
         class="p-4 border-t text-xs text-gray-600 bg-gray-50 space-y-1"
@@ -88,7 +104,7 @@
       </div>
     </aside>
 
-    <!-- Chat Area (no changes inside) -->
+    <!-- Chat Area (no changes here) -->
     <div
       class="flex flex-col flex-1 bg-white shadow-lg overflow-hidden transition-all duration-300"
     >
@@ -156,7 +172,6 @@
         >
           🔑 Please connect your API key first
         </div>
-
         <div class="chat-input-wrapper flex items-end gap-3">
           <textarea
             v-model="messageInput"
@@ -191,7 +206,7 @@
       </div>
     </div>
     
-    <!-- Report & Notification Modals (no changes inside) -->
+    <!-- Modals (no changes here) -->
     <ReportModal
       :show="showReport"
       :chatHistory="chatHistory"
@@ -216,7 +231,6 @@
     </div>
   </div>
 
-  <!-- ADDED: The v-else block for the loading state -->
   <div v-else class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 items-center justify-center">
     <div class="flex items-center justify-center space-x-3">
       <svg class="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -227,7 +241,6 @@
     </div>
   </div>
 </template>
-
 
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
@@ -259,29 +272,27 @@ const showReport = ref(false);
 const isSidebarOpen = ref(true);
 
 const STORAGE_KEY = computed(() => `chatHistory_${props.botId}`);
-const API_KEY_STORAGE_KEY = 'chatbot_api_key'; // UPDATED: A dedicated key for the API key
+const API_KEY_STORAGE_KEY = 'chatbot_api_key';
 
+// UPDATED onMounted with corrected order of operations
 onMounted(async () => {
-  // UPDATED: Load API key from localStorage when the component mounts
-  const savedApiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-  if (savedApiKey) {
-    apiKey.value = savedApiKey;
-    // Automatically try to connect if a key is found
-    // The connectAPI function will handle displaying the welcome message
-    connectAPI(true); // pass a flag to suppress "already connected" notification
-  }
-
+    
+  // 1. Load bot configs FIRST, so we have the data we need.
   await chatbotStore.loadBots();
 
+  // Redirect if the bot is not valid
   if (!selectedBot.value) {
     router.push('/');
     return;
   }
   
+  // 2. Populate component state from the loaded bot config.
+  // Now welcomePrompt.value will have the correct text.
   systemPrompt.value = selectedBot.value.systemPrompt;
   welcomePrompt.value = selectedBot.value.welcomePrompt;
   model.value = selectedBot.value.model;
 
+  // 3. Load saved chat history.
   const saved = localStorage.getItem(STORAGE_KEY.value);
   if (saved) {
     try {
@@ -293,6 +304,14 @@ onMounted(async () => {
     } catch (e) {
       console.error("Failed to parse chat history:", e);
     }
+  }
+
+  // 4. NOW, with all other state loaded, try to auto-connect.
+  // connectAPI() will now have the correct welcomePrompt and chatHistory status.
+  const savedApiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+  if (savedApiKey) {
+    apiKey.value = savedApiKey;
+    connectAPI(true); // pass a flag to suppress "already connected" notification
   }
 });
 
@@ -319,7 +338,6 @@ const assistantCount = computed(
   () => chatHistory.value.filter((m) => m.role === "assistant").length
 );
 
-// UPDATED: Added 'isAutoConnect' parameter to prevent redundant notifications
 function connectAPI(isAutoConnect = false) {
   if (isConnected.value && !isAutoConnect) {
     notify("Already connected!", "info");
@@ -330,11 +348,10 @@ function connectAPI(isAutoConnect = false) {
     return;
   }
   
-  // UPDATED: Save the key to localStorage
   localStorage.setItem(API_KEY_STORAGE_KEY, apiKey.value);
 
   isConnected.value = true;
-  // Only add welcome message if chat is empty
+  // This check now works correctly because chatHistory and welcomePrompt are already loaded.
   if (chatHistory.value.length === 0) {
     chatHistory.value.push({
       role: "assistant",
@@ -346,7 +363,6 @@ function connectAPI(isAutoConnect = false) {
 }
 
 function clearAPI() {
-  // UPDATED: Remove the key from localStorage
   localStorage.removeItem(API_KEY_STORAGE_KEY);
   
   apiKey.value = "";
@@ -423,7 +439,6 @@ async function sendMessage() {
 
 function startNewSession() {
   chatHistory.value = [];
-  // Re-add the welcome prompt for a new session
   if (isConnected.value) {
     chatHistory.value.push({
       role: "assistant",
