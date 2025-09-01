@@ -214,32 +214,13 @@
     </div>
 
     <!-- Report Modal -->
-    <div
-      v-if="showReport"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-    >
-      <div
-        class="report-content bg-white w-full max-w-2xl rounded-lg shadow-xl p-6"
-      >
-        <div class="flex justify-between items-center border-b pb-3 mb-4">
-          <h2 class="text-lg font-bold">📊 Learning Session Report</h2>
-          <button class="close-btn" @click="showReport = false">&times;</button>
-        </div>
-        <div class="report-body space-y-2 max-h-96 overflow-y-auto text-sm">
-          <p><strong>Total messages:</strong> {{ chatHistory.length }}</p>
-          <p><strong>User messages:</strong> {{ userCount }}</p>
-          <p><strong>Assistant messages:</strong> {{ assistantCount }}</p>
-        </div>
-        <div class="report-footer mt-4 flex justify-end gap-2">
-          <button
-            class="btn-secondary px-4 py-2 rounded-lg"
-            @click="showReport = false"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
+    <ReportModal
+      :show="showReport"
+      :chatHistory="chatHistory"
+      :userCount="userCount"
+      :assistantCount="assistantCount"
+      @close="showReport = false"
+    />
 
     <!-- Notifications -->
     <div class="fixed top-5 right-5 space-y-2 z-50">
@@ -262,6 +243,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
 import { useChatbotStore } from "../components/chatbotStore";
+import ReportModal from "../components/ReportModal.vue";
 
 const chatbotStore = useChatbotStore();
 
