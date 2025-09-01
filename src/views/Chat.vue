@@ -107,7 +107,7 @@
         class="chat-header flex justify-between items-center p-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
       >
         <div>
-          <h1 class="text-xl font-bold">HKBU Learning Assistant</h1>
+          <h1 class="text-xl font-bold">{{ selectedBot.name }}</h1>
           <div class="text-sm opacity-80">
             💡 Customize prompts, chat, and generate learning reports
           </div>
@@ -180,12 +180,13 @@
 
         <div class="chat-input-wrapper flex items-end gap-3">
           <textarea
-            v-model="messageInput"
-            :disabled="!isConnected"
+            v-model="newMessage"
             placeholder="Type your message..."
+            class="flex-grow p-3 pr-12 bg-white/20 backdrop-blur-sm rounded-l-xl focus:outline-none resize-none"
             rows="1"
-            class="chat-input flex-1 rounded-full border p-3 text-sm resize-none focus:ring focus:ring-indigo-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
-          ></textarea>
+            @input="adjustTextareaHeight"
+            @keydown.enter.exact.prevent="sendMessage"
+          ></textarea>  
           <div class="input-buttons flex gap-2">
             <!-- Send button -->
             <button

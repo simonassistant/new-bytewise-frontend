@@ -7,22 +7,18 @@
         🤖 Choose Your Chatbot
       </h1>
       <p class="text-center text-gray-500">
-        Select a chatbot to start chatting with its custom prompts.
+        Select a chatbot to start a conversation.
       </p>
 
       <div class="space-y-4">
+        <!-- Loop through available bots from the store -->
         <button
-          class="w-full p-5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold shadow hover:opacity-90 transition"
-          @click="chooseBot('learning')"
+          v-for="bot in chatbotStore.availableBots"
+          :key="bot.id"
+          :class="['w-full p-5 rounded-xl bg-gradient-to-r text-white font-semibold shadow hover:opacity-90 transition', bot.styleClass]"
+          @click="chooseBot(bot)"
         >
-          🎓 Learning Assistant
-        </button>
-
-        <button
-          class="w-full p-5 rounded-xl bg-gradient-to-r from-pink-500 to-red-500 text-white font-semibold shadow hover:opacity-90 transition"
-          @click="chooseBot('fun')"
-        >
-          🎉 Fun Bot
+          {{ bot.name }}
         </button>
       </div>
     </div>
@@ -30,29 +26,22 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue' // <-- Import onMounted
 import { useRouter } from 'vue-router'
 import { useChatbotStore } from '../components/chatbotStore'
 
 const router = useRouter()
 const chatbotStore = useChatbotStore()
 
-function chooseBot(type) {
-  if (type === 'learning') {
-    chatbotStore.selectBot({
-      name: "Learning Assistant",
-      welcomePrompt: "Welcome to HKBU Chat Assistant!",
-      systemPrompt: "You are a helpful AI learning assistant at HKBU.",
-      model: "gpt-4.1-mini"
-    })
-  } else if (type === 'fun') {
-    chatbotStore.selectBot({
-      name: "Fun Bot",
-      welcomePrompt: "Hey there! 🎉 Ready for some fun?",
-      systemPrompt: "You are a witty, playful chatbot that tells jokes and entertains.",
-      model: "gpt-3.5-turbo"
-    })
-  }
+// When the component is first created, tell the store to load the bots.
+onMounted(() => {
+  chatbotStore.loadBots()
+})
 
+// This function is now much simpler!
+function chooseBot(bot) {
+  // The entire bot object (with name, prompts, model, etc.) is passed to the store
+  chatbotStore.selectBot(bot)
   router.push('/chat')
 }
 </script>
