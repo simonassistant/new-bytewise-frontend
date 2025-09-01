@@ -1,13 +1,11 @@
 <template>
-  <div
-    class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800"
-  >
-    <!-- Sidebar -->
+  <!-- WRAPPER: Conditionally render the main view or a loading state -->
+  <div v-if="selectedBot" class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800">
+    <!-- Sidebar (no changes inside) -->
     <aside
       class="bg-white/90 backdrop-blur shadow-xl flex flex-col transition-all duration-300 overflow-hidden"
       :class="isSidebarOpen ? 'w-80' : 'w-0'"
     >
-      <!-- Header -->
       <div
         v-if="isSidebarOpen"
         class="p-5 border-b bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex justify-between items-center"
@@ -22,10 +20,7 @@
           ✖
         </button>
       </div>
-
-      <!-- Content -->
       <div v-if="isSidebarOpen" class="p-5 space-y-6 flex-1 overflow-y-auto">
-        <!-- API Config -->
         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <h3 class="font-semibold text-yellow-800 mb-3">
             🔑 API Configuration
@@ -48,7 +43,7 @@
           <div class="flex gap-2 mt-3">
             <button
               class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium"
-              @click="connectAPI"
+              @click="connectAPI()"
             >
               ✅ Connect
             </button>
@@ -60,15 +55,12 @@
             </button>
           </div>
         </div>
-
-        <!-- Prompts -->
         <div>
           <h3 class="font-semibold mb-2">📝 Welcome Prompt</h3>
           <div class="bg-gray-100 p-3 rounded-lg text-sm shadow-inner">
             {{ welcomePrompt }}
           </div>
         </div>
-
         <div>
           <h3 class="font-semibold mb-2">⚙️ System Prompt</h3>
           <div class="bg-gray-100 p-3 rounded-lg text-sm shadow-inner">
@@ -76,8 +68,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Footer -->
       <div
         v-if="isSidebarOpen"
         class="p-4 border-t text-xs text-gray-600 bg-gray-50 space-y-1"
@@ -98,11 +88,10 @@
       </div>
     </aside>
 
-    <!-- Chat Area -->
+    <!-- Chat Area (no changes inside) -->
     <div
       class="flex flex-col flex-1 bg-white shadow-lg overflow-hidden transition-all duration-300"
     >
-      <!-- Header -->
       <div
         class="chat-header flex justify-between items-center p-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
       >
@@ -113,23 +102,18 @@
           </div>
         </div>
         <div class="flex gap-2">
-          <!-- Sidebar toggle button -->
           <button
             class="bg-white/20 px-3 py-1 rounded-lg hover:bg-white/30"
             @click="isSidebarOpen = !isSidebarOpen"
           >
             {{ isSidebarOpen ? "⬅ Hide Sidebar" : "➡ Show Sidebar" }}
           </button>
-
-          <!-- New session button -->
           <button
             class="new-session-btn bg-white/20 px-3 py-1 rounded-lg hover:bg-white/30"
             @click="startNewSession"
           >
             🔄 New Session
           </button>
-
-          <!-- Back button -->
           <button
             class="bg-white/20 px-3 py-1 rounded-lg hover:bg-white/30"
             @click="goBack()"
@@ -138,8 +122,6 @@
           </button>
         </div>
       </div>
-
-      <!-- Messages -->
       <div class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
         <div
           v-for="(msg, i) in chatHistory"
@@ -148,7 +130,7 @@
           :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
         >
           <div
-            class="max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl shadow text-base"
+            class="max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl shadow text-base break-words"
             :class="
               msg.role === 'user'
                 ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-br-none'
@@ -161,16 +143,13 @@
             <div class="text-base whitespace-pre-wrap">
               {{ msg.content }}
             </div>
-            <div class="text-xs text-gray-500 mt-1 text-right">
+            <div class="text-xs text-gray-400 mt-2 text-right">
               {{ msg.timestamp.toLocaleTimeString() }}
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Input -->
       <div class="chat-input-container p-4 border-t bg-gray-50 relative">
-        <!-- Overlay when not connected -->
         <div
           v-if="!isConnected"
           class="absolute inset-0 flex items-center justify-center bg-white/70 text-gray-600 text-sm font-medium z-10"
@@ -180,29 +159,27 @@
 
         <div class="chat-input-wrapper flex items-end gap-3">
           <textarea
-            v-model="newMessage"
+            v-model="messageInput"
             placeholder="Type your message..."
-            class="flex-grow p-3 pr-12 bg-white/20 backdrop-blur-sm rounded-l-xl focus:outline-none resize-none"
+            class="flex-grow p-3 pr-4 bg-gray-100 border rounded-lg focus:outline-none focus:ring focus:ring-indigo-300 resize-none"
             rows="1"
+            ref="textareaRef"
             @input="adjustTextareaHeight"
             @keydown.enter.exact.prevent="sendMessage"
-          ></textarea>  
+          ></textarea>
           <div class="input-buttons flex gap-2">
-            <!-- Send button -->
             <button
-              class="px-4 py-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow transition transform hover:scale-105"
+              class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed shadow transition transform hover:scale-105"
               :disabled="!isConnected"
               @click="sendMessage"
               title="Send Message"
             >
               ➤
             </button>
-
-            <!-- Done button -->
             <button
-              class="px-4 py-2 rounded-full bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow transition transform hover:scale-105"
+              class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow transition transform hover:scale-105"
               :disabled="
-                chatHistory?.length == null || chatHistory.length === 0
+                !chatHistory || chatHistory.length === 0
               "
               @click="showReport = true"
               title="Finish & View Report"
@@ -213,17 +190,16 @@
         </div>
       </div>
     </div>
-
-    <!-- Report Modal -->
+    
+    <!-- Report & Notification Modals (no changes inside) -->
     <ReportModal
       :show="showReport"
       :chatHistory="chatHistory"
       :userCount="userCount"
       :assistantCount="assistantCount"
+      :botName="selectedBot.name"
       @close="showReport = false"
     />
-
-    <!-- Notifications -->
     <div class="fixed top-5 right-5 space-y-2 z-50">
       <div
         v-for="n in notifications"
@@ -239,15 +215,26 @@
       </div>
     </div>
   </div>
+
+  <!-- ADDED: The v-else block for the loading state -->
+  <div v-else class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 items-center justify-center">
+    <div class="flex items-center justify-center space-x-3">
+      <svg class="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span class="text-white text-2xl font-semibold">Loading Chatbot...</span>
+    </div>
+  </div>
 </template>
+
 
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
-import { useRouter } from 'vue-router'; // UPDATED: Import useRouter
+import { useRouter } from 'vue-router';
 import { useChatbotStore } from "../components/chatbotStore";
 import ReportModal from "../components/ReportModal.vue";
 
-// UPDATED: Define props to accept 'botId' from the router
 const props = defineProps({
   botId: {
     type: String,
@@ -255,43 +242,46 @@ const props = defineProps({
   }
 });
 
-const router = useRouter(); // UPDATED: Initialize router
+const router = useRouter();
 const chatbotStore = useChatbotStore();
 
-// UPDATED: Find the bot using the botId from the URL prop, not from the store's "selectedBot"
 const selectedBot = computed(() => chatbotStore.availableBots.find(b => b.id === props.botId));
 
 const chatHistory = ref([]);
 const notifications = ref([]);
 const apiKey = ref("");
-// UPDATED: These refs now depend on the 'selectedBot' computed property
 const systemPrompt = ref('');
 const welcomePrompt = ref('');
 const model = ref('');
 const isConnected = ref(false);
-const messageInput = ref(""); // Note: Your template has a v-model named "newMessage", but script has "messageInput". I've used messageInput to match your sendMessage function. You may need to align these. Let's assume you'll fix the template v-model to "messageInput".
+const messageInput = ref("");
 const showReport = ref(false);
 const isSidebarOpen = ref(true);
 
-// UPDATED: Use a unique storage key for each bot
 const STORAGE_KEY = computed(() => `chatHistory_${props.botId}`);
+const API_KEY_STORAGE_KEY = 'chatbot_api_key'; // UPDATED: A dedicated key for the API key
 
 onMounted(async () => {
-  // Ensure bots are loaded. It might be good to await this.
+  // UPDATED: Load API key from localStorage when the component mounts
+  const savedApiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+  if (savedApiKey) {
+    apiKey.value = savedApiKey;
+    // Automatically try to connect if a key is found
+    // The connectAPI function will handle displaying the welcome message
+    connectAPI(true); // pass a flag to suppress "already connected" notification
+  }
+
   await chatbotStore.loadBots();
 
-  // If the botId from the URL doesn't match any known bot, go home.
   if (!selectedBot.value) {
     router.push('/');
     return;
   }
   
-  // UPDATED: Load settings from the found bot
   systemPrompt.value = selectedBot.value.systemPrompt;
   welcomePrompt.value = selectedBot.value.welcomePrompt;
   model.value = selectedBot.value.model;
 
-  // Load history from the correct localStorage key
   const saved = localStorage.getItem(STORAGE_KEY.value);
   if (saved) {
     try {
@@ -307,13 +297,12 @@ onMounted(async () => {
 });
 
 function goBack() {
-  router.push('/'); // UPDATED: Use router push for cleaner navigation
+  router.push('/');
 }
 
 watch(
   chatHistory,
   (newHistory) => {
-    // UPDATED: Save to the bot-specific localStorage key
     if(newHistory.length > 0) {
       localStorage.setItem(STORAGE_KEY.value, JSON.stringify(newHistory));
     } else {
@@ -330,28 +319,42 @@ const assistantCount = computed(
   () => chatHistory.value.filter((m) => m.role === "assistant").length
 );
 
-function connectAPI() {
-  if (!apiKey.value) {
-    notify("Please enter an API key", "error");
+// UPDATED: Added 'isAutoConnect' parameter to prevent redundant notifications
+function connectAPI(isAutoConnect = false) {
+  if (isConnected.value && !isAutoConnect) {
+    notify("Already connected!", "info");
     return;
   }
+  if (!apiKey.value) {
+    if (!isAutoConnect) notify("Please enter an API key", "error");
+    return;
+  }
+  
+  // UPDATED: Save the key to localStorage
+  localStorage.setItem(API_KEY_STORAGE_KEY, apiKey.value);
+
   isConnected.value = true;
-  chatHistory.value.push({
-    role: "assistant",
-    content: welcomePrompt.value, // Uses the ref
-    timestamp: new Date(),
-  });
-  notify("API connected successfully!", "success");
+  // Only add welcome message if chat is empty
+  if (chatHistory.value.length === 0) {
+    chatHistory.value.push({
+      role: "assistant",
+      content: welcomePrompt.value,
+      timestamp: new Date(),
+    });
+  }
+  if (!isAutoConnect) notify("API connected successfully!", "success");
 }
 
 function clearAPI() {
+  // UPDATED: Remove the key from localStorage
+  localStorage.removeItem(API_KEY_STORAGE_KEY);
+  
   apiKey.value = "";
   isConnected.value = false;
   chatHistory.value = [];
   notify("API disconnected", "info");
 }
 
-// NOTE: Please ensure the <textarea> v-model in your template is `messageInput` not `newMessage` to match this function.
 async function sendMessage() {
   if (!isConnected.value) {
     notify("Please connect your API key first", "error");
@@ -386,14 +389,13 @@ async function sendMessage() {
           message,
           apiKey: apiKey.value,
           provider: "hkbu",
-          model: model.value, // Uses the ref
-          systemPrompt: systemPrompt.value, // Uses the ref
+          model: model.value,
+          systemPrompt: systemPrompt.value,
         }),
       }
     );
 
     const data = await response.json();
-
     chatHistory.value = chatHistory.value.filter((m) => !m.typing);
 
     if (response.ok && !data.error) {
@@ -411,7 +413,6 @@ async function sendMessage() {
     }
   } catch (error) {
     chatHistory.value = chatHistory.value.filter((m) => !m.typing);
-
     chatHistory.value.push({
       role: "assistant",
       content: `⚠️ Network error: ${error.message}`,
@@ -421,7 +422,15 @@ async function sendMessage() {
 }
 
 function startNewSession() {
-  chatHistory.value = []; // This will trigger the watch to clear localStorage
+  chatHistory.value = [];
+  // Re-add the welcome prompt for a new session
+  if (isConnected.value) {
+    chatHistory.value.push({
+      role: "assistant",
+      content: welcomePrompt.value,
+      timestamp: new Date(),
+    });
+  }
   notify("Started new session", "success");
 }
 
@@ -433,13 +442,12 @@ function notify(msg, type = "info") {
   }, 3000);
 }
 
-// This function seems unused in your template but is present in the `chat-input-container` section. If you re-add a text area with `ref="textareaRef"`, it will work.
 const textareaRef = ref(null);
 function adjustTextareaHeight() {
     const textarea = textareaRef.value;
     if (textarea) {
-        textarea.style.height = 'auto'; // Reset height
-        textarea.style.height = `${textarea.scrollHeight}px`; // Set to scroll height
+        textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight}px`;
     }
 }
 </script>
