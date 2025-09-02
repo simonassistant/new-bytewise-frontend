@@ -371,6 +371,8 @@ function clearAPI() {
   notify("API disconnected", "info");
 }
 
+// PASTE THIS ENTIRE FUNCTION TO REPLACE YOUR OLD sendMessage
+
 async function sendMessage() {
   if (!isConnected.value) {
     notify("Please connect your API key first", "error");
@@ -387,6 +389,11 @@ async function sendMessage() {
   });
 
   messageInput.value = "";
+  // Auto-resize textarea after sending
+  if (textareaRef.value) {
+    textareaRef.value.style.height = 'auto';
+  }
+
 
   chatHistory.value.push({
     role: "assistant",
@@ -396,13 +403,22 @@ async function sendMessage() {
   });
 
   try {
+    // 1. Prepare the message history for the API.
+    // We remove the "typing" indicator and any other UI-specific fields.
+    const messagesToSend = chatHistory.value
+      .filter(m => !m.typing) // Don't send the "typing..." placeholder
+      .map(m => ({ role: m.role, content: m.content })); // Send only role and content
+
     const response = await fetch(
-      "https://smartlessons-production.up.railway.app/api/chat",
+      `${import.meta.env.VITE_API_BASE_URL}/api/chat`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+
+        // 2. ✅ SOLUTION: Send the entire message history
         body: JSON.stringify({
-          message,
+          // The 'message' property is replaced by the 'messages' array
+          messages: messagesToSend, 
           apiKey: apiKey.value,
           provider: "hkbu",
           model: model.value,
@@ -411,27 +427,32 @@ async function sendMessage() {
       }
     );
 
-    const data = await response.json();
+    // Remove the "typing..." message from the UI
     chatHistory.value = chatHistory.value.filter((m) => !m.typing);
+    
+    // Check for network or server errors first
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response.' }));
+        throw new Error(errorData.error || `Request failed with status ${response.status}`);
+    }
 
-    if (response.ok && !data.error) {
+    const data = await response.json();
+
+    if (data.response) {
       chatHistory.value.push({
         role: "assistant",
         content: data.response,
         timestamp: new Date(),
       });
     } else {
-      chatHistory.value.push({
-        role: "assistant",
-        content: `⚠️ Error: ${data.error || "Unknown error"}`,
-        timestamp: new Date(),
-      });
+      throw new Error(data.error || "Received an empty response from the server.");
     }
   } catch (error) {
+    // Make sure typing indicator is removed even if there's an error
     chatHistory.value = chatHistory.value.filter((m) => !m.typing);
     chatHistory.value.push({
       role: "assistant",
-      content: `⚠️ Network error: ${error.message}`,
+      content: `⚠️ Error: ${error.message}`,
       timestamp: new Date(),
     });
   }
