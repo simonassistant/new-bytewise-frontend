@@ -101,3 +101,14 @@ The conversation memory issue has been successfully resolved. The application no
 
 ---
 *Report generated during testing on fix/conversational-memory branch*
+
+## Addendum (10:27 AM)
+
+- User session with IELTS Writing Tutor: menu -> option 2 (review) -> pasted outline and clarifications.
+- Observed: Occasional drift from selected protocol and perceived "memory" issues.
+- Applied on fix/memory-optimization branch:
+  - Augmented system prompts for all modes (brainstorm, review, feedback) with CURRENT MODE/STEP/TOPIC.
+  - Message tagging for review/feedback sessions to provide clearer intent.
+  - UI indicator for current state (mode/step/topic) to aid debugging.
+  - Render cap (200) and storage cap (1000) for chat messages with pruning.
+- Next test: Re-run same session sequence to verify protocol persistence and improved responsiveness with long turns.

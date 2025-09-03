@@ -61,6 +61,7 @@
           <div class="flex gap-2 mt-3">
             <button
               class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium"
+              :disabled="!apiKey"
               @click="connectAPI()"
             >
               ✅ Connect
@@ -177,13 +178,13 @@
       </div>
       <div class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
         <div
-          v-for="(msg, i) in chatHistory"
+          v-for="(msg, i) in displayedMessages"
           :key="i"
           class="flex"
           :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
         >
-          <div
-            class="max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl shadow text-base break-words"
+          <div 
+            class="max-w-2xl w-full px-6 py-4 rounded-2xl shadow text-base break-words"
             :class="
               msg.role === 'user'
                 ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-br-none'
@@ -193,9 +194,8 @@
             <div class="font-semibold text-xs mb-1">
               {{ msg.role === "user" ? "👤 You" : "🤖 Assistant" }}
             </div>
-            <div class="text-base whitespace-pre-wrap">
-              {{ msg.content }}
-            </div>
+            <div v-if="msg.role === 'assistant'" class="text-base prose prose-sm max-w-none" v-html="renderMarkdown(msg.content)"></div>
+            <div v-else class="text-base whitespace-pre-wrap">{{ msg.content }}</div>
             <div class="text-xs text-gray-400 mt-2 text-right">
               {{ msg.timestamp.toLocaleTimeString() }}
             </div>
@@ -208,6 +208,10 @@
           class="absolute inset-0 flex items-center justify-center bg-white/70 text-gray-600 text-sm font-medium z-10"
         >
           🔑 Please connect your API key first
+        </div>
+        <!-- Lightweight state debug indicator -->
+        <div class="absolute left-4 -top-3 text-[10px] px-2 py-0.5 rounded bg-indigo-600 text-white shadow">
+          Mode: {{ conversationState.mode }} • Step: {{ conversationState.step }}<span v-if="conversationState.topic"> • Topic: {{ conversationState.topic }}</span>
         </div>
         <div class="chat-input-wrapper flex items-end gap-3">
           <textarea
@@ -280,6 +284,12 @@
 </template>
 
 <script setup>
+import { marked } from 'marked';
+// Render Markdown for assistant messages
+function renderMarkdown(text) {
+  if (!text) return '';
+  return marked.parse(text, { breaks: true });
+}
 import { ref, computed, watch, onMounted } from "vue";
 import { useRouter } from 'vue-router';
 import { useChatbotStore } from "../components/chatbotStore";
@@ -298,6 +308,12 @@ const chatbotStore = useChatbotStore();
 const selectedBot = computed(() => chatbotStore.availableBots.find(b => b.id === props.botId));
 
 const chatHistory = ref([]);
+const MAX_RENDERED_MESSAGES = 200; // limit DOM nodes for memory optimization
+const MAX_STORED_MESSAGES = 1000; // hard cap to prevent unbounded growth
+const displayedMessages = computed(() => {
+  if (!chatHistory.value || chatHistory.value.length <= MAX_RENDERED_MESSAGES) return chatHistory.value;
+  return chatHistory.value.slice(-MAX_RENDERED_MESSAGES);
+});
 const notifications = ref([]);
 const apiKey = ref("");
 const systemPrompt = ref('');
@@ -359,6 +375,7 @@ onMounted(async () => {
         ...m,
         timestamp: new Date(m.timestamp),
       }));
+  pruneHistoryIfNeeded();
     } catch (e) {
       console.error("Failed to parse chat history:", e);
     }
@@ -381,6 +398,7 @@ watch(
   chatHistory,
   (newHistory) => {
     if(newHistory.length > 0) {
+  pruneHistoryIfNeeded();
       localStorage.setItem(STORAGE_KEY.value, JSON.stringify(newHistory));
     } else {
       localStorage.removeItem(STORAGE_KEY.value);
@@ -397,6 +415,8 @@ const assistantCount = computed(
 );
 
 function connectAPI(isAutoConnect = false) {
+  notify('DEBUG: connectAPI called', 'info');
+  console.log('connectAPI called. isConnected:', isConnected.value, 'isAutoConnect:', isAutoConnect, 'apiKey:', apiKey.value);
   if (isConnected.value && !isAutoConnect) {
     notify("Already connected!", "info");
     return;
@@ -405,9 +425,7 @@ function connectAPI(isAutoConnect = false) {
     if (!isAutoConnect) notify("Please enter an API key", "error");
     return;
   }
-  
   localStorage.setItem(API_KEY_STORAGE_KEY, apiKey.value);
-
   isConnected.value = true;
   // This check now works correctly because chatHistory and welcomePrompt are already loaded.
   if (chatHistory.value.length === 0) {
@@ -471,7 +489,7 @@ async function sendMessage() {
   // Store last valid state
   conversationState.value.lastValidState = prevState;
   
-  // Enhanced message preparation with more context
+  // Enhanced message preparation with more context across modes
   let messageToSend = message;
   
   // If we're in brainstorming mode with a topic, provide comprehensive context
@@ -487,27 +505,48 @@ async function sendMessage() {
     messageToSend = `[BRAINSTORMING SESSION - Topic: "${conversationState.value.topic}" | Recent context: ${recentExchange}] User says: ${message}`;
   }
   
-  // Enhanced system prompt with comprehensive context
+  // Enhanced system prompt with comprehensive context for ALL modes
   let augmentedSystemPrompt = systemPrompt.value;
-  
-  // Add context information directly in the system prompt
+  const recentMessages = chatHistory.value.slice(-6).map(m => `${m.role}: ${m.content}`).join('\n');
+  const baseContext = `
+CURRENT MODE: ${conversationState.value.mode}
+CURRENT STEP: ${conversationState.value.step}${conversationState.value.topic ? `\nCURRENT TOPIC: ${conversationState.value.topic}` : ''}
+RULES:
+`; 
+
   if (conversationState.value.mode === 'brainstorm' && conversationState.value.step === 'brainstorming' && conversationState.value.topic) {
-    // Get the last few messages for additional context
-    const recentMessages = chatHistory.value.slice(-6).map(m => `${m.role}: ${m.content}`).join('\n');
-    
     augmentedSystemPrompt = `${systemPrompt.value}
+${baseContext}
+ROLE: Creative Partner (Protocol 1: Brainstorm ideas)
+OBJECTIVE: Guide the student from topic to arguable thesis with Socratic questions.
 
-IMPORTANT CONTEXT: 
-- The user has selected to brainstorm about the topic: "${conversationState.value.topic}"
-- You are currently in an active brainstorming session about this topic
-- Continue the brainstorming discussion naturally without asking for the topic again
-- Build upon the previous conversation and the user's responses
-- Help develop ideas, provide suggestions, and guide the brainstorming process
+RECENT CONVERSATION CONTEXT:\n${recentMessages}
+Remember: Stay focused on brainstorming about "${conversationState.value.topic}" and build upon prior turns.`;
+  } else if (conversationState.value.mode === 'review') {
+    augmentedSystemPrompt = `${systemPrompt.value}
+${baseContext}
+ROLE: Architect (Protocol 2: Review an essay outline)
+OBJECTIVE: Check structure, flow, and thesis support. Ask targeted questions.
 
-RECENT CONVERSATION CONTEXT:
-${recentMessages}
+RECENT CONVERSATION CONTEXT:\n${recentMessages}`;
+    // If an outline is being provided now (heuristic), tag the user message accordingly
+    if (message.length > 120 || /\b(introduction|body|conclusion|thesis|outline)\b/i.test(message)) {
+      messageToSend = `[OUTLINE REVIEW SESSION] Outline/Content provided: ${message}`;
+    } else {
+      messageToSend = `[OUTLINE REVIEW SESSION] User says: ${message}`;
+    }
+  } else if (conversationState.value.mode === 'feedback') {
+    augmentedSystemPrompt = `${systemPrompt.value}
+${baseContext}
+ROLE: Examiner (Protocol 3: Provide feedback on an essay)
+OBJECTIVE: Guide through IELTS criteria systematically, starting with Task Achievement.
 
-Remember: Stay focused on brainstorming about "${conversationState.value.topic}" and respond appropriately to the user's latest input.`;
+RECENT CONVERSATION CONTEXT:\n${recentMessages}`;
+    if (message.length > 200) {
+      messageToSend = `[ESSAY FEEDBACK SESSION] Essay/Excerpt provided: ${message}`;
+    } else {
+      messageToSend = `[ESSAY FEEDBACK SESSION] User says: ${message}`;
+    }
   }
 
   chatHistory.value.push({
@@ -515,6 +554,9 @@ Remember: Stay focused on brainstorming about "${conversationState.value.topic}"
     content: message,
     timestamp: new Date(),
   });
+
+  // Debug: Print chat history after user message
+  console.log('Current chat history after user message:', JSON.stringify(chatHistory.value, null, 2));
 
   messageInput.value = "";
   // Auto-resize textarea after sending
@@ -601,6 +643,9 @@ Remember: Stay focused on brainstorming about "${conversationState.value.topic}"
         content: data.response,
         timestamp: new Date(),
       });
+
+      // Debug: Print chat history after assistant response
+      console.log('Current chat history after assistant response:', JSON.stringify(chatHistory.value, null, 2));
       
       // Extract and update token usage - try multiple possible fields
       let tokensUsed = 0;
@@ -667,6 +712,9 @@ Remember: Stay focused on brainstorming about "${conversationState.value.topic}"
       content: `⚠️ Error: ${error.message}`,
       timestamp: new Date(),
     });
+    // Debug: Print chat history after error
+    console.log('Current chat history after error:', JSON.stringify(chatHistory.value, null, 2));
+  pruneHistoryIfNeeded();
   }
 }
 
@@ -770,5 +818,15 @@ function adjustTextareaHeight() {
         textarea.style.height = 'auto';
         textarea.style.height = `${textarea.scrollHeight}px`;
     }
+}
+
+// Prune history to avoid unbounded memory usage
+function pruneHistoryIfNeeded() {
+  if (!Array.isArray(chatHistory.value)) return;
+  if (chatHistory.value.length > MAX_STORED_MESSAGES) {
+    const excess = chatHistory.value.length - MAX_STORED_MESSAGES;
+    console.log(`🧹 Pruning ${excess} old messages from chat history`);
+    chatHistory.value.splice(0, excess);
+  }
 }
 </script>
