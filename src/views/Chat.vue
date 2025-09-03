@@ -342,7 +342,9 @@ const conversationState = ref({
   mode: 'welcome', // welcome, menu, brainstorm, review, feedback
   topic: null,
   step: 'initial', // initial, topic_selection, brainstorming, etc.
-  lastValidState: null
+  lastValidState: null,
+  // Persistent memory for outline review
+  outlines: null // { one?: string, two?: string, raw: string }
 });
 
 const STORAGE_KEY = computed(() => `chatHistory_${props.botId}`);
@@ -486,6 +488,14 @@ async function sendMessage() {
     // Don't change the state, just continue the conversation
   }
 
+  // Heuristic: If user pasted outlines while not explicitly in review, switch to review and capture them
+  const outlineHeuristic = message.length > 120 || /\b(introduction|body|conclusion|thesis|outline|outline\s*1|outline\s*2|^1[).:-]|^2[).:-])\b/i.test(message);
+  if (outlineHeuristic && conversationState.value.mode !== 'review') {
+    conversationState.value.mode = 'review';
+    conversationState.value.step = 'outlines_received';
+    conversationState.value.outlines = extractOutlinesFromMessage(message);
+  }
+
   // Store last valid state
   conversationState.value.lastValidState = prevState;
   
@@ -529,11 +539,23 @@ ROLE: Architect (Protocol 2: Review an essay outline)
 OBJECTIVE: Check structure, flow, and thesis support. Ask targeted questions.
 
 RECENT CONVERSATION CONTEXT:\n${recentMessages}`;
-    // If an outline is being provided now (heuristic), tag the user message accordingly
-    if (message.length > 120 || /\b(introduction|body|conclusion|thesis|outline)\b/i.test(message)) {
-      messageToSend = `[OUTLINE REVIEW SESSION] Outline/Content provided: ${message}`;
+    // If outlines are provided now (heuristic), capture and persist them
+    const looksLikeOutline = message.length > 120 || /\b(introduction|body|conclusion|thesis|outline|outline\s*1|outline\s*2|^1[).:-]|^2[).:-])\b/i.test(message);
+    if (looksLikeOutline) {
+      const parsed = extractOutlinesFromMessage(message);
+      conversationState.value.outlines = parsed;
+      // Mark step for review flow
+      conversationState.value.step = 'outlines_received';
+      messageToSend = `[OUTLINE REVIEW SESSION] Outline(s) provided. Please analyze the following outlines and then respond to the user query. USER QUERY: ${summarizeForInline(message)} \n\nOUTLINES RAW:\n${trimForContext(parsed.raw, 3000)}${parsed.one || parsed.two ? `\n\nOUTLINE 1:\n${trimForContext(parsed.one || '', 1500)}\n\nOUTLINE 2:\n${trimForContext(parsed.two || '', 1500)}` : ''}`;
     } else {
       messageToSend = `[OUTLINE REVIEW SESSION] User says: ${message}`;
+    }
+
+    // Always inject persistent outline context if available
+    if (conversationState.value.outlines && conversationState.value.outlines.raw) {
+      const o = conversationState.value.outlines;
+      const persistent = `\n\nPERSISTENT OUTLINE CONTEXT (carry across turns):\n- If relevant, base your reasoning on the student-provided outlines below.\n- Do NOT ask the user to resend them; you already have them.\n\nRAW OUTLINES (truncated):\n${trimForContext(o.raw, 2500)}${o.one || o.two ? `\n\nOUTLINE 1 (truncated):\n${trimForContext(o.one || '', 1200)}\n\nOUTLINE 2 (truncated):\n${trimForContext(o.two || '', 1200)}` : ''}\n`;
+      augmentedSystemPrompt += persistent;
     }
   } else if (conversationState.value.mode === 'feedback') {
     augmentedSystemPrompt = `${systemPrompt.value}
@@ -547,6 +569,13 @@ RECENT CONVERSATION CONTEXT:\n${recentMessages}`;
     } else {
       messageToSend = `[ESSAY FEEDBACK SESSION] User says: ${message}`;
     }
+  }
+
+  // Always inject persistent outlines if present (helps follow-up turns like "how to revise" reference the same outlines)
+  if (conversationState.value.outlines && conversationState.value.outlines.raw) {
+    const o = conversationState.value.outlines;
+    const persistent = `\n\nPERSISTENT OUTLINE CONTEXT (carry across turns):\n- Base your reasoning on the stored outlines when relevant.\n- Do NOT ask the user to resend them; they are provided below.\n\nRAW OUTLINES (truncated):\n${trimForContext(o.raw, 2500)}${o.one || o.two ? `\n\nOUTLINE 1 (truncated):\n${trimForContext(o.one || '', 1200)}\n\nOUTLINE 2 (truncated):\n${trimForContext(o.two || '', 1200)}` : ''}\n`;
+    augmentedSystemPrompt += persistent;
   }
 
   chatHistory.value.push({
@@ -828,5 +857,35 @@ function pruneHistoryIfNeeded() {
     console.log(`🧹 Pruning ${excess} old messages from chat history`);
     chatHistory.value.splice(0, excess);
   }
+}
+
+// ----------- Helpers for persistent outline memory -----------
+function extractOutlinesFromMessage(text) {
+  // Attempt to split into outline 1 and 2 if numbered; else keep raw
+  const raw = text;
+  let one = null;
+  let two = null;
+  // Common patterns: "1) ... 2) ...", "Outline 1: ... Outline 2: ..."
+  const reNumbered = /(?:^|\n)\s*(?:outline\s*1\s*[:\-]|1[\).:\-])([\s\S]*?)(?=(?:\n\s*(?:outline\s*2\s*[:\-]|2[\).:\-]))|$)/i;
+  const reSecond = /(?:^|\n)\s*(?:outline\s*2\s*[:\-]|2[\).:\-])([\s\S]*)$/i;
+  const m1 = raw.match(reNumbered);
+  const m2 = raw.match(reSecond);
+  if (m1) one = m1[1].trim();
+  if (m2) two = m2[1].trim();
+
+  return { raw, one, two };
+}
+
+function trimForContext(text, maxLen = 1200) {
+  if (!text) return '';
+  if (text.length <= maxLen) return text;
+  const head = Math.floor(maxLen * 0.7);
+  const tail = maxLen - head - 20;
+  return `${text.slice(0, head)}\n...\n${text.slice(-tail)}`;
+}
+
+function summarizeForInline(text, maxLen = 300) {
+  const t = text.replace(/\s+/g, ' ').trim();
+  return t.length > maxLen ? `${t.slice(0, maxLen - 3)}...` : t;
 }
 </script>
