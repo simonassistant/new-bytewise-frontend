@@ -271,6 +271,14 @@ const messageInput = ref("");
 const showReport = ref(false);
 const isSidebarOpen = ref(true);
 
+// Add conversation state management
+const conversationState = ref({
+  mode: 'welcome', // welcome, menu, brainstorm, review, feedback
+  topic: null,
+  step: 'initial', // initial, topic_selection, brainstorming, etc.
+  lastValidState: null
+});
+
 const STORAGE_KEY = computed(() => `chatHistory_${props.botId}`);
 const API_KEY_STORAGE_KEY = 'chatbot_api_key';
 
@@ -382,6 +390,32 @@ async function sendMessage() {
   const message = messageInput.value.trim();
   if (!message) return;
 
+  // Update conversation state based on user input
+  const prevState = { ...conversationState.value };
+  
+  if (message.toLowerCase() === 'menu') {
+    conversationState.value.mode = 'menu';
+    conversationState.value.step = 'option_selection';
+  } else if (['1', '2', '3'].includes(message)) {
+    const modes = ['brainstorm', 'review', 'feedback'];
+    conversationState.value.mode = modes[parseInt(message) - 1];
+    conversationState.value.step = conversationState.value.mode === 'brainstorm' ? 'topic_selection' : 'initial';
+  } else if (conversationState.value.mode === 'brainstorm' && conversationState.value.step === 'topic_selection') {
+    conversationState.value.topic = message;
+    conversationState.value.step = 'brainstorming';
+  }
+
+  // Store last valid state
+  conversationState.value.lastValidState = prevState;
+  
+  // Create a system message that contains our state context
+  let augmentedSystemPrompt = systemPrompt.value;
+  
+  // Add context information directly in the system prompt
+  if (conversationState.value.mode === 'brainstorm' && conversationState.value.step === 'brainstorming' && conversationState.value.topic) {
+    augmentedSystemPrompt = `${systemPrompt.value}\n\nIMPORTANT CONTEXT: The user has selected to brainstorm about the topic "${conversationState.value.topic}". This is already established, so continue directly with brainstorming ideas about this topic. DO NOT ask them what topic they want to work on again.`;
+  }
+
   chatHistory.value.push({
     role: "user",
     content: message,
@@ -403,26 +437,33 @@ async function sendMessage() {
   });
 
   try {
-    // 1. Prepare the message history for the API.
-    // We remove the "typing" indicator and any other UI-specific fields.
-    const messagesToSend = chatHistory.value
-      .filter(m => !m.typing) // Don't send the "typing..." placeholder
-      .map(m => ({ role: m.role, content: m.content })); // Send only role and content
-
+    // Prepare the complete message with history if in brainstorming mode
+    let messageToSend = message;
+    
+    // If we're in brainstorming mode with a topic, make sure we include the topic context
+    if (conversationState.value.mode === 'brainstorm' && 
+        conversationState.value.step === 'brainstorming' && 
+        conversationState.value.topic) {
+      // Add context to the actual message
+      messageToSend = `[CONTINUING BRAINSTORMING ON TOPIC: "${conversationState.value.topic}"] ${message}`;
+    }
+    
     const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/api/chat`,
+      "https://smartlessons-production.up.railway.app/api/chat",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-
-        // 2. ✅ SOLUTION: Send the entire message history
         body: JSON.stringify({
-          // The 'message' property is replaced by the 'messages' array
-          messages: messagesToSend, 
+          message: messageToSend,
           apiKey: apiKey.value,
           provider: "hkbu",
           model: model.value,
-          systemPrompt: systemPrompt.value,
+          systemPrompt: augmentedSystemPrompt,
+          conversationContext: {
+            mode: conversationState.value.mode,
+            step: conversationState.value.step,
+            topic: conversationState.value.topic
+          }
         }),
       }
     );
@@ -460,6 +501,14 @@ async function sendMessage() {
 
 function startNewSession() {
   chatHistory.value = [];
+  // Reset conversation state
+  conversationState.value = {
+    mode: 'welcome',
+    topic: null,
+    step: 'initial',
+    lastValidState: null
+  };
+  
   if (isConnected.value) {
     chatHistory.value.push({
       role: "assistant",
