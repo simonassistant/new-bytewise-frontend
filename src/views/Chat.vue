@@ -396,24 +396,44 @@ async function sendMessage() {
   if (message.toLowerCase() === 'menu') {
     conversationState.value.mode = 'menu';
     conversationState.value.step = 'option_selection';
+    conversationState.value.topic = null; // Reset topic when going back to menu
   } else if (['1', '2', '3'].includes(message)) {
     const modes = ['brainstorm', 'review', 'feedback'];
     conversationState.value.mode = modes[parseInt(message) - 1];
     conversationState.value.step = conversationState.value.mode === 'brainstorm' ? 'topic_selection' : 'initial';
+    conversationState.value.topic = null; // Reset topic when selecting new mode
   } else if (conversationState.value.mode === 'brainstorm' && conversationState.value.step === 'topic_selection') {
     conversationState.value.topic = message;
     conversationState.value.step = 'brainstorming';
+  } else if (conversationState.value.mode === 'brainstorm' && conversationState.value.step === 'brainstorming') {
+    // We're already in brainstorming mode with a topic - keep the context
+    // Don't change the state, just continue the conversation
   }
 
   // Store last valid state
   conversationState.value.lastValidState = prevState;
   
-  // Create a system message that contains our state context
+  // Enhanced system prompt with comprehensive context
   let augmentedSystemPrompt = systemPrompt.value;
   
   // Add context information directly in the system prompt
   if (conversationState.value.mode === 'brainstorm' && conversationState.value.step === 'brainstorming' && conversationState.value.topic) {
-    augmentedSystemPrompt = `${systemPrompt.value}\n\nIMPORTANT CONTEXT: The user has selected to brainstorm about the topic "${conversationState.value.topic}". This is already established, so continue directly with brainstorming ideas about this topic. DO NOT ask them what topic they want to work on again.`;
+    // Get the last few messages for additional context
+    const recentMessages = chatHistory.value.slice(-6).map(m => `${m.role}: ${m.content}`).join('\n');
+    
+    augmentedSystemPrompt = `${systemPrompt.value}
+
+IMPORTANT CONTEXT: 
+- The user has selected to brainstorm about the topic: "${conversationState.value.topic}"
+- You are currently in an active brainstorming session about this topic
+- Continue the brainstorming discussion naturally without asking for the topic again
+- Build upon the previous conversation and the user's responses
+- Help develop ideas, provide suggestions, and guide the brainstorming process
+
+RECENT CONVERSATION CONTEXT:
+${recentMessages}
+
+Remember: Stay focused on brainstorming about "${conversationState.value.topic}" and respond appropriately to the user's latest input.`;
   }
 
   chatHistory.value.push({
@@ -428,7 +448,6 @@ async function sendMessage() {
     textareaRef.value.style.height = 'auto';
   }
 
-
   chatHistory.value.push({
     role: "assistant",
     content: "⏳ Assistant is typing...",
@@ -437,15 +456,20 @@ async function sendMessage() {
   });
 
   try {
-    // Prepare the complete message with history if in brainstorming mode
+    // Enhanced message preparation with more context
     let messageToSend = message;
     
-    // If we're in brainstorming mode with a topic, make sure we include the topic context
+    // If we're in brainstorming mode with a topic, provide comprehensive context
     if (conversationState.value.mode === 'brainstorm' && 
         conversationState.value.step === 'brainstorming' && 
         conversationState.value.topic) {
-      // Add context to the actual message
-      messageToSend = `[CONTINUING BRAINSTORMING ON TOPIC: "${conversationState.value.topic}"] ${message}`;
+      
+      // Get recent conversation for context
+      const recentExchange = chatHistory.value.slice(-4, -1).map(m => 
+        `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`
+      ).join(' | ');
+      
+      messageToSend = `[BRAINSTORMING SESSION - Topic: "${conversationState.value.topic}" | Recent context: ${recentExchange}] User says: ${message}`;
     }
     
     const response = await fetch(
@@ -462,7 +486,8 @@ async function sendMessage() {
           conversationContext: {
             mode: conversationState.value.mode,
             step: conversationState.value.step,
-            topic: conversationState.value.topic
+            topic: conversationState.value.topic,
+            messageCount: chatHistory.value.length
           }
         }),
       }
