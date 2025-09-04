@@ -10,7 +10,274 @@ This document provides guidance on implementing email functionality in our ByteW
 2. This triggers the `showReport = true` state in `Chat.vue`, which displays the `ReportModal` component.
 3. The `ReportModal` receives the chat history and generates a formatted report.
 
-## Email Feature Implementation Requirements
+## Implementation Progress Report
+
+### Phase 1: Basic Email Functionality (COMPLETED ✅)
+
+**Date**: January 2025
+**Status**: Successfully implemented and tested
+
+#### Changes Made to ReportModal.vue
+
+1. **Added Email Sending Button**
+   - Integrated "📧 Send Report" button in the modal footer
+   - Button triggers `sendReportByEmail()` function
+
+2. **Implemented Core Email Functionality**
+   ```javascript
+   // Added reactive variables for email state management
+   const student_email = ref("23257024@life.hkbu.edu.hk");
+   const teacher_email = ref("2468668109@qq.com"); // Currently hardcoded
+   const emailSending = ref(false);
+   const emailSent = ref(false);
+
+   // Implemented email sending function
+   function sendReportByEmail() {
+     const history = props.chatHistory;
+     if (!history.length) {
+       alert("No conversation to export");
+       return;
+     }
+     emailSending.value = true;
+
+     fetch("http://localhost:5001/api/sendEmail", {
+       method: "POST",
+       headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({
+         student_email: student_email.value,
+         teacher_email: teacher_email.value,
+         report_md: createMarkdownReport(history),
+         report_history: history,
+       }),
+     })
+       .then((response) => {
+         if (response.ok) {
+           emailSent.value = true;
+           alert("Report sent successfully!");
+         } else {
+           throw new Error("Failed to send email");
+         }
+       })
+       .catch((error) => {
+         alert(`Error: ${error.message}`);
+       })
+       .finally(() => {
+         emailSending.value = false;
+       });
+   }
+   ```
+
+3. **Fixed Data Format Issues**
+   - **Problem**: Initially passed Vue ref objects instead of their values
+   - **Solution**: Used `.value` to access actual ref values
+   - **Problem**: Backend expected array format for `report_history`, not stringified JSON
+   - **Solution**: Passed `history` array directly instead of `JSON.stringify(history)`
+
+4. **Backend Integration**
+   - Successfully connected to `http://localhost:5001/api/sendEmail` endpoint
+   - Confirmed API accepts the following request format:
+     ```json
+     {
+       "student_email": "student@example.com",
+       "teacher_email": "teacher@example.com",
+       "report_md": "markdown content",
+       "report_history": [{"role": "user", "content": "...", "timestamp": "..."}]
+     }
+     ```
+   - API returns `{"message": "Email sent successfully!", "success": true}` on success
+
+#### Testing Results
+- ✅ Email sending functionality works correctly
+- ✅ Backend API integration successful
+- ✅ Error handling implemented
+- ✅ Loading states managed properly
+
+### Phase 2: User Input for Email Addresses (PLANNED 📋)
+
+**Status**: Next implementation phase
+**Priority**: High
+
+#### Required Features
+
+1. **Dynamic Email Input Form**
+   - Replace hardcoded email addresses with user input fields
+   - Add form validation for email format
+   - Implement email address persistence (localStorage)
+
+2. **UI/UX Enhancements**
+   - Add email input section to ReportModal
+   - Include form validation feedback
+   - Add option to save email preferences
+   - Improve loading states and success/error messaging
+
+#### Proposed Implementation Plan
+
+**Step 1: Add Email Input Form to ReportModal.vue**
+```vue
+<!-- Add this section before the button group -->
+<div class="email-section mt-6 border-t border-gray-200 pt-4">
+  <h3 class="text-lg font-semibold mb-4">📧 Send Report via Email</h3>
+
+  <div class="space-y-4">
+    <!-- Student Email Input -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        Your Email Address
+      </label>
+      <input
+        v-model="student_email"
+        type="email"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="Enter your email address"
+        :class="{ 'border-red-500': !isValidStudentEmail && student_email }"
+      />
+      <p v-if="!isValidStudentEmail && student_email" class="text-red-500 text-xs mt-1">
+        Please enter a valid email address
+      </p>
+    </div>
+
+    <!-- Teacher Email Input -->
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">
+        Teacher's Email Address
+      </label>
+      <input
+        v-model="teacher_email"
+        type="email"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        placeholder="Enter teacher's email address"
+        :class="{ 'border-red-500': !isValidTeacherEmail && teacher_email }"
+      />
+      <p v-if="!isValidTeacherEmail && teacher_email" class="text-red-500 text-xs mt-1">
+        Please enter a valid email address
+      </p>
+    </div>
+
+    <!-- Save Preference Checkbox -->
+    <div class="flex items-center">
+      <input
+        v-model="saveEmailPreference"
+        type="checkbox"
+        id="saveEmails"
+        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+      />
+      <label for="saveEmails" class="ml-2 block text-sm text-gray-700">
+        Remember these email addresses for future reports
+      </label>
+    </div>
+  </div>
+</div>
+```
+
+**Step 2: Add Reactive Variables and Validation**
+```javascript
+// Replace hardcoded emails with reactive inputs
+const student_email = ref("");
+const teacher_email = ref("");
+const saveEmailPreference = ref(false);
+
+// Add email validation
+const isValidStudentEmail = computed(() => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return !student_email.value || emailRegex.test(student_email.value);
+});
+
+const isValidTeacherEmail = computed(() => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return !teacher_email.value || emailRegex.test(teacher_email.value);
+});
+
+const canSendEmail = computed(() => {
+  return isValidStudentEmail.value &&
+         isValidTeacherEmail.value &&
+         student_email.value &&
+         teacher_email.value;
+});
+```
+
+**Step 3: Add Email Persistence**
+```javascript
+// Load saved email preferences on component mount
+onMounted(() => {
+  const savedStudentEmail = localStorage.getItem('student_email_pref');
+  const savedTeacherEmail = localStorage.getItem('teacher_email_pref');
+
+  if (savedStudentEmail) student_email.value = savedStudentEmail;
+  if (savedTeacherEmail) teacher_email.value = savedTeacherEmail;
+});
+
+// Update sendReportByEmail function to save preferences
+function sendReportByEmail() {
+  if (!canSendEmail.value) {
+    alert("Please enter valid email addresses for both student and teacher");
+    return;
+  }
+
+  // Save email preferences if checkbox is checked
+  if (saveEmailPreference.value) {
+    localStorage.setItem('student_email_pref', student_email.value);
+    localStorage.setItem('teacher_email_pref', teacher_email.value);
+  }
+
+  // ... rest of existing email sending logic
+}
+```
+
+**Step 4: Update Send Button**
+```vue
+<button
+  class="px-4 py-2 rounded-lg text-white"
+  :class="canSendEmail ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'"
+  :disabled="!canSendEmail || emailSending"
+  @click="sendReportByEmail"
+>
+  <span v-if="emailSending">📤 Sending...</span>
+  <span v-else>📧 Send Report</span>
+</button>
+```
+
+#### Estimated Timeline
+- **UI Implementation**: 2-3 hours
+- **Validation Logic**: 1-2 hours
+- **Testing & Refinement**: 1-2 hours
+- **Total**: 4-7 hours
+
+#### Benefits of Phase 2 Implementation
+- ✨ **User Flexibility**: Users can specify any email addresses
+- 💾 **Convenience**: Email preferences saved for future use
+- ✅ **Validation**: Prevents errors from invalid email formats
+- 🎨 **Better UX**: Clear visual feedback and intuitive interface
+- 🔒 **Privacy**: Users control their own email data
+
+---
+
+## Summary
+
+### Current Status
+- **Phase 1**: ✅ **COMPLETED** - Basic email functionality with hardcoded addresses
+- **Phase 2**: 📋 **PLANNED** - User input for email addresses
+
+### Key Achievements
+1. Successfully integrated email sending functionality into ReportModal
+2. Fixed critical data format issues that caused 400 BAD REQUEST errors
+3. Established working connection with backend API at `localhost:5001/api/sendEmail`
+4. Implemented proper error handling and loading states
+
+### Next Steps
+1. Implement user input form for email addresses
+2. Add email validation and persistence
+3. Enhance UI/UX with better visual feedback
+4. Test complete user workflow from chat to email delivery
+
+### Technical Notes
+- Backend API endpoint: `http://localhost:5001/api/sendEmail`
+- Required request format: JSON with `student_email`, `teacher_email`, `report_md`, `report_history`
+- Frontend framework: Vue.js 3 with Composition API
+- State management: Vue reactive refs
+
+---
+
+## Legacy Documentation (Original Implementation Guide)
 
 ### User Flow
 1. User completes a chatbot session

@@ -21,7 +21,13 @@
       <div class="prose max-w-none text-sm" v-html="reportHtml"></div>
 
       <!-- Footer -->
-      <div class="mt-6 flex flex-wrap justify-end gap-2">
+      <div class="mt-6 flex flex-wrap justify-end gap-1">
+        <button
+          class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
+          @click="sendReportByEmail"
+        >
+          📧 Send Report
+        </button>
         <button
           class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
           @click="downloadPDF"
@@ -429,5 +435,46 @@ function copyReport() {
     alert("Failed to copy report");
   }
   document.body.removeChild(el);
+}
+
+const student_email = ref("23257024@life.hkbu.edu.hk");
+// const teacher_email = ref("simonwang@hkbu.edu.hk");
+const teacher_email = ref("2468668109@qq.com");
+const emailSending = ref(false);
+const emailSent = ref(false);
+
+
+function sendReportByEmail() {
+  const history = props.chatHistory;
+  if (!history.length) {
+    alert("No conversation to export");
+    return;
+  }
+  emailSending.value = true;
+
+  fetch("http://localhost:5001/api/sendEmail/a", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      student_email: student_email.value,
+      teacher_email: teacher_email.value,
+      report_md: createMarkdownReport(history),
+      report_history: history,
+    }),
+  })
+    .then((response) => {
+      if (response.ok) {
+        emailSent.value = true;
+        alert("Report sent successfully!");
+      } else {
+        throw new Error("Failed to send email");
+      }
+    })
+    .catch((error) => {
+      alert(`Error: ${error.message}`);
+    })
+    .finally(() => {
+      emailSending.value = false;
+    });
 }
 </script>
