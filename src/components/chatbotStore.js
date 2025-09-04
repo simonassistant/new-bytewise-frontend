@@ -5,6 +5,10 @@ export const useChatbotStore = defineStore('chatbot', {
   state: () => ({
     selectedBot: null,
     availableBots: [], // This will hold our list of bots from the JSON files
+    currentState: {
+      mode: null, // 'welcome', 'menu', 'brainstorm', 'review', 'feedback'
+      context: null, // Store current context (e.g., essay topic)
+    },
   }),
 
   actions: {
@@ -34,6 +38,17 @@ export const useChatbotStore = defineStore('chatbot', {
         });
       }
       this.availableBots = bots;
+    },
+
+    setConversationState(mode, context = null) {
+      this.currentState = {
+        mode,
+        context,
+      };
+    },
+
+    getConversationState() {
+      return this.currentState;
     },
   },
 });
