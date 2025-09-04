@@ -342,13 +342,7 @@ const conversationState = ref({
   mode: 'welcome', // welcome, menu, brainstorm, review, feedback
   topic: null,
   step: 'initial', // initial, topic_selection, brainstorming, etc.
-<<<<<<< HEAD
   lastValidState: null
-=======
-  lastValidState: null,
-  // Persistent memory for outline review
-  outlines: null // { one?: string, two?: string, raw: string }
->>>>>>> 481002edde61692b9e762928a6c2cdafee9fbe5f
 });
 
 const STORAGE_KEY = computed(() => `chatHistory_${props.botId}`);
@@ -492,25 +486,10 @@ async function sendMessage() {
     // Don't change the state, just continue the conversation
   }
 
-<<<<<<< HEAD
   // Store last valid state
   conversationState.value.lastValidState = prevState;
   
   // Enhanced message preparation with more context
-=======
-  // Heuristic: If user pasted outlines while not explicitly in review, switch to review and capture them
-  const outlineHeuristic = message.length > 120 || /\b(introduction|body|conclusion|thesis|outline|outline\s*1|outline\s*2|^1[).:-]|^2[).:-])\b/i.test(message);
-  if (outlineHeuristic && conversationState.value.mode !== 'review') {
-    conversationState.value.mode = 'review';
-    conversationState.value.step = 'outlines_received';
-    conversationState.value.outlines = extractOutlinesFromMessage(message);
-  }
-
-  // Store last valid state
-  conversationState.value.lastValidState = prevState;
-  
-  // Enhanced message preparation with more context across modes
->>>>>>> 481002edde61692b9e762928a6c2cdafee9fbe5f
   let messageToSend = message;
   
   // If we're in brainstorming mode with a topic, provide comprehensive context
@@ -643,12 +622,6 @@ Remember: Stay focused on brainstorming about "${conversationState.value.topic}"
         content: data.response,
         timestamp: new Date(),
       });
-<<<<<<< HEAD
-=======
-
-      // Debug: Print chat history after assistant response
-      console.log('Current chat history after assistant response:', JSON.stringify(chatHistory.value, null, 2));
->>>>>>> 481002edde61692b9e762928a6c2cdafee9fbe5f
       
       // Extract and update token usage - try multiple possible fields
       let tokensUsed = 0;
