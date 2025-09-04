@@ -284,12 +284,6 @@
 </template>
 
 <script setup>
-import { marked } from 'marked';
-// Render Markdown for assistant messages
-function renderMarkdown(text) {
-  if (!text) return '';
-  return marked.parse(text, { breaks: true });
-}
 import { ref, computed, watch, onMounted } from "vue";
 import { useRouter } from 'vue-router';
 import { useChatbotStore } from "../components/chatbotStore";
