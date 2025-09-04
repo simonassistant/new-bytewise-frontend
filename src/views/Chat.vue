@@ -74,6 +74,43 @@
           </div>
         </div>
 
+        <!-- Token Usage Counter -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 class="font-semibold text-blue-800 mb-3">
+            📊 Token Usage
+          </h3>
+          <div class="space-y-2">
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Session Total:</span>
+              <span class="font-mono font-semibold text-blue-700">
+                {{ formatNumber(sessionTokens) }}
+              </span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600">Monthly Limit ({{ model }}):</span>
+              <span class="font-mono text-gray-500">
+                {{ formatNumber(getCurrentModelLimit()) }}
+              </span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+              <div 
+                class="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                :style="{ width: getUsagePercentage() + '%' }"
+              ></div>
+            </div>
+            <div class="text-xs text-gray-500 text-center">
+              Session usage only • Resets on new session
+            </div>
+            <!-- Test Button -->
+            <button 
+              @click="testTokenCounter" 
+              class="w-full mt-2 px-3 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded border border-green-300"
+            >
+              🧪 Test Counter (+100 tokens)
+            </button>
+          </div>
+        </div>
+
         <!-- Prompts -->
         <div>
           <h3 class="font-semibold mb-2">⚙️ System Prompt</h3>
@@ -271,6 +308,27 @@ const messageInput = ref("");
 const showReport = ref(false);
 const isSidebarOpen = ref(true);
 
+// Token counter variables
+const sessionTokens = ref(0);
+const MODEL_LIMITS = {
+  'gpt-4.1': 3000000,
+  'gpt-4.1-mini': 15000000,
+  'gpt-4.1-turbo': 3000000,
+  'gpt-3.5-turbo': 15000000,
+  'gpt-5': 3000000,
+  'gpt-5-mini': 15000000,
+  'o1': 400000,
+  'o3-mini': 5500000
+};
+
+// Add conversation state management
+const conversationState = ref({
+  mode: 'welcome', // welcome, menu, brainstorm, review, feedback
+  topic: null,
+  step: 'initial', // initial, topic_selection, brainstorming, etc.
+  lastValidState: null
+});
+
 const STORAGE_KEY = computed(() => `chatHistory_${props.botId}`);
 const API_KEY_STORAGE_KEY = 'chatbot_api_key';
 
@@ -371,14 +429,86 @@ function clearAPI() {
   notify("API disconnected", "info");
 }
 
+// PASTE THIS ENTIRE FUNCTION TO REPLACE YOUR OLD sendMessage
+
 async function sendMessage() {
+  console.log('🚀 sendMessage function called');
+  
   if (!isConnected.value) {
+    console.log('❌ Not connected - showing error');
     notify("Please connect your API key first", "error");
     return;
   }
 
   const message = messageInput.value.trim();
-  if (!message) return;
+  console.log('📝 Message to send:', message);
+  
+  if (!message) {
+    console.log('❌ Empty message - returning');
+    return;
+  }
+
+  // Update conversation state based on user input
+  const prevState = { ...conversationState.value };
+  
+  if (message.toLowerCase() === 'menu') {
+    conversationState.value.mode = 'menu';
+    conversationState.value.step = 'option_selection';
+    conversationState.value.topic = null; // Reset topic when going back to menu
+  } else if (['1', '2', '3'].includes(message)) {
+    const modes = ['brainstorm', 'review', 'feedback'];
+    conversationState.value.mode = modes[parseInt(message) - 1];
+    conversationState.value.step = conversationState.value.mode === 'brainstorm' ? 'topic_selection' : 'initial';
+    conversationState.value.topic = null; // Reset topic when selecting new mode
+  } else if (conversationState.value.mode === 'brainstorm' && conversationState.value.step === 'topic_selection') {
+    conversationState.value.topic = message;
+    conversationState.value.step = 'brainstorming';
+  } else if (conversationState.value.mode === 'brainstorm' && conversationState.value.step === 'brainstorming') {
+    // We're already in brainstorming mode with a topic - keep the context
+    // Don't change the state, just continue the conversation
+  }
+
+  // Store last valid state
+  conversationState.value.lastValidState = prevState;
+  
+  // Enhanced message preparation with more context
+  let messageToSend = message;
+  
+  // If we're in brainstorming mode with a topic, provide comprehensive context
+  if (conversationState.value.mode === 'brainstorm' && 
+      conversationState.value.step === 'brainstorming' && 
+      conversationState.value.topic) {
+    
+    // Get recent conversation for context
+    const recentExchange = chatHistory.value.slice(-4, -1).map(m => 
+      `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`
+    ).join(' | ');
+    
+    messageToSend = `[BRAINSTORMING SESSION - Topic: "${conversationState.value.topic}" | Recent context: ${recentExchange}] User says: ${message}`;
+  }
+  
+  // Enhanced system prompt with comprehensive context
+  let augmentedSystemPrompt = systemPrompt.value;
+  
+  // Add context information directly in the system prompt
+  if (conversationState.value.mode === 'brainstorm' && conversationState.value.step === 'brainstorming' && conversationState.value.topic) {
+    // Get the last few messages for additional context
+    const recentMessages = chatHistory.value.slice(-6).map(m => `${m.role}: ${m.content}`).join('\n');
+    
+    augmentedSystemPrompt = `${systemPrompt.value}
+
+IMPORTANT CONTEXT: 
+- The user has selected to brainstorm about the topic: "${conversationState.value.topic}"
+- You are currently in an active brainstorming session about this topic
+- Continue the brainstorming discussion naturally without asking for the topic again
+- Build upon the previous conversation and the user's responses
+- Help develop ideas, provide suggestions, and guide the brainstorming process
+
+RECENT CONVERSATION CONTEXT:
+${recentMessages}
+
+Remember: Stay focused on brainstorming about "${conversationState.value.topic}" and respond appropriately to the user's latest input.`;
+  }
 
   chatHistory.value.push({
     role: "user",
@@ -387,12 +517,31 @@ async function sendMessage() {
   });
 
   messageInput.value = "";
+  // Auto-resize textarea after sending
+  if (textareaRef.value) {
+    textareaRef.value.style.height = 'auto';
+  }
 
   chatHistory.value.push({
     role: "assistant",
     content: "⏳ Assistant is typing...",
     timestamp: new Date(),
     typing: true,
+  });
+
+  console.log('🌐 About to make API call to:', "https://smartlessons-production.up.railway.app/api/chat");
+  console.log('📤 API payload:', {
+    message: messageToSend,
+    apiKey: apiKey.value ? '[HIDDEN]' : 'MISSING',
+    provider: "hkbu",
+    model: model.value,
+    systemPrompt: augmentedSystemPrompt ? '[SET]' : 'MISSING',
+    conversationContext: {
+      mode: conversationState.value.mode,
+      step: conversationState.value.step,
+      topic: conversationState.value.topic,
+      messageCount: chatHistory.value.length
+    }
   });
 
   try {
@@ -402,36 +551,120 @@ async function sendMessage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message,
+          message: messageToSend,
           apiKey: apiKey.value,
           provider: "hkbu",
           model: model.value,
-          systemPrompt: systemPrompt.value,
+          systemPrompt: augmentedSystemPrompt,
+          conversationContext: {
+            mode: conversationState.value.mode,
+            step: conversationState.value.step,
+            topic: conversationState.value.topic,
+            messageCount: chatHistory.value.length
+          }
         }),
       }
     );
 
-    const data = await response.json();
-    chatHistory.value = chatHistory.value.filter((m) => !m.typing);
+    console.log('📡 API response status:', response.status);
+    console.log('📡 API response OK:', response.ok);
 
-    if (response.ok && !data.error) {
+    // Remove the "typing..." message from the UI
+    chatHistory.value = chatHistory.value.filter((m) => !m.typing);
+    
+    // Check for network or server errors first
+    if (!response.ok) {
+        console.log('❌ API response not OK, trying to parse error');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response.' }));
+        console.log('❌ Error data:', errorData);
+        throw new Error(errorData.error || `Request failed with status ${response.status}`);
+    }
+
+    console.log('✅ API response OK, parsing JSON...');
+    const data = await response.json();
+
+    // Debug: Log the full response to see token structure
+    console.log('=== API RESPONSE DEBUG ===');
+    console.log('Full API Response:', JSON.stringify(data, null, 2));
+    console.log('Response has "usage" field:', !!data.usage);
+    console.log('Response has "tokenUsage" field:', !!data.tokenUsage);
+    console.log('Response has "tokens" field:', !!data.tokens);
+    console.log('Response keys:', Object.keys(data));
+    
+    if (data.usage) {
+      console.log('Usage object:', JSON.stringify(data.usage, null, 2));
+    }
+
+    if (data.response) {
       chatHistory.value.push({
         role: "assistant",
         content: data.response,
         timestamp: new Date(),
       });
+      
+      // Extract and update token usage - try multiple possible fields
+      let tokensUsed = 0;
+      if (data.usage && data.usage.total_tokens) {
+        tokensUsed = data.usage.total_tokens;
+        console.log('✅ Found tokens in data.usage.total_tokens:', tokensUsed);
+      } else if (data.usage && data.usage.totalTokens) {
+        tokensUsed = data.usage.totalTokens;
+        console.log('✅ Found tokens in data.usage.totalTokens:', tokensUsed);
+      } else if (data.tokenUsage) {
+        tokensUsed = data.tokenUsage;
+        console.log('✅ Found tokens in data.tokenUsage:', tokensUsed);
+      } else if (data.tokens) {
+        tokensUsed = data.tokens;
+        console.log('✅ Found tokens in data.tokens:', tokensUsed);
+      } else if (data.usage && data.usage.prompt_tokens && data.usage.completion_tokens) {
+        tokensUsed = data.usage.prompt_tokens + data.usage.completion_tokens;
+        console.log('✅ Calculated tokens from prompt + completion:', tokensUsed);
+      } else {
+        console.log('❌ No token data found in any expected field');
+        // Fallback: Estimate tokens based on message length
+        const messageLength = message.length;
+        const responseLength = data.response.length;
+        // Rough estimate: ~4 characters per token for English text
+        tokensUsed = Math.ceil((messageLength + responseLength) / 4);
+        console.log('📊 Estimated tokens based on text length:', tokensUsed);
+        console.log('📝 Input length:', messageLength, 'Response length:', responseLength);
+        
+        // Also log to terminal via fetch to our local logging endpoint
+        fetch('/api/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            level: 'info',
+            message: `TOKEN COUNTER: Estimated ${tokensUsed} tokens for message exchange (${messageLength} + ${responseLength} chars)`,
+            timestamp: new Date().toISOString()
+          })
+        }).catch(() => {}); // Silently fail if logging endpoint doesn't exist
+      }
+      
+      console.log('Final tokens to add:', tokensUsed);
+      console.log('Current session tokens before update:', sessionTokens.value);
+      
+      if (tokensUsed > 0) {
+        updateTokenCounter(tokensUsed);
+        console.log('✅ Updated session tokens to:', sessionTokens.value);
+      } else {
+        console.log('❌ No tokens to update (tokensUsed = 0)');
+      }
+      
+      console.log('=== END DEBUG ===');
     } else {
-      chatHistory.value.push({
-        role: "assistant",
-        content: `⚠️ Error: ${data.error || "Unknown error"}`,
-        timestamp: new Date(),
-      });
+      throw new Error(data.error || "Received an empty response from the server.");
     }
   } catch (error) {
+    console.log('💥 Error caught in sendMessage:', error);
+    console.log('💥 Error message:', error.message);
+    console.log('💥 Error stack:', error.stack);
+    
+    // Make sure typing indicator is removed even if there's an error
     chatHistory.value = chatHistory.value.filter((m) => !m.typing);
     chatHistory.value.push({
       role: "assistant",
-      content: `⚠️ Network error: ${error.message}`,
+      content: `⚠️ Error: ${error.message}`,
       timestamp: new Date(),
     });
   }
@@ -439,6 +672,15 @@ async function sendMessage() {
 
 function startNewSession() {
   chatHistory.value = [];
+  sessionTokens.value = 0; // Reset token counter
+  // Reset conversation state
+  conversationState.value = {
+    mode: 'welcome',
+    topic: null,
+    step: 'initial',
+    lastValidState: null
+  };
+  
   if (isConnected.value) {
     chatHistory.value.push({
       role: "assistant",
@@ -455,6 +697,70 @@ function notify(msg, type = "info") {
   setTimeout(() => {
     notifications.value = notifications.value.filter((n) => n.id !== id);
   }, 3000);
+}
+
+// Token counter helper functions
+function formatNumber(num) {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  return num.toString();
+}
+
+function getCurrentModelLimit() {
+  return MODEL_LIMITS[model.value] || 0;
+}
+
+function getUsagePercentage() {
+  const limit = getCurrentModelLimit();
+  if (limit === 0) return 0;
+  return Math.min((sessionTokens.value / limit) * 100, 100);
+}
+
+function updateTokenCounter(tokens) {
+  console.log('updateTokenCounter called with:', tokens, 'type:', typeof tokens);
+  if (typeof tokens === 'number' && tokens > 0) {
+    const oldValue = sessionTokens.value;
+    sessionTokens.value += tokens;
+    console.log('Token counter updated:', oldValue, '->', sessionTokens.value);
+    
+    // Log to a global array for easy export
+    if (!window.tokenLogs) window.tokenLogs = [];
+    window.tokenLogs.push({
+      timestamp: new Date().toISOString(),
+      action: 'token_added',
+      tokens: tokens,
+      oldTotal: oldValue,
+      newTotal: sessionTokens.value,
+      model: model.value
+    });
+    
+    // Also provide a way to download logs
+    if (!window.downloadTokenLogs) {
+      window.downloadTokenLogs = function() {
+        const logs = JSON.stringify(window.tokenLogs, null, 2);
+        const blob = new Blob([logs], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'token-logs.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+      console.log('📁 To download token logs, run: window.downloadTokenLogs()');
+    }
+  } else {
+    console.log('Token counter NOT updated - invalid tokens:', tokens);
+  }
+}
+
+// Test function for token counter
+function testTokenCounter() {
+  console.log('🧪 Testing token counter with 100 tokens');
+  updateTokenCounter(100);
+  notify('Added 100 test tokens to counter', 'success');
 }
 
 const textareaRef = ref(null);
