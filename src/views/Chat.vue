@@ -210,7 +210,7 @@
           v-if="!isConnected"
           class="absolute inset-0 flex items-center justify-center bg-white/70 text-gray-600 text-sm font-medium z-10"
         >
-          🔑 Please connect your API key first
+          🔑 Please connect your API key or class access code first
         </div>
         <!-- Lightweight state debug indicator -->
         <div class="absolute left-4 -top-3 text-[10px] px-2 py-0.5 rounded bg-indigo-600 text-white shadow">
@@ -429,28 +429,45 @@ const assistantCount = computed(
 
 function connectAPI(isAutoConnect = false) {
   notify('DEBUG: connectAPI called', 'info');
-  console.log('connectAPI called. isConnected:', isConnected.value, 'isAutoConnect:', isAutoConnect, 'apiKey:', apiKey.value);
+  console.log('connectAPI called. isConnected:', isConnected.value, 'isAutoConnect:', isAutoConnect, 'apiKey:', apiKey.value, 'classCode:', classCode.value);
   if (isConnected.value && !isAutoConnect) {
     notify("Already connected!", "info");
     return;
   }
-  if (!apiKey.value) {
-    if (!isAutoConnect) notify("Please enter an API key", "error");
+
+  const entered = (apiKey.value || '').trim();
+  const savedClass = (classCode.value || '').trim();
+  const isPlaceholder = /^CLASS-\*+$/i.test(entered);
+  const isSecretCode = entered.toLowerCase() === 'aichangestheworld';
+  const looksLikeClassCode = /^(?:\s*CLASS[-_:]|\s*CLASS\s+)/i.test(entered) || isSecretCode || isPlaceholder;
+
+  // If nothing entered and no saved class, block manual connect (but allow auto-connect if saved class exists)
+  if (!entered && !savedClass) {
+    if (!isAutoConnect) notify("Please enter an API key or class code", "error");
     return;
   }
-  // Detect class access code pattern (e.g., CLASS-XXXX)
-  const entered = apiKey.value.trim();
-  const isSecretCode = entered.toLowerCase() === 'aichangestheworld';
-  const looksLikeClassCode = /^\s*CLASS[-_:]/i.test(entered) || /^\s*CLASS\s+/i.test(entered) || isSecretCode;
+
   if (looksLikeClassCode) {
-    classCode.value = isSecretCode ? 'aichangestheworld' : entered;
-    localStorage.setItem(CLASS_CODE_STORAGE_KEY, classCode.value);
-    // Do NOT persist class code into API_KEY storage
-  } else {
-    localStorage.setItem(API_KEY_STORAGE_KEY, apiKey.value);
+    // If placeholder shown but we already have a saved class code, keep the saved value
+    if (isPlaceholder && savedClass) {
+      console.log('Using saved class code from storage during connect.');
+      // Do not modify storage; just proceed
+    } else {
+      classCode.value = isSecretCode ? 'aichangestheworld' : entered;
+      localStorage.setItem(CLASS_CODE_STORAGE_KEY, classCode.value);
+    }
+    // Never persist class codes into API key storage
+    localStorage.removeItem(API_KEY_STORAGE_KEY);
+  } else if (entered) {
+    // Treat as normal API key path
+    localStorage.setItem(API_KEY_STORAGE_KEY, entered);
     classCode.value = "";
     localStorage.removeItem(CLASS_CODE_STORAGE_KEY);
+  } else if (savedClass) {
+    // Auto-connect path: saved class exists, no apiKey entered
+    console.log('Auto-connecting with saved class code.');
   }
+
   isConnected.value = true;
   // This check now works correctly because chatHistory and welcomePrompt are already loaded.
   if (chatHistory.value.length === 0) {
