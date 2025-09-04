@@ -1,5 +1,8 @@
 <template>
-  <div v-if="selectedBot" class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800">
+  <div
+    v-if="selectedBot"
+    class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800"
+  >
     <!-- Sidebar -->
     <aside
       class="bg-white/90 backdrop-blur shadow-xl flex flex-col transition-all duration-300 overflow-hidden"
@@ -37,15 +40,15 @@
 
           <!-- ADDED: Instruction text with a link -->
           <p class="text-xs text-gray-600 mt-2">
-            Get your key from the 
-            <a 
-              href="https://genai.hkbu.edu.hk/settings/api-docs" 
-              target="_blank" 
+            Get your key from the
+            <a
+              href="https://genai.hkbu.edu.hk/settings/api-docs"
+              target="_blank"
               rel="noopener noreferrer"
               class="text-indigo-600 hover:underline"
             >
-              HKBU Generative AI Platform
-            </a>.
+              HKBU Generative AI Platform </a
+            >.
           </p>
           <!-- END ADDED -->
 
@@ -77,9 +80,7 @@
 
         <!-- Token Usage Counter -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 class="font-semibold text-blue-800 mb-3">
-            📊 Token Usage
-          </h3>
+          <h3 class="font-semibold text-blue-800 mb-3">📊 Token Usage</h3>
           <div class="space-y-2">
             <div class="flex justify-between text-sm">
               <span class="text-gray-600">Session Total:</span>
@@ -94,7 +95,7 @@
               </span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-              <div 
+              <div
                 class="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
                 :style="{ width: getUsagePercentage() + '%' }"
               ></div>
@@ -103,8 +104,8 @@
               Session usage only • Resets on new session
             </div>
             <!-- Test Button -->
-            <button 
-              @click="testTokenCounter" 
+            <button
+              @click="testTokenCounter"
               class="w-full mt-2 px-3 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded border border-green-300"
             >
               🧪 Test Counter (+100 tokens)
@@ -183,7 +184,7 @@
           class="flex"
           :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
         >
-          <div 
+          <div
             class="max-w-2xl w-full px-6 py-4 rounded-2xl shadow text-base break-words"
             :class="
               msg.role === 'user'
@@ -194,8 +195,15 @@
             <div class="font-semibold text-xs mb-1">
               {{ msg.role === "user" ? "👤 You" : "🤖 Assistant" }}
             </div>
-            <div v-if="msg.role === 'assistant'" class="text-base prose prose-sm max-w-none" v-html="renderMarkdown(msg.content)"></div>
-            <div v-else class="text-base whitespace-pre-wrap">{{ msg.content }}</div>
+            <div
+              v-if="msg.role === 'assistant'"
+              class="text-base prose prose-sm max-w-none"
+            >
+              {{ msg.content }}
+            </div>
+            <div v-else class="text-base whitespace-pre-wrap">
+              {{ msg.content }}
+            </div>
             <div class="text-xs text-gray-400 mt-2 text-right">
               {{ msg.timestamp.toLocaleTimeString() }}
             </div>
@@ -210,8 +218,13 @@
           🔑 Please connect your API key first
         </div>
         <!-- Lightweight state debug indicator -->
-        <div class="absolute left-4 -top-3 text-[10px] px-2 py-0.5 rounded bg-indigo-600 text-white shadow">
-          Mode: {{ conversationState.mode }} • Step: {{ conversationState.step }}<span v-if="conversationState.topic"> • Topic: {{ conversationState.topic }}</span>
+        <div
+          class="absolute left-4 -top-3 text-[10px] px-2 py-0.5 rounded bg-indigo-600 text-white shadow"
+        >
+          Mode: {{ conversationState.mode }} • Step: {{ conversationState.step
+          }}<span v-if="conversationState.topic">
+            • Topic: {{ conversationState.topic }}</span
+          >
         </div>
         <div class="chat-input-wrapper flex items-end gap-3">
           <textarea
@@ -234,9 +247,7 @@
             </button>
             <button
               class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow transition transform hover:scale-105"
-              :disabled="
-                !chatHistory || chatHistory.length === 0
-              "
+              :disabled="!chatHistory || chatHistory.length === 0"
               @click="showReport = true"
               title="Finish & View Report"
             >
@@ -246,7 +257,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Modals (no changes here) -->
     <ReportModal
       :show="showReport"
@@ -272,11 +283,30 @@
     </div>
   </div>
 
-  <div v-else class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 items-center justify-center">
+  <div
+    v-else
+    class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 items-center justify-center"
+  >
     <div class="flex items-center justify-center space-x-3">
-      <svg class="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      <svg
+        class="animate-spin h-8 w-8 text-white"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
       </svg>
       <span class="text-white text-2xl font-semibold">Loading Chatbot...</span>
     </div>
@@ -285,7 +315,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
-import { useRouter } from 'vue-router';
+import { useRouter } from "vue-router";
 import { useChatbotStore } from "../components/chatbotStore";
 import ReportModal from "../components/ReportModal.vue";
 
@@ -293,26 +323,29 @@ const props = defineProps({
   botId: {
     type: String,
     required: true,
-  }
+  },
 });
 
 const router = useRouter();
 const chatbotStore = useChatbotStore();
 
-const selectedBot = computed(() => chatbotStore.availableBots.find(b => b.id === props.botId));
+const selectedBot = computed(() =>
+  chatbotStore.availableBots.find((b) => b.id === props.botId)
+);
 
 const chatHistory = ref([]);
 const MAX_RENDERED_MESSAGES = 200; // limit DOM nodes for memory optimization
 const MAX_STORED_MESSAGES = 1000; // hard cap to prevent unbounded growth
 const displayedMessages = computed(() => {
-  if (!chatHistory.value || chatHistory.value.length <= MAX_RENDERED_MESSAGES) return chatHistory.value;
+  if (!chatHistory.value || chatHistory.value.length <= MAX_RENDERED_MESSAGES)
+    return chatHistory.value;
   return chatHistory.value.slice(-MAX_RENDERED_MESSAGES);
 });
 const notifications = ref([]);
 const apiKey = ref("");
-const systemPrompt = ref('');
-const welcomePrompt = ref('');
-const model = ref('');
+const systemPrompt = ref("");
+const welcomePrompt = ref("");
+const model = ref("");
 const isConnected = ref(false);
 const messageInput = ref("");
 const showReport = ref(false);
@@ -321,39 +354,38 @@ const isSidebarOpen = ref(true);
 // Token counter variables
 const sessionTokens = ref(0);
 const MODEL_LIMITS = {
-  'gpt-4.1': 3000000,
-  'gpt-4.1-mini': 15000000,
-  'gpt-4.1-turbo': 3000000,
-  'gpt-3.5-turbo': 15000000,
-  'gpt-5': 3000000,
-  'gpt-5-mini': 15000000,
-  'o1': 400000,
-  'o3-mini': 5500000
+  "gpt-4.1": 3000000,
+  "gpt-4.1-mini": 15000000,
+  "gpt-4.1-turbo": 3000000,
+  "gpt-3.5-turbo": 15000000,
+  "gpt-5": 3000000,
+  "gpt-5-mini": 15000000,
+  o1: 400000,
+  "o3-mini": 5500000,
 };
 
 // Add conversation state management
 const conversationState = ref({
-  mode: 'welcome', // welcome, menu, brainstorm, review, feedback
+  mode: "welcome", // welcome, menu, brainstorm, review, feedback
   topic: null,
-  step: 'initial', // initial, topic_selection, brainstorming, etc.
-  lastValidState: null
+  step: "initial", // initial, topic_selection, brainstorming, etc.
+  lastValidState: null,
 });
 
 const STORAGE_KEY = computed(() => `chatHistory_${props.botId}`);
-const API_KEY_STORAGE_KEY = 'chatbot_api_key';
+const API_KEY_STORAGE_KEY = "chatbot_api_key";
 
 // UPDATED onMounted with corrected order of operations
 onMounted(async () => {
-    
   // 1. Load bot configs FIRST, so we have the data we need.
   await chatbotStore.loadBots();
 
   // Redirect if the bot is not valid
   if (!selectedBot.value) {
-    router.push('/');
+    router.push("/");
     return;
   }
-  
+
   // 2. Populate component state from the loaded bot config.
   // Now welcomePrompt.value will have the correct text.
   systemPrompt.value = selectedBot.value.systemPrompt;
@@ -369,7 +401,7 @@ onMounted(async () => {
         ...m,
         timestamp: new Date(m.timestamp),
       }));
-  pruneHistoryIfNeeded();
+      pruneHistoryIfNeeded();
     } catch (e) {
       console.error("Failed to parse chat history:", e);
     }
@@ -385,14 +417,14 @@ onMounted(async () => {
 });
 
 function goBack() {
-  router.push('/');
+  router.push("/");
 }
 
 watch(
   chatHistory,
   (newHistory) => {
-    if(newHistory.length > 0) {
-  pruneHistoryIfNeeded();
+    if (newHistory.length > 0) {
+      pruneHistoryIfNeeded();
       localStorage.setItem(STORAGE_KEY.value, JSON.stringify(newHistory));
     } else {
       localStorage.removeItem(STORAGE_KEY.value);
@@ -409,8 +441,15 @@ const assistantCount = computed(
 );
 
 function connectAPI(isAutoConnect = false) {
-  notify('DEBUG: connectAPI called', 'info');
-  console.log('connectAPI called. isConnected:', isConnected.value, 'isAutoConnect:', isAutoConnect, 'apiKey:', apiKey.value);
+  notify("DEBUG: connectAPI called", "info");
+  console.log(
+    "connectAPI called. isConnected:",
+    isConnected.value,
+    "isAutoConnect:",
+    isAutoConnect,
+    "apiKey:",
+    apiKey.value
+  );
   if (isConnected.value && !isAutoConnect) {
     notify("Already connected!", "info");
     return;
@@ -434,7 +473,7 @@ function connectAPI(isAutoConnect = false) {
 
 function clearAPI() {
   localStorage.removeItem(API_KEY_STORAGE_KEY);
-  
+
   apiKey.value = "";
   isConnected.value = false;
   chatHistory.value = [];
@@ -444,69 +483,87 @@ function clearAPI() {
 // PASTE THIS ENTIRE FUNCTION TO REPLACE YOUR OLD sendMessage
 
 async function sendMessage() {
-  console.log('🚀 sendMessage function called');
-  
+  console.log("🚀 sendMessage function called");
+
   if (!isConnected.value) {
-    console.log('❌ Not connected - showing error');
+    console.log("❌ Not connected - showing error");
     notify("Please connect your API key first", "error");
     return;
   }
 
   const message = messageInput.value.trim();
-  console.log('📝 Message to send:', message);
-  
+  console.log("📝 Message to send:", message);
+
   if (!message) {
-    console.log('❌ Empty message - returning');
+    console.log("❌ Empty message - returning");
     return;
   }
 
   // Update conversation state based on user input
   const prevState = { ...conversationState.value };
-  
-  if (message.toLowerCase() === 'menu') {
-    conversationState.value.mode = 'menu';
-    conversationState.value.step = 'option_selection';
+
+  if (message.toLowerCase() === "menu") {
+    conversationState.value.mode = "menu";
+    conversationState.value.step = "option_selection";
     conversationState.value.topic = null; // Reset topic when going back to menu
-  } else if (['1', '2', '3'].includes(message)) {
-    const modes = ['brainstorm', 'review', 'feedback'];
+  } else if (["1", "2", "3"].includes(message)) {
+    const modes = ["brainstorm", "review", "feedback"];
     conversationState.value.mode = modes[parseInt(message) - 1];
-    conversationState.value.step = conversationState.value.mode === 'brainstorm' ? 'topic_selection' : 'initial';
+    conversationState.value.step =
+      conversationState.value.mode === "brainstorm"
+        ? "topic_selection"
+        : "initial";
     conversationState.value.topic = null; // Reset topic when selecting new mode
-  } else if (conversationState.value.mode === 'brainstorm' && conversationState.value.step === 'topic_selection') {
+  } else if (
+    conversationState.value.mode === "brainstorm" &&
+    conversationState.value.step === "topic_selection"
+  ) {
     conversationState.value.topic = message;
-    conversationState.value.step = 'brainstorming';
-  } else if (conversationState.value.mode === 'brainstorm' && conversationState.value.step === 'brainstorming') {
+    conversationState.value.step = "brainstorming";
+  } else if (
+    conversationState.value.mode === "brainstorm" &&
+    conversationState.value.step === "brainstorming"
+  ) {
     // We're already in brainstorming mode with a topic - keep the context
     // Don't change the state, just continue the conversation
   }
 
   // Store last valid state
   conversationState.value.lastValidState = prevState;
-  
+
   // Enhanced message preparation with more context
   let messageToSend = message;
-  
+
   // If we're in brainstorming mode with a topic, provide comprehensive context
-  if (conversationState.value.mode === 'brainstorm' && 
-      conversationState.value.step === 'brainstorming' && 
-      conversationState.value.topic) {
-    
+  if (
+    conversationState.value.mode === "brainstorm" &&
+    conversationState.value.step === "brainstorming" &&
+    conversationState.value.topic
+  ) {
     // Get recent conversation for context
-    const recentExchange = chatHistory.value.slice(-4, -1).map(m => 
-      `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`
-    ).join(' | ');
-    
+    const recentExchange = chatHistory.value
+      .slice(-4, -1)
+      .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+      .join(" | ");
+
     messageToSend = `[BRAINSTORMING SESSION - Topic: "${conversationState.value.topic}" | Recent context: ${recentExchange}] User says: ${message}`;
   }
-  
+
   // Enhanced system prompt with comprehensive context
   let augmentedSystemPrompt = systemPrompt.value;
-  
+
   // Add context information directly in the system prompt
-  if (conversationState.value.mode === 'brainstorm' && conversationState.value.step === 'brainstorming' && conversationState.value.topic) {
+  if (
+    conversationState.value.mode === "brainstorm" &&
+    conversationState.value.step === "brainstorming" &&
+    conversationState.value.topic
+  ) {
     // Get the last few messages for additional context
-    const recentMessages = chatHistory.value.slice(-6).map(m => `${m.role}: ${m.content}`).join('\n');
-    
+    const recentMessages = chatHistory.value
+      .slice(-6)
+      .map((m) => `${m.role}: ${m.content}`)
+      .join("\n");
+
     augmentedSystemPrompt = `${systemPrompt.value}
 
 IMPORTANT CONTEXT: 
@@ -529,12 +586,15 @@ Remember: Stay focused on brainstorming about "${conversationState.value.topic}"
   });
 
   // Debug: Print chat history after user message
-  console.log('Current chat history after user message:', JSON.stringify(chatHistory.value, null, 2));
+  console.log(
+    "Current chat history after user message:",
+    JSON.stringify(chatHistory.value, null, 2)
+  );
 
   messageInput.value = "";
   // Auto-resize textarea after sending
   if (textareaRef.value) {
-    textareaRef.value.style.height = 'auto';
+    textareaRef.value.style.height = "auto";
   }
 
   chatHistory.value.push({
@@ -544,19 +604,22 @@ Remember: Stay focused on brainstorming about "${conversationState.value.topic}"
     typing: true,
   });
 
-  console.log('🌐 About to make API call to:', "https://smartlessons-production.up.railway.app/api/chat");
-  console.log('📤 API payload:', {
+  console.log(
+    "🌐 About to make API call to:",
+    "https://smartlessons-production.up.railway.app/api/chat"
+  );
+  console.log("📤 API payload:", {
     message: messageToSend,
-    apiKey: apiKey.value ? '[HIDDEN]' : 'MISSING',
+    apiKey: apiKey.value ? "[HIDDEN]" : "MISSING",
     provider: "hkbu",
     model: model.value,
-    systemPrompt: augmentedSystemPrompt ? '[SET]' : 'MISSING',
+    systemPrompt: augmentedSystemPrompt ? "[SET]" : "MISSING",
     conversationContext: {
       mode: conversationState.value.mode,
       step: conversationState.value.step,
       topic: conversationState.value.topic,
-      messageCount: chatHistory.value.length
-    }
+      messageCount: chatHistory.value.length,
+    },
   });
 
   try {
@@ -575,39 +638,43 @@ Remember: Stay focused on brainstorming about "${conversationState.value.topic}"
             mode: conversationState.value.mode,
             step: conversationState.value.step,
             topic: conversationState.value.topic,
-            messageCount: chatHistory.value.length
-          }
+            messageCount: chatHistory.value.length,
+          },
         }),
       }
     );
 
-    console.log('📡 API response status:', response.status);
-    console.log('📡 API response OK:', response.ok);
+    console.log("📡 API response status:", response.status);
+    console.log("📡 API response OK:", response.ok);
 
     // Remove the "typing..." message from the UI
     chatHistory.value = chatHistory.value.filter((m) => !m.typing);
-    
+
     // Check for network or server errors first
     if (!response.ok) {
-        console.log('❌ API response not OK, trying to parse error');
-        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response.' }));
-        console.log('❌ Error data:', errorData);
-        throw new Error(errorData.error || `Request failed with status ${response.status}`);
+      console.log("❌ API response not OK, trying to parse error");
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: "Failed to parse error response." }));
+      console.log("❌ Error data:", errorData);
+      throw new Error(
+        errorData.error || `Request failed with status ${response.status}`
+      );
     }
 
-    console.log('✅ API response OK, parsing JSON...');
+    console.log("✅ API response OK, parsing JSON...");
     const data = await response.json();
 
     // Debug: Log the full response to see token structure
-    console.log('=== API RESPONSE DEBUG ===');
-    console.log('Full API Response:', JSON.stringify(data, null, 2));
+    console.log("=== API RESPONSE DEBUG ===");
+    console.log("Full API Response:", JSON.stringify(data, null, 2));
     console.log('Response has "usage" field:', !!data.usage);
     console.log('Response has "tokenUsage" field:', !!data.tokenUsage);
     console.log('Response has "tokens" field:', !!data.tokens);
-    console.log('Response keys:', Object.keys(data));
-    
+    console.log("Response keys:", Object.keys(data));
+
     if (data.usage) {
-      console.log('Usage object:', JSON.stringify(data.usage, null, 2));
+      console.log("Usage object:", JSON.stringify(data.usage, null, 2));
     }
 
     if (data.response) {
@@ -616,65 +683,79 @@ Remember: Stay focused on brainstorming about "${conversationState.value.topic}"
         content: data.response,
         timestamp: new Date(),
       });
-      
+
       // Extract and update token usage - try multiple possible fields
       let tokensUsed = 0;
       if (data.usage && data.usage.total_tokens) {
         tokensUsed = data.usage.total_tokens;
-        console.log('✅ Found tokens in data.usage.total_tokens:', tokensUsed);
+        console.log("✅ Found tokens in data.usage.total_tokens:", tokensUsed);
       } else if (data.usage && data.usage.totalTokens) {
         tokensUsed = data.usage.totalTokens;
-        console.log('✅ Found tokens in data.usage.totalTokens:', tokensUsed);
+        console.log("✅ Found tokens in data.usage.totalTokens:", tokensUsed);
       } else if (data.tokenUsage) {
         tokensUsed = data.tokenUsage;
-        console.log('✅ Found tokens in data.tokenUsage:', tokensUsed);
+        console.log("✅ Found tokens in data.tokenUsage:", tokensUsed);
       } else if (data.tokens) {
         tokensUsed = data.tokens;
-        console.log('✅ Found tokens in data.tokens:', tokensUsed);
-      } else if (data.usage && data.usage.prompt_tokens && data.usage.completion_tokens) {
+        console.log("✅ Found tokens in data.tokens:", tokensUsed);
+      } else if (
+        data.usage &&
+        data.usage.prompt_tokens &&
+        data.usage.completion_tokens
+      ) {
         tokensUsed = data.usage.prompt_tokens + data.usage.completion_tokens;
-        console.log('✅ Calculated tokens from prompt + completion:', tokensUsed);
+        console.log(
+          "✅ Calculated tokens from prompt + completion:",
+          tokensUsed
+        );
       } else {
-        console.log('❌ No token data found in any expected field');
+        console.log("❌ No token data found in any expected field");
         // Fallback: Estimate tokens based on message length
         const messageLength = message.length;
         const responseLength = data.response.length;
         // Rough estimate: ~4 characters per token for English text
         tokensUsed = Math.ceil((messageLength + responseLength) / 4);
-        console.log('📊 Estimated tokens based on text length:', tokensUsed);
-        console.log('📝 Input length:', messageLength, 'Response length:', responseLength);
-        
+        console.log("📊 Estimated tokens based on text length:", tokensUsed);
+        console.log(
+          "📝 Input length:",
+          messageLength,
+          "Response length:",
+          responseLength
+        );
+
         // Also log to terminal via fetch to our local logging endpoint
-        fetch('/api/log', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        fetch("/api/log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            level: 'info',
+            level: "info",
             message: `TOKEN COUNTER: Estimated ${tokensUsed} tokens for message exchange (${messageLength} + ${responseLength} chars)`,
-            timestamp: new Date().toISOString()
-          })
+            timestamp: new Date().toISOString(),
+          }),
         }).catch(() => {}); // Silently fail if logging endpoint doesn't exist
       }
-      
-      console.log('Final tokens to add:', tokensUsed);
-      console.log('Current session tokens before update:', sessionTokens.value);
-      
+
+      console.log("Final tokens to add:", tokensUsed);
+      console.log("Current session tokens before update:", sessionTokens.value);
+
       if (tokensUsed > 0) {
         updateTokenCounter(tokensUsed);
-        console.log('✅ Updated session tokens to:', sessionTokens.value);
+        console.log("✅ Updated session tokens to:", sessionTokens.value);
       } else {
-        console.log('❌ No tokens to update (tokensUsed = 0)');
+        console.log("❌ No tokens to update (tokensUsed = 0)");
       }
-      
-      console.log('=== END DEBUG ===');
+
+      console.log("=== END DEBUG ===");
     } else {
-      throw new Error(data.error || "Received an empty response from the server.");
+      throw new Error(
+        data.error || "Received an empty response from the server."
+      );
     }
   } catch (error) {
-    console.log('💥 Error caught in sendMessage:', error);
-    console.log('💥 Error message:', error.message);
-    console.log('💥 Error stack:', error.stack);
-    
+    console.log("💥 Error caught in sendMessage:", error);
+    console.log("💥 Error message:", error.message);
+    console.log("💥 Error stack:", error.stack);
+
     // Make sure typing indicator is removed even if there's an error
     chatHistory.value = chatHistory.value.filter((m) => !m.typing);
     chatHistory.value.push({
@@ -683,8 +764,11 @@ Remember: Stay focused on brainstorming about "${conversationState.value.topic}"
       timestamp: new Date(),
     });
     // Debug: Print chat history after error
-    console.log('Current chat history after error:', JSON.stringify(chatHistory.value, null, 2));
-  pruneHistoryIfNeeded();
+    console.log(
+      "Current chat history after error:",
+      JSON.stringify(chatHistory.value, null, 2)
+    );
+    pruneHistoryIfNeeded();
   }
 }
 
@@ -693,12 +777,12 @@ function startNewSession() {
   sessionTokens.value = 0; // Reset token counter
   // Reset conversation state
   conversationState.value = {
-    mode: 'welcome',
+    mode: "welcome",
     topic: null,
-    step: 'initial',
-    lastValidState: null
+    step: "initial",
+    lastValidState: null,
   };
-  
+
   if (isConnected.value) {
     chatHistory.value.push({
       role: "assistant",
@@ -720,9 +804,9 @@ function notify(msg, type = "info") {
 // Token counter helper functions
 function formatNumber(num) {
   if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + 'M';
+    return (num / 1000000).toFixed(1) + "M";
   } else if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K';
+    return (num / 1000).toFixed(1) + "K";
   }
   return num.toString();
 }
@@ -738,56 +822,61 @@ function getUsagePercentage() {
 }
 
 function updateTokenCounter(tokens) {
-  console.log('updateTokenCounter called with:', tokens, 'type:', typeof tokens);
-  if (typeof tokens === 'number' && tokens > 0) {
+  console.log(
+    "updateTokenCounter called with:",
+    tokens,
+    "type:",
+    typeof tokens
+  );
+  if (typeof tokens === "number" && tokens > 0) {
     const oldValue = sessionTokens.value;
     sessionTokens.value += tokens;
-    console.log('Token counter updated:', oldValue, '->', sessionTokens.value);
-    
+    console.log("Token counter updated:", oldValue, "->", sessionTokens.value);
+
     // Log to a global array for easy export
     if (!window.tokenLogs) window.tokenLogs = [];
     window.tokenLogs.push({
       timestamp: new Date().toISOString(),
-      action: 'token_added',
+      action: "token_added",
       tokens: tokens,
       oldTotal: oldValue,
       newTotal: sessionTokens.value,
-      model: model.value
+      model: model.value,
     });
-    
+
     // Also provide a way to download logs
     if (!window.downloadTokenLogs) {
-      window.downloadTokenLogs = function() {
+      window.downloadTokenLogs = function () {
         const logs = JSON.stringify(window.tokenLogs, null, 2);
-        const blob = new Blob([logs], { type: 'application/json' });
+        const blob = new Blob([logs], { type: "application/json" });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = 'token-logs.json';
+        a.download = "token-logs.json";
         a.click();
         URL.revokeObjectURL(url);
       };
-      console.log('📁 To download token logs, run: window.downloadTokenLogs()');
+      console.log("📁 To download token logs, run: window.downloadTokenLogs()");
     }
   } else {
-    console.log('Token counter NOT updated - invalid tokens:', tokens);
+    console.log("Token counter NOT updated - invalid tokens:", tokens);
   }
 }
 
 // Test function for token counter
 function testTokenCounter() {
-  console.log('🧪 Testing token counter with 100 tokens');
+  console.log("🧪 Testing token counter with 100 tokens");
   updateTokenCounter(100);
-  notify('Added 100 test tokens to counter', 'success');
+  notify("Added 100 test tokens to counter", "success");
 }
 
 const textareaRef = ref(null);
 function adjustTextareaHeight() {
-    const textarea = textareaRef.value;
-    if (textarea) {
-        textarea.style.height = 'auto';
-        textarea.style.height = `${textarea.scrollHeight}px`;
-    }
+  const textarea = textareaRef.value;
+  if (textarea) {
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }
 }
 
 // Prune history to avoid unbounded memory usage
@@ -807,7 +896,8 @@ function extractOutlinesFromMessage(text) {
   let one = null;
   let two = null;
   // Common patterns: "1) ... 2) ...", "Outline 1: ... Outline 2: ..."
-  const reNumbered = /(?:^|\n)\s*(?:outline\s*1\s*[:\-]|1[\).:\-])([\s\S]*?)(?=(?:\n\s*(?:outline\s*2\s*[:\-]|2[\).:\-]))|$)/i;
+  const reNumbered =
+    /(?:^|\n)\s*(?:outline\s*1\s*[:\-]|1[\).:\-])([\s\S]*?)(?=(?:\n\s*(?:outline\s*2\s*[:\-]|2[\).:\-]))|$)/i;
   const reSecond = /(?:^|\n)\s*(?:outline\s*2\s*[:\-]|2[\).:\-])([\s\S]*)$/i;
   const m1 = raw.match(reNumbered);
   const m2 = raw.match(reSecond);
@@ -818,7 +908,7 @@ function extractOutlinesFromMessage(text) {
 }
 
 function trimForContext(text, maxLen = 1200) {
-  if (!text) return '';
+  if (!text) return "";
   if (text.length <= maxLen) return text;
   const head = Math.floor(maxLen * 0.7);
   const tail = maxLen - head - 20;
@@ -826,7 +916,7 @@ function trimForContext(text, maxLen = 1200) {
 }
 
 function summarizeForInline(text, maxLen = 300) {
-  const t = text.replace(/\s+/g, ' ').trim();
+  const t = text.replace(/\s+/g, " ").trim();
   return t.length > maxLen ? `${t.slice(0, maxLen - 3)}...` : t;
 }
 </script>
