@@ -197,8 +197,7 @@
             <div class="font-semibold text-xs mb-1">
               {{ msg.role === "user" ? "👤 You" : "🤖 Assistant" }}
             </div>
-            <div v-if="msg.role === 'assistant'" class="text-base prose prose-sm max-w-none" v-html="renderMarkdown(msg.content)"></div>
-            <div v-else class="text-base whitespace-pre-wrap">{{ msg.content }}</div>
+            <div class="text-base whitespace-pre-wrap">{{ msg.content }}</div>
             <div class="text-xs text-gray-400 mt-2 text-right">
               {{ msg.timestamp.toLocaleTimeString() }}
             </div>
@@ -287,12 +286,6 @@
 </template>
 
 <script setup>
-import { marked } from 'marked';
-// Render Markdown for assistant messages
-function renderMarkdown(text) {
-  if (!text) return '';
-  return marked.parse(text, { breaks: true });
-}
 import { ref, computed, watch, onMounted } from "vue";
 import { useRouter } from 'vue-router';
 import { useChatbotStore } from "../components/chatbotStore";

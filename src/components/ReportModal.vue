@@ -442,7 +442,7 @@ const student_email = ref("23257024@life.hkbu.edu.hk");
 const teacher_email = ref("2468668109@qq.com");
 const emailSending = ref(false);
 const emailSent = ref(false);
-
+import { BASE_URL } from "../components/base_url";
 
 function sendReportByEmail() {
   const history = props.chatHistory;
@@ -452,7 +452,7 @@ function sendReportByEmail() {
   }
   emailSending.value = true;
 
-  fetch("http://localhost:5001/api/sendEmail/a", {
+  fetch(`${BASE_URL}/sendEmail/send-email`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
