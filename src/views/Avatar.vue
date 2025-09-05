@@ -1,8 +1,11 @@
 <template>
   <div
     v-if="selectedBot"
-    class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800"
+    class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800 relative"
   >
+    <!-- Avatar Panel (overlay on right side) -->
+    <AvatarPanel />
+  
     <!-- Sidebar -->
     <aside
       class="bg-white/90 backdrop-blur shadow-xl flex flex-col transition-all duration-300 overflow-hidden"
@@ -139,34 +142,29 @@
 
       <!-- Chat history -->
       <div class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
-        <div
+        <ChatBubble
           v-for="(msg, i) in chatHistory"
           :key="i"
-          class="flex"
-          :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
-        >
-          <div
-            class="max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl shadow text-base break-words"
-            :class="
-              msg.role === 'user'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-br-none'
-                : 'bg-gray-100 border border-gray-200 text-gray-800 rounded-bl-none'
-            "
-          >
-            <div class="font-semibold text-xs mb-1">
-              {{ msg.role === "user" ? "👤 You (voice)" : "🤖 Assistant" }}
-            </div>
-            <div class="text-base whitespace-pre-wrap">
-              {{ msg.content }}
-            </div>
-            <div class="text-xs text-gray-400 mt-2 text-right">
-              {{ msg.timestamp.toLocaleTimeString() }}
+          :message="msg.content"
+          :is-user="msg.role === 'user'"
+          :timestamp="msg.timestamp"
+          :avatar="msg.role === 'user' ? null : '🤖'"
+        />
+        
+        <!-- Typing indicator -->
+        <div v-if="isTyping" class="flex justify-start">
+          <div class="max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl shadow text-base bg-gray-100 border border-gray-200 text-gray-800 rounded-bl-none">
+            <div class="font-semibold text-xs mb-1">🤖 Assistant</div>
+            <div class="flex space-x-1">
+              <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+              <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+              <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Audio input -->
+      <!-- Audio input with Input Mode Toggle -->
       <div class="chat-input-container p-4 border-t bg-gray-50 relative">
         <div
           v-if="!isConnected"
@@ -174,15 +172,37 @@
         >
           🔑 Please connect your API key first
         </div>
+        
+        <!-- Input Mode Toggle -->
+        <div class="mb-4">
+          <InputModeToggle 
+            :current-mode="inputMode" 
+            @mode-change="handleModeChange" 
+          />
+        </div>
+
         <div class="flex justify-center">
           <button
-            class="px-6 py-3 rounded-full bg-red-500 text-white text-lg font-bold shadow-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            class="px-6 py-3 rounded-full bg-red-500 text-white text-lg font-bold shadow-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200"
             :disabled="!isConnected || isPlaying || isRecognizing"
             @click="toggleRecording"
+            :class="{
+              'bg-red-600 scale-105': isRecording,
+              'bg-gray-400': !isConnected || isPlaying || isRecognizing
+            }"
           >
-            {{ isRecording ? "⏹ Stop" : "🎤 Speak" }}
+            {{ isRecording ? "⏹ Stop Recording" : "🎤 Start Speaking" }}
           </button>
         </div>
+        
+        <!-- Recording Status -->
+        <div v-if="isRecording" class="mt-4 text-center">
+          <div class="inline-flex items-center space-x-2 text-red-600">
+            <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+            <span class="text-sm font-medium">Recording...</span>
+          </div>
+        </div>
+        
         <div class="mt-4 flex justify-center" v-if="audioUrl">
           <audio
             :src="audioUrl"
@@ -234,6 +254,11 @@ import { io } from "socket.io-client";
 import { BASE_URL } from "../components/base_url";
 import audioBufferToWav from "audiobuffer-to-wav";
 
+// Import Sprint 1 components
+import AvatarPanel from "../components/avatar/AvatarPanel.vue";
+import ChatBubble from "../components/avatar/ChatBubble.vue";
+import InputModeToggle from "../components/avatar/InputModeToggle.vue";
+
 const props = defineProps({ avatarId: { type: String, required: true } });
 const router = useRouter();
 const chatbotStore = useChatbotStore();
@@ -253,6 +278,10 @@ const isRecording = ref(false);
 const isPlaying = ref(false);
 const audioUrl = ref(null);
 const isRecognizing = ref(false);
+
+// Sprint 1: Input mode and UI state
+const inputMode = ref(localStorage.getItem('inputMode') || 'voice');
+const isTyping = ref(false);
 
 let mediaRecorder = null;
 let audioChunks = [];
@@ -390,6 +419,10 @@ function startNewSession() {
  */
 function sendUserMessage(userText) {
   if (!isConnected.value || !userText.trim() || !socket) return;
+  
+  // Show typing indicator
+  isTyping.value = true;
+  
   // Add a placeholder assistant reply while waiting
   chatHistory.value.push({
     role: "assistant",
@@ -412,11 +445,18 @@ function sendUserMessage(userText) {
 
   // Listen for assistant reply
   socket.once("assistant_reply", (reply) => {
+    isTyping.value = false;
     chatHistory.value[msgIndex] = {
       ...chatHistory.value[msgIndex],
       content: reply?.content || "[No response]",
       timestamp: new Date(),
     };
   });
+}
+
+// Sprint 1: Handle input mode changes
+function handleModeChange(newMode) {
+  inputMode.value = newMode;
+  localStorage.setItem('inputMode', newMode);
 }
 </script>
