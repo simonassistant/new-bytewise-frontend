@@ -1,5 +1,8 @@
 <template>
-  <div v-if="selectedBot" class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800">
+  <div v-if="selectedBot" class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800 relative">
+    <!-- Avatar Panel (overlay on right side) -->
+    <AvatarPanel />
+
     <!-- Sidebar -->
     <aside
       class="bg-white/90 backdrop-blur shadow-xl flex flex-col transition-all duration-300 overflow-hidden"
@@ -179,27 +182,24 @@
           </button>
         </div>
       </div>
-      <div class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
-        <div
+      <!-- Chat Messages with WeChat-style bubbles -->
+      <div class="chat-messages flex-1 overflow-y-auto p-5" ref="chatContainer">
+        <ChatBubble
           v-for="(msg, i) in displayedMessages"
           :key="i"
-          class="flex"
-          :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
-        >
-          <div 
-            class="max-w-2xl w-full px-6 py-4 rounded-2xl shadow text-base break-words"
-            :class="
-              msg.role === 'user'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-br-none'
-                : 'bg-gray-100 border border-gray-200 text-gray-800 rounded-bl-none'
-            "
-          >
-            <div class="font-semibold text-xs mb-1">
-              {{ msg.role === "user" ? "👤 You" : "🤖 Assistant" }}
-            </div>
-            <div class="text-base whitespace-pre-wrap">{{ msg.content }}</div>
-            <div class="text-xs text-gray-400 mt-2 text-right">
-              {{ msg.timestamp.toLocaleTimeString() }}
+          :message="msg.content"
+          :isUser="msg.role === 'user'"
+          :timestamp="msg.timestamp"
+          :userName="msg.role === 'user' ? 'You' : selectedBot.name"
+        />
+        <!-- Typing indicator (if assistant is responding) -->
+        <div v-if="isLoading" class="typing-indicator">
+          <div class="typing-bubble">
+            <div class="ai-avatar">🤖</div>
+            <div class="typing-animation">
+              <span></span>
+              <span></span>
+              <span></span>
             </div>
           </div>
         </div>
@@ -215,7 +215,17 @@
         <div class="absolute left-4 -top-3 text-[10px] px-2 py-0.5 rounded bg-indigo-600 text-white shadow">
           Mode: {{ conversationState.mode }} • Step: {{ conversationState.step }}<span v-if="conversationState.topic"> • Topic: {{ conversationState.topic }}</span>
         </div>
-        <div class="chat-input-wrapper flex items-end gap-3">
+
+        <!-- Input Mode Toggle -->
+        <div class="mb-4">
+          <InputModeToggle 
+            :initialMode="inputMode"
+            @mode-changed="handleModeChange"
+          />
+        </div>
+
+        <!-- Text Input (shown when typing mode) -->
+        <div v-if="inputMode === 'typing'" class="chat-input-wrapper flex items-end gap-3">
           <textarea
             v-model="messageInput"
             placeholder="Type your message..."
@@ -245,6 +255,29 @@
               ✓
             </button>
           </div>
+        </div>
+
+        <!-- Voice Input (shown when voice mode) -->
+        <div v-else class="voice-input-wrapper flex items-center justify-center gap-4">
+          <button
+            class="voice-record-btn px-8 py-4 rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 disabled:bg-gray-300 shadow-lg transition transform hover:scale-105"
+            :disabled="!isConnected"
+            @click="toggleVoiceRecording"
+            :class="{ 'recording': isRecording }"
+          >
+            <span class="text-2xl">{{ isRecording ? '⏹️' : '🎤' }}</span>
+            <span class="ml-2">{{ isRecording ? 'Stop Recording' : 'Start Recording' }}</span>
+          </button>
+          <button
+            class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow transition transform hover:scale-105"
+            :disabled="
+              !chatHistory || chatHistory.length === 0
+            "
+            @click="showReport = true"
+            title="Finish & View Report"
+          >
+            ✓ Report
+          </button>
         </div>
       </div>
     </div>
@@ -290,6 +323,9 @@ import { ref, computed, watch, onMounted } from "vue";
 import { useRouter } from 'vue-router';
 import { useChatbotStore } from "../components/chatbotStore";
 import ReportModal from "../components/ReportModal.vue";
+import AvatarPanel from "../components/avatar/AvatarPanel.vue";
+import ChatBubble from "../components/avatar/ChatBubble.vue";
+import InputModeToggle from "../components/avatar/InputModeToggle.vue";
 
 const props = defineProps({
   botId: {
@@ -321,6 +357,13 @@ const isConnected = ref(false);
 const messageInput = ref("");
 const showReport = ref(false);
 const isSidebarOpen = ref(true);
+
+// Sprint 1: New data properties for avatar and input mode
+const inputMode = ref('typing'); // 'typing' or 'voice'
+const isRecording = ref(false);
+const isLoading = ref(false);
+const chatContainer = ref(null);
+const textareaRef = ref(null);
 
 // Token counter variables
 const sessionTokens = ref(0);
@@ -877,7 +920,6 @@ function testTokenCounter() {
   notify('Added 100 test tokens to counter', 'success');
 }
 
-const textareaRef = ref(null);
 function adjustTextareaHeight() {
     const textarea = textareaRef.value;
     if (textarea) {
@@ -925,4 +967,169 @@ function summarizeForInline(text, maxLen = 300) {
   const t = text.replace(/\s+/g, ' ').trim();
   return t.length > maxLen ? `${t.slice(0, maxLen - 3)}...` : t;
 }
+
+// Sprint 1: New methods for input mode and voice functionality
+function handleModeChange(newMode) {
+  console.log('Input mode changed to:', newMode);
+  inputMode.value = newMode;
+  
+  // Reset any active recording when switching modes
+  if (isRecording.value) {
+    isRecording.value = false;
+  }
+  
+  // Auto-scroll to latest message when mode changes
+  scrollToBottom();
+}
+
+function toggleVoiceRecording() {
+  if (!isConnected.value) {
+    notify("Please connect your API key first", "error");
+    return;
+  }
+  
+  if (isRecording.value) {
+    // Stop recording
+    isRecording.value = false;
+    // TODO: In Sprint 3, this will integrate with actual voice recording
+    notify("Voice recording stopped (placeholder)", "info");
+  } else {
+    // Start recording
+    isRecording.value = true;
+    // TODO: In Sprint 3, this will integrate with actual voice recording
+    notify("Voice recording started (placeholder)", "info");
+  }
+}
+
+function scrollToBottom() {
+  if (chatContainer.value) {
+    setTimeout(() => {
+      chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+    }, 100);
+  }
+}
+
+// Watch for new messages and auto-scroll
+watch(chatHistory, () => {
+  scrollToBottom();
+}, { deep: true });
 </script>
+
+<style scoped>
+/* Sprint 1: Additional styles for new components */
+
+/* Typing Indicator */
+.typing-indicator {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 16px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.typing-bubble {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.ai-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  border: 2px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.typing-animation {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  border-bottom-left-radius: 6px;
+  padding: 12px 16px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.typing-animation span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #94a3b8;
+  animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-animation span:nth-child(1) {
+  animation-delay: 0ms;
+}
+
+.typing-animation span:nth-child(2) {
+  animation-delay: 200ms;
+}
+
+.typing-animation span:nth-child(3) {
+  animation-delay: 400ms;
+}
+
+@keyframes typing {
+  0%, 60%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  30% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* Voice Recording Button */
+.voice-record-btn.recording {
+  animation: recordingPulse 1s infinite;
+}
+
+@keyframes recordingPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* Voice Input Wrapper */
+.voice-input-wrapper {
+  min-height: 80px;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 640px) {
+  .voice-record-btn {
+    padding: 12px 20px;
+    font-size: 14px;
+  }
+  
+  .voice-record-btn span:first-child {
+    font-size: 18px;
+  }
+}
+</style>
