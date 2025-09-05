@@ -177,7 +177,7 @@
         <div class="mb-4">
           <InputModeToggle 
             :current-mode="inputMode" 
-            @mode-change="handleModeChange" 
+            @mode-changed="handleModeChange" 
           />
         </div>
 

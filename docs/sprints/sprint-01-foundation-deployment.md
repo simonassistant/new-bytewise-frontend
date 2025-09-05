@@ -5,27 +5,60 @@
 **Developer**: Bob8259
 **Status**: ✅ Complete (Setup Phase)
 
----
 
-## Comments and feedback from Simon to follow up 
 
-https://avatar-test.hkbu.tech/avatar/learning 
+## Comments and feedback from Simon to follow up
 
-this is the avatar version 
+https://avatar-test.hkbu.tech/avatar/learning
 
-when switch to type there is no space to type 
+this is the avatar version
 
-voice module works ok 
+~~when switch to type there is no space to type~~ ✅ **FIXED** - Added conditional typing input area
 
-there is a chat icon to click to open the sideview but this icon overlap with back to home button 
+voice module works ok
+
+NEW: yes we can type but when switch to voice; there is no more speak option; 
+
+there is a chat icon to click to open the sideview but this icon overlap with back to home button
 
 in addition, when the sidebar is opened it covers part of the main canva
 
 so there are two issues 
 
-let's fix one issue and update progress here I'll test and move on to the next issue 
 
-## 🎯 **Sprint Objectives**
+
+I can see voice typing is available for avatar version
+
+yet the avatar sidebar is still found in the chat version; we can keep the speak option in chat version but we should remove the avatar sidebar in chat 
+
+the latest move of the agent took too long - please find out why 
+
+
+~~let's fix one issue and update progress here I'll test and move on to the next issue~~
+
+### 🐛 Issues Tracked & Resolution Status
+
+#### ✅ Issue 1: Missing Typing Input Area - RESOLVED
+
+**Problem**: When switching input mode to "typing", no text input area appeared**Solution**: Added conditional typing interface in Avatar.vue**Status**: ✅ **Fixed in commit 3559254**
+
+- Added v-if/v-else conditions for voice vs typing modes
+- Complete typing interface with auto-resizing textarea
+- Send button with proper validation
+- Enter key functionality
+- **Ready for re-testing**
+
+#### 🚧 Issue 2: Avatar Panel Toggle Overlaps Back Button - PENDING
+
+**Problem**: Chat/avatar panel toggle button overlaps with "Back to Home" button
+**Impact**: UI navigation conflict
+**Status**: 🔄 **Next to fix**
+
+#### 🚧 Issue 3: Sidebar Covers Main Canvas - PENDING
+
+**Problem**: When sidebar is opened, it covers part of the main conversation area
+**Impact**: Content visibility issue
+**Status**: 🔄 **Next to fix**## 🎯 **Sprint Objectives**
 
 1. **Primary Objective**: Successfully deploy ByteWise to Railway at https://avatartutor.hkbu.tech/
 2. **Secondary Objective**: Establish robust development workflow and documentation system

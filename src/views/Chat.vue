@@ -1,8 +1,5 @@
 <template>
-  <div v-if="selectedBot" class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800 relative">
-    <!-- Avatar Panel (overlay on right side) -->
-    <AvatarPanel />
-
+  <div v-if="selectedBot" class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800">
     <!-- Sidebar -->
     <aside
       class="bg-white/90 backdrop-blur shadow-xl flex flex-col transition-all duration-300 overflow-hidden"
@@ -323,9 +320,6 @@ import { ref, computed, watch, onMounted } from "vue";
 import { useRouter } from 'vue-router';
 import { useChatbotStore } from "../components/chatbotStore";
 import ReportModal from "../components/ReportModal.vue";
-import AvatarPanel from "../components/avatar/AvatarPanel.vue";
-import ChatBubble from "../components/avatar/ChatBubble.vue";
-import InputModeToggle from "../components/avatar/InputModeToggle.vue";
 
 const props = defineProps({
   botId: {
