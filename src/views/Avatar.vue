@@ -181,35 +181,61 @@
           />
         </div>
 
-        <div class="flex justify-center">
-          <button
-            class="px-6 py-3 rounded-full bg-red-500 text-white text-lg font-bold shadow-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200"
-            :disabled="!isConnected || isPlaying || isRecognizing"
-            @click="toggleRecording"
-            :class="{
-              'bg-red-600 scale-105': isRecording,
-              'bg-gray-400': !isConnected || isPlaying || isRecognizing
-            }"
-          >
-            {{ isRecording ? "⏹ Stop Recording" : "🎤 Start Speaking" }}
-          </button>
-        </div>
-        
-        <!-- Recording Status -->
-        <div v-if="isRecording" class="mt-4 text-center">
-          <div class="inline-flex items-center space-x-2 text-red-600">
-            <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-            <span class="text-sm font-medium">Recording...</span>
+        <!-- Voice Input (shown when voice mode) -->
+        <div v-if="inputMode === 'voice'" class="voice-input-section">
+          <div class="flex justify-center">
+            <button
+              class="px-6 py-3 rounded-full bg-red-500 text-white text-lg font-bold shadow-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200"
+              :disabled="!isConnected || isPlaying || isRecognizing"
+              @click="toggleRecording"
+              :class="{
+                'bg-red-600 scale-105': isRecording,
+                'bg-gray-400': !isConnected || isPlaying || isRecognizing
+              }"
+            >
+              {{ isRecording ? "⏹ Stop Recording" : "🎤 Start Speaking" }}
+            </button>
+          </div>
+          
+          <!-- Recording Status -->
+          <div v-if="isRecording" class="mt-4 text-center">
+            <div class="inline-flex items-center space-x-2 text-red-600">
+              <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              <span class="text-sm font-medium">Recording...</span>
+            </div>
+          </div>
+          
+          <div class="mt-4 flex justify-center" v-if="audioUrl">
+            <audio
+              :src="audioUrl"
+              autoplay
+              @play="isPlaying = true"
+              @ended="isPlaying = false"
+            ></audio>
           </div>
         </div>
-        
-        <div class="mt-4 flex justify-center" v-if="audioUrl">
-          <audio
-            :src="audioUrl"
-            autoplay
-            @play="isPlaying = true"
-            @ended="isPlaying = false"
-          ></audio>
+
+        <!-- Text Input (shown when typing mode) -->
+        <div v-else class="typing-input-section">
+          <div class="flex items-end gap-3">
+            <textarea
+              v-model="messageInput"
+              placeholder="Type your message..."
+              class="flex-grow p-3 bg-gray-100 border rounded-lg focus:outline-none focus:ring focus:ring-indigo-300 resize-none min-h-[44px] max-h-32"
+              rows="1"
+              ref="textareaRef"
+              @input="adjustTextareaHeight"
+              @keydown.enter.exact.prevent="sendTypedMessage"
+            ></textarea>
+            <button
+              class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed shadow transition transform hover:scale-105"
+              :disabled="!isConnected || !messageInput.trim()"
+              @click="sendTypedMessage"
+              title="Send Message"
+            >
+              ➤
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -282,6 +308,8 @@ const isRecognizing = ref(false);
 // Sprint 1: Input mode and UI state
 const inputMode = ref(localStorage.getItem('inputMode') || 'voice');
 const isTyping = ref(false);
+const messageInput = ref('');
+const textareaRef = ref(null);
 
 let mediaRecorder = null;
 let audioChunks = [];
@@ -458,5 +486,32 @@ function sendUserMessage(userText) {
 function handleModeChange(newMode) {
   inputMode.value = newMode;
   localStorage.setItem('inputMode', newMode);
+}
+
+// Typing functionality
+function sendTypedMessage() {
+  if (!isConnected.value || !messageInput.value.trim()) return;
+  
+  const userMessage = messageInput.value.trim();
+  
+  // Add user message to history
+  chatHistory.value.push({
+    role: "user",
+    content: userMessage,
+    timestamp: new Date(),
+  });
+  
+  // Clear input
+  messageInput.value = '';
+  
+  // Send message using existing functionality
+  sendUserMessage(userMessage);
+}
+
+function adjustTextareaHeight() {
+  if (textareaRef.value) {
+    textareaRef.value.style.height = 'auto';
+    textareaRef.value.style.height = Math.min(textareaRef.value.scrollHeight, 128) + 'px';
+  }
 }
 </script>
