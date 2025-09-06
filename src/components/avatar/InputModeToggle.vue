@@ -7,13 +7,13 @@
           class="mode-label"
           :class="{ 'active': currentMode === 'typing' }"
         >
-          ⌨️ Type
+          ⌨️ Primary: Type
         </span>
         <span 
           class="mode-label"
           :class="{ 'active': currentMode === 'voice' }"
         >
-          🎤 Voice
+          🎤 Primary: Voice
         </span>
       </div>
 
@@ -38,8 +38,8 @@
       <div class="mode-description">
         <p class="description-text">
           {{ currentMode === 'typing' 
-            ? 'Type your messages in the text box' 
-            : 'Click and speak your message aloud' 
+            ? 'Primary: Text input • Voice & audio response always enabled' 
+            : 'Primary: Voice input • Text input also available below' 
           }}
         </p>
       </div>

@@ -5,8 +5,6 @@
 **Developer**: Bob8259
 **Status**: ✅ Complete (Setup Phase)
 
-
-
 ## Comments and feedback from Simon to follow up
 
 https://avatar-test.hkbu.tech/avatar/learning
@@ -17,40 +15,41 @@ this is the avatar version
 
 voice module works ok
 
-~~NEW: yes we can type but when switch to voice; there is no more speak option;~~ ✅ **FIXED** - Event binding corrected 
+~~NEW: yes we can type but when switch to voice; there is no more speak option;~~ ✅ **FIXED** - Event binding corrected
 
-there is a chat icon to click to open the sideview but this icon overlap with back to home button
+there is a chat icon to click to open the sideview but this icon overlap with back to home button - ok
 
-in addition, when the sidebar is opened it covers part of the main canva
+in addition, when the sidebar is opened it covers part of the main canva -ok 
 
-
+When we switch to type we still want the voice feedback
+so the idea is that we can talk to an avatar tutor in two ways either type or talk - in fact it would be good to offer a more seamless exp; can speak and type at the same time 
 
 so there are two issues
 
-
-
 I can see voice typing is available for avatar version
 
-~~yet the avatar sidebar is still found in the chat version; we can keep the speak option in chat version but we should remove the avatar sidebar in chat~~ ✅ **FIXED** - Avatar components removed from Chat.vue 
+~~yet the avatar sidebar is still found in the chat version; we can keep the speak option in chat version but we should remove the avatar sidebar in chat~~ ✅ **FIXED** - Avatar components removed from Chat.vue
 
-the latest move of the agent took too long - please find out why 
-
+the latest move of the agent took too long - please find out why
 
 ~~let's fix one issue and update progress here I'll test and move on to the next issue~~
 
 ### 🐛 Issues Tracked & Resolution Status
 
 #### ✅ Issue 1A: Missing Typing Input Area - RESOLVED
+
 **Problem**: When switching input mode to "typing", no text input area appeared
 **Solution**: Added conditional typing interface in Avatar.vue
 **Status**: ✅ **Fixed in commit 3559254**
 
-#### ✅ Issue 1B: Voice Mode Toggle Not Working - RESOLVED  
+#### ✅ Issue 1B: Voice Mode Toggle Not Working - RESOLVED
+
 **Problem**: When switching back to voice mode, speak button disappeared
 **Solution**: Fixed event name mismatch (@mode-change → @mode-changed)
 **Status**: ✅ **Fixed - event binding corrected**
 
 #### ✅ Issue 1C: Avatar Components in Chat Routes - RESOLVED
+
 **Problem**: Avatar sidebar appeared in /chat/ routes where it shouldn't be
 **Solution**: Removed all avatar components from Chat.vue
 **Status**: ✅ **Fixed in commit 3ef332e - clean route separation**

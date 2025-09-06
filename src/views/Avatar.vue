@@ -117,7 +117,7 @@
       >
         <div>
           <h1 class="text-xl font-bold">{{ selectedBot.name }}</h1>
-          <div class="text-sm opacity-80">🎙️ Speak with your AI assistant</div>
+          <div class="text-sm opacity-80">� Speak or type with your AI avatar • Voice responses always enabled</div>
         </div>
         <div class="flex gap-2">
           <button
@@ -165,7 +165,7 @@
         </div>
       </div>
 
-      <!-- Audio input with Input Mode Toggle -->
+      <!-- Hybrid Input Interface - Both Voice and Typing Available -->
       <div class="chat-input-container p-4 border-t bg-gray-50 relative">
         <div
           v-if="!isConnected"
@@ -174,69 +174,82 @@
           🔑 Please connect your API key first
         </div>
         
-        <!-- Input Mode Toggle -->
+        <!-- Primary Input Mode Toggle (for layout preference) -->
         <div class="mb-4">
           <InputModeToggle 
             :current-mode="inputMode" 
             @mode-changed="handleModeChange" 
           />
+          <p class="text-xs text-gray-500 mt-1 text-center">💡 Voice feedback is always enabled • Switch layout preference</p>
         </div>
 
-        <!-- Voice Input (shown when voice mode) -->
-        <div v-if="inputMode === 'voice'" class="voice-input-section">
-          <div class="flex justify-center">
-            <button
-              class="px-6 py-3 rounded-full bg-red-500 text-white text-lg font-bold shadow-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200"
-              :disabled="!isConnected || isPlaying || isRecognizing"
-              @click="toggleRecording"
-              :class="{
-                'bg-red-600 scale-105': isRecording,
-                'bg-gray-400': !isConnected || isPlaying || isRecognizing
-              }"
-            >
-              {{ isRecording ? "⏹ Stop Recording" : "🎤 Start Speaking" }}
-            </button>
-          </div>
+        <!-- Enhanced Input Interface - Shows both methods when primary mode is selected -->
+        <div class="space-y-4">
           
-          <!-- Recording Status -->
-          <div v-if="isRecording" class="mt-4 text-center">
-            <div class="inline-flex items-center space-x-2 text-red-600">
-              <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-              <span class="text-sm font-medium">Recording...</span>
+          <!-- Voice Input Section (Always Available) -->
+          <div class="voice-input-section" :class="{ 'opacity-50': inputMode === 'typing' && !isRecording }">
+            <div class="flex justify-center">
+              <button
+                class="px-6 py-3 rounded-full bg-red-500 text-white text-lg font-bold shadow-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200"
+                :disabled="!isConnected || isPlaying || isRecognizing"
+                @click="toggleRecording"
+                :class="{
+                  'bg-red-600 scale-105': isRecording,
+                  'bg-gray-400': !isConnected || isPlaying || isRecognizing
+                }"
+              >
+                {{ isRecording ? "⏹ Stop Recording" : "🎤 Speak" }}
+              </button>
+            </div>
+            
+            <!-- Recording Status -->
+            <div v-if="isRecording" class="mt-2 text-center">
+              <div class="inline-flex items-center space-x-2 text-red-600">
+                <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                <span class="text-sm font-medium">Recording...</span>
+              </div>
             </div>
           </div>
-          
-          <div class="mt-4 flex justify-center" v-if="audioUrl">
-            <audio
-              :src="audioUrl"
-              autoplay
-              @play="isPlaying = true"
-              @ended="isPlaying = false"
-            ></audio>
+
+          <!-- Divider (when both are prominently shown) -->
+          <div v-if="inputMode === 'hybrid'" class="flex items-center justify-center">
+            <div class="flex-grow h-px bg-gray-300"></div>
+            <span class="px-3 text-xs text-gray-500 bg-gray-50">OR</span>
+            <div class="flex-grow h-px bg-gray-300"></div>
+          </div>
+
+          <!-- Text Input Section (Always Available) -->
+          <div class="typing-input-section" :class="{ 'opacity-50': inputMode === 'voice' && !messageInput.trim() }">
+            <div class="flex items-end gap-3">
+              <textarea
+                v-model="messageInput"
+                placeholder="Type your message... (Voice feedback will still play)"
+                class="flex-grow p-3 bg-gray-100 border rounded-lg focus:outline-none focus:ring focus:ring-indigo-300 resize-none min-h-[44px] max-h-32"
+                rows="1"
+                ref="textareaRef"
+                @input="adjustTextareaHeight"
+                @keydown.enter.exact.prevent="sendTypedMessage"
+              ></textarea>
+              <button
+                class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed shadow transition transform hover:scale-105"
+                :disabled="!isConnected || !messageInput.trim()"
+                @click="sendTypedMessage"
+                title="Send Message (with Voice Response)"
+              >
+                ➤
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Text Input (shown when typing mode) -->
-        <div v-else class="typing-input-section">
-          <div class="flex items-end gap-3">
-            <textarea
-              v-model="messageInput"
-              placeholder="Type your message..."
-              class="flex-grow p-3 bg-gray-100 border rounded-lg focus:outline-none focus:ring focus:ring-indigo-300 resize-none min-h-[44px] max-h-32"
-              rows="1"
-              ref="textareaRef"
-              @input="adjustTextareaHeight"
-              @keydown.enter.exact.prevent="sendTypedMessage"
-            ></textarea>
-            <button
-              class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed shadow transition transform hover:scale-105"
-              :disabled="!isConnected || !messageInput.trim()"
-              @click="sendTypedMessage"
-              title="Send Message"
-            >
-              ➤
-            </button>
-          </div>
+        <!-- Audio Output (Always Available) -->
+        <div class="mt-4 flex justify-center" v-if="audioUrl">
+          <audio
+            :src="audioUrl"
+            autoplay
+            @play="isPlaying = true"
+            @ended="isPlaying = false"
+          ></audio>
         </div>
       </div>
     </div>
