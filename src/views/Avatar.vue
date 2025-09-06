@@ -2,9 +2,10 @@
   <div
     v-if="selectedBot"
     class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800 relative"
+    :class="{ 'avatar-panel-open': isAvatarPanelOpen }"
   >
     <!-- Avatar Panel (overlay on right side) -->
-    <AvatarPanel />
+    <AvatarPanel @panel-toggle="handleAvatarPanelToggle" />
   
     <!-- Sidebar -->
     <aside
@@ -310,6 +311,7 @@ const inputMode = ref(localStorage.getItem('inputMode') || 'voice');
 const isTyping = ref(false);
 const messageInput = ref('');
 const textareaRef = ref(null);
+const isAvatarPanelOpen = ref(false);
 
 let mediaRecorder = null;
 let audioChunks = [];
@@ -488,6 +490,11 @@ function handleModeChange(newMode) {
   localStorage.setItem('inputMode', newMode);
 }
 
+// Avatar panel toggle handler
+function handleAvatarPanelToggle(isOpen) {
+  isAvatarPanelOpen.value = isOpen;
+}
+
 // Typing functionality
 function sendTypedMessage() {
   if (!isConnected.value || !messageInput.value.trim()) return;
@@ -515,3 +522,18 @@ function adjustTextareaHeight() {
   }
 }
 </script>
+
+<style scoped>
+/* Adjust layout when avatar panel is open */
+.avatar-panel-open {
+  padding-right: 320px;
+  transition: padding-right 0.3s ease;
+}
+
+/* Ensure content doesn't get covered by fixed avatar panel */
+@media (max-width: 768px) {
+  .avatar-panel-open {
+    padding-right: 0; /* Remove padding on mobile, use overlay instead */
+  }
+}
+</style>

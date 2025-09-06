@@ -55,7 +55,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 export default {
   name: 'AvatarPanel',
-  setup() {
+  emits: ['panel-toggle'],
+  setup(_, { emit }) {
     const isVisible = ref(false)
     const windowWidth = ref(window.innerWidth)
 
@@ -67,11 +68,15 @@ export default {
       isVisible.value = !isVisible.value
       // Save preference to localStorage
       localStorage.setItem('avatarPanelVisible', isVisible.value.toString())
+      // Emit event to parent
+      emit('panel-toggle', isVisible.value)
     }
 
     const closePanel = () => {
       isVisible.value = false
       localStorage.setItem('avatarPanelVisible', 'false')
+      // Emit event to parent
+      emit('panel-toggle', false)
     }
 
     const handleResize = () => {
@@ -89,6 +94,9 @@ export default {
       if (savedState === 'true') {
         isVisible.value = true
       }
+
+      // Emit initial state to parent
+      emit('panel-toggle', isVisible.value)
 
       // Add resize listener
       window.addEventListener('resize', handleResize)
@@ -116,7 +124,7 @@ export default {
 /* Toggle Button */
 .avatar-toggle-btn {
   position: fixed;
-  top: 20px;
+  top: 90px; /* Moved down to avoid overlap with back button */
   right: 20px;
   width: 56px;
   height: 56px;
@@ -158,7 +166,7 @@ export default {
   height: 100vh;
   background: white;
   box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
-  z-index: 999;
+  z-index: 998; /* Lower than toggle button but still above main content */
   transition: right 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -166,6 +174,12 @@ export default {
 
 .avatar-panel.panel-visible {
   right: 0;
+}
+
+/* Add margin to main content when avatar panel is open */
+.avatar-panel.panel-visible ~ * {
+  margin-right: 320px;
+  transition: margin-right 0.3s ease;
 }
 
 /* Panel Header */
