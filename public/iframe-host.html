@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Security Headers -->
+  <meta http-equiv="Content-Security-Policy" content="
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval';
+    style-src 'self' 'unsafe-inline';
+    connect-src 'self' 
+      https://api.openrouter.ai 
+      https://*.hkbu.edu.hk 
+      https://new-bytewise-backend-production-8c33.up.railway.app 
+      https://smartlessons-production.up.railway.app
+      wss://*.railway.app;
+    img-src 'self' data: https:;
+    font-src 'self' data: https://fonts.googleapis.com https://fonts.gstatic.com;
+    media-src 'self' blob:;
+    worker-src 'self' blob:;
+    frame-ancestors ALLOWED_ORIGINS_PLACEHOLDER;
+    form-action 'none';
+    base-uri 'self';
+  ">
+  
+  <!-- Prevent clickjacking -->
+  <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+  
+  <!-- Referrer policy -->
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  
+  <title>ByteWise AI Chatbot</title>
+  
+  <!-- Preload critical resources -->
+  <link rel="preload" href="/assets/fonts/main.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://api.openrouter.ai">
+  
+  <!-- Inline critical CSS to prevent FOUC -->
+  <style>
+    /* Critical CSS for initial load */
+    * { box-sizing: border-box; }
+    
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: transparent;
+      overflow: hidden;
+    }
+    
+    #chatbot-app {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    
+    .chatbot-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      border-radius: 12px;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .error-state {
+      padding: 1rem;
+      background: #fee;
+      border: 1px solid #fcc;
+      border-radius: 8px;
+      color: #c33;
+      text-align: center;
+    }
+    
+    /* Responsive base styles */
+    @media (max-width: 640px) {
+      .chatbot-loading {
+        padding: 1rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Main application container -->
+  <div id="chatbot-app">
+    <!-- Initial loading state -->
+    <div class="chatbot-loading" id="initial-loader">
+      <div class="loading-spinner"></div>
+      <p>Initializing ByteWise AI...</p>
+      <small>Connecting to AI services...</small>
+    </div>
+  </div>
+  
+  <!-- Configuration script (populated by server) -->
+  <script id="chatbot-config">
+    window.CHATBOT_CONFIG = {
+      apiEndpoint: 'ENDPOINT_PLACEHOLDER',
+      allowedOrigins: 'ORIGINS_PLACEHOLDER',
+      version: 'VERSION_PLACEHOLDER',
+      buildTime: 'BUILD_TIME_PLACEHOLDER',
+      features: {
+        voice: true,
+        typing: true,
+        email: true,
+        themes: true
+      }
+    };
+  </script>
+  
+  <!-- Error handling script (loads immediately) -->
+  <script>
+    window.onerror = function(msg, url, lineNo, columnNo, error) {
+      console.error('Chatbot Error:', { msg, url, lineNo, columnNo, error });
+      
+      // Send error to parent
+      if (window.parent !== window) {
+        window.parent.postMessage({
+          type: 'error',
+          source: 'bytewise-chatbot',
+          data: {
+            message: msg,
+            file: url,
+            line: lineNo,
+            column: columnNo,
+            stack: error?.stack
+          }
+        }, '*');
+      }
+      
+      // Show error UI
+      document.getElementById('chatbot-app').innerHTML = 
+        '<div class="error-state">' +
+        '<h3>⚠️ Chatbot Error</h3>' +
+        '<p>Unable to load the AI assistant. Please refresh or contact support.</p>' +
+        '<details><summary>Technical Details</summary><pre>' + msg + '</pre></details>' +
+        '</div>';
+      
+      return true;
+    };
+    
+    // Unhandled promise rejections
+    window.addEventListener('unhandledrejection', function(event) {
+      console.error('Unhandled promise rejection:', event.reason);
+      window.onerror(event.reason.message || 'Promise rejection', '', 0, 0, event.reason);
+    });
+  </script>
+  
+  <!-- Main chatbot application (loaded after DOM ready) -->
+  <script defer src="/assets/chatbot.js?v=BUILD_HASH_PLACEHOLDER"></script>
+</body>
+</html>

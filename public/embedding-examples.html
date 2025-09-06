@@ -1,0 +1,491 @@
+<!-- Example HTML page showing how to embed the ByteWise chatbot -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ByteWise Chatbot - Embedding Examples</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 2rem;
+      background: #f5f7fa;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1, h2 {
+      color: #2d3748;
+    }
+    
+    .demo-section {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+    
+    .chatbot-container {
+      border: 2px dashed #e2e8f0;
+      border-radius: 12px;
+      padding: 1rem;
+      min-height: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .chatbot-container h3 {
+      margin-top: 0;
+      color: #4a5568;
+    }
+    
+    .code-example {
+      background: #2d3748;
+      color: #e2e8f0;
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+    }
+    
+    .controls {
+      margin-top: 1rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    
+    button:hover {
+      background: #5b5bd6;
+    }
+    
+    button:disabled {
+      background: #a0aec0;
+      cursor: not-allowed;
+    }
+    
+    input, select {
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    
+    .status {
+      margin-top: 1rem;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    
+    .status.success { background: #d1fae5; color: #065f46; }
+    .status.error { background: #fee2e2; color: #991b1b; }
+    .status.info { background: #dbeafe; color: #1e40af; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🤖 ByteWise AI Chatbot - Embedding Examples</h1>
+    <p>This page demonstrates different ways to embed the ByteWise AI chatbot in your website.</p>
+    
+    <!-- Basic Embedding -->
+    <div class="demo-section">
+      <h2>1. Basic Embedding (Auto-initialization)</h2>
+      <p>The simplest way to add the chatbot - just add the script and use data attributes.</p>
+      
+      <div class="code-example">
+&lt;!-- Add the chatbot script --&gt;
+&lt;script src="https://chatbot.bytewise.ai/chatbot-embedder.js"&gt;&lt;/script&gt;
+
+&lt;!-- Add chatbot with data attributes --&gt;
+&lt;div data-bytewise-chatbot
+     data-chatbot-theme="default"
+     data-chatbot-width="400"
+     data-chatbot-height="600"&gt;&lt;/div&gt;
+      </div>
+      
+      <div class="demo-grid">
+        <div class="chatbot-container">
+          <div data-bytewise-chatbot
+               data-chatbot-src="./iframe-host.html"
+               data-chatbot-theme="default"
+               data-chatbot-width="380"
+               data-chatbot-height="580">
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- JavaScript API -->
+    <div class="demo-section">
+      <h2>2. JavaScript API (Programmatic Control)</h2>
+      <p>Use the JavaScript API for dynamic control and event handling.</p>
+      
+      <div class="code-example">
+// Initialize chatbot programmatically
+const chatbot = new ByteWiseChatbot('#chatbot-container', {
+  theme: 'corporate',
+  width: 400,
+  height: 600,
+  apiProvider: 'hkbu',
+  enableVoice: true,
+  systemPrompt: 'You are a helpful customer service assistant.'
+});
+
+// Listen for events
+chatbot.on('ready', (data) => console.log('Chatbot ready:', data));
+chatbot.on('message', (data) => console.log('Message:', data));
+chatbot.on('error', (error) => console.error('Error:', error));
+      </div>
+      
+      <div class="demo-grid">
+        <div>
+          <div id="js-chatbot-container" class="chatbot-container">
+            <p style="color: #666;">Click "Initialize" to load chatbot</p>
+          </div>
+          
+          <div class="controls">
+            <button id="init-chatbot">Initialize Chatbot</button>
+            <button id="destroy-chatbot" disabled>Destroy</button>
+            <button id="send-test-message" disabled>Send Test Message</button>
+          </div>
+          
+          <div id="chatbot-status" class="status info" style="display: none;"></div>
+        </div>
+        
+        <div>
+          <h3>Configuration</h3>
+          <div style="display: grid; gap: 0.5rem; margin-bottom: 1rem;">
+            <label>
+              Theme: 
+              <select id="theme-select">
+                <option value="default">Default</option>
+                <option value="corporate">Corporate</option>
+                <option value="minimal">Minimal</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+            
+            <label>
+              Width: 
+              <input type="number" id="width-input" value="400" min="300" max="800">
+            </label>
+            
+            <label>
+              Height: 
+              <input type="number" id="height-input" value="600" min="400" max="900">
+            </label>
+            
+            <label>
+              <input type="checkbox" id="voice-checkbox" checked> Enable Voice
+            </label>
+            
+            <label>
+              <input type="checkbox" id="typing-checkbox" checked> Enable Typing
+            </label>
+            
+            <label>
+              <input type="checkbox" id="auto-resize-checkbox" checked> Auto Resize
+            </label>
+          </div>
+          
+          <button id="update-config" disabled>Update Configuration</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Advanced Features -->
+    <div class="demo-section">
+      <h2>3. Advanced Features</h2>
+      <p>Demonstration of advanced chatbot features and integrations.</p>
+      
+      <div class="demo-grid">
+        <div>
+          <div id="advanced-chatbot-container" class="chatbot-container">
+            <div data-bytewise-chatbot
+                 data-chatbot-src="./iframe-host.html"
+                 data-chatbot-theme="dark"
+                 data-chatbot-width="380"
+                 data-chatbot-height="580"
+                 data-chatbot-system-prompt="You are an expert coding assistant specialized in Vue.js and JavaScript."
+                 data-chatbot-enable-voice="true"
+                 data-chatbot-enable-email="true">
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <h3>Features Demonstrated:</h3>
+          <ul>
+            <li>🌙 Dark theme</li>
+            <li>🎤 Voice input enabled</li>
+            <li>📧 Email integration</li>
+            <li>💻 Custom system prompt (coding assistant)</li>
+            <li>🔄 Auto-resize functionality</li>
+          </ul>
+          
+          <h3>Event Log:</h3>
+          <div id="event-log" style="
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 1rem;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.8rem;
+          "></div>
+          
+          <button id="clear-log" style="margin-top: 0.5rem;">Clear Log</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Integration Examples -->
+    <div class="demo-section">
+      <h2>4. Integration Code Examples</h2>
+      
+      <h3>React Integration</h3>
+      <div class="code-example">
+import React, { useEffect, useRef } from 'react';
+
+function ChatbotComponent({ config = {} }) {
+  const containerRef = useRef(null);
+  const chatbotRef = useRef(null);
+  
+  useEffect(() => {
+    if (containerRef.current && !chatbotRef.current) {
+      chatbotRef.current = new ByteWiseChatbot(containerRef.current, {
+        theme: 'default',
+        width: 400,
+        height: 600,
+        ...config
+      });
+      
+      chatbotRef.current.on('ready', handleReady);
+      chatbotRef.current.on('message', handleMessage);
+    }
+    
+    return () => {
+      if (chatbotRef.current) {
+        chatbotRef.current.destroy();
+      }
+    };
+  }, []);
+  
+  return &lt;div ref={containerRef} /&gt;;
+}
+      </div>
+      
+      <h3>Vue 3 Integration</h3>
+      <div class="code-example">
+&lt;template&gt;
+  &lt;div ref="chatbotContainer"&gt;&lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script setup&gt;
+import { ref, onMounted, onUnmounted } from 'vue';
+
+const chatbotContainer = ref(null);
+let chatbot = null;
+
+onMounted(() => {
+  chatbot = new ByteWiseChatbot(chatbotContainer.value, {
+    theme: 'default',
+    width: 400,
+    height: 600,
+    apiProvider: 'hkbu'
+  });
+  
+  chatbot.on('ready', handleReady);
+  chatbot.on('message', handleMessage);
+});
+
+onUnmounted(() => {
+  if (chatbot) {
+    chatbot.destroy();
+  }
+});
+&lt;/script&gt;
+      </div>
+      
+      <h3>WordPress Integration</h3>
+      <div class="code-example">
+&lt;?php
+// Add to functions.php
+function add_bytewise_chatbot() {
+    wp_enqueue_script('bytewise-chatbot', 
+        'https://chatbot.bytewise.ai/chatbot-embedder.js', 
+        array(), '1.0', true);
+}
+add_action('wp_enqueue_scripts', 'add_bytewise_chatbot');
+
+// Add shortcode
+function bytewise_chatbot_shortcode($atts) {
+    $atts = shortcode_atts(array(
+        'theme' => 'default',
+        'width' => 400,
+        'height' => 600,
+        'voice' => 'true'
+    ), $atts);
+    
+    return sprintf(
+        '&lt;div data-bytewise-chatbot data-chatbot-theme="%s" data-chatbot-width="%d" data-chatbot-height="%d" data-chatbot-enable-voice="%s"&gt;&lt;/div&gt;',
+        esc_attr($atts['theme']),
+        intval($atts['width']),
+        intval($atts['height']),
+        esc_attr($atts['voice'])
+    );
+}
+add_shortcode('bytewise_chatbot', 'bytewise_chatbot_shortcode');
+?&gt;
+
+&lt;!-- Usage in posts/pages --&gt;
+[bytewise_chatbot theme="corporate" width="450" height="650" voice="true"]
+      </div>
+    </div>
+  </div>
+
+  <!-- Load the chatbot embedder script -->
+  <script src="./chatbot-embedder.js"></script>
+  
+  <!-- JavaScript for interactive examples -->
+  <script>
+    let programmaticChatbot = null;
+    const eventLog = document.getElementById('event-log');
+    
+    function logEvent(message) {
+      const timestamp = new Date().toLocaleTimeString();
+      eventLog.innerHTML += `[${timestamp}] ${message}\n`;
+      eventLog.scrollTop = eventLog.scrollHeight;
+    }
+    
+    // Initialize programmatic chatbot
+    document.getElementById('init-chatbot').addEventListener('click', () => {
+      if (programmaticChatbot) return;
+      
+      const config = {
+        src: './iframe-host.html',
+        theme: document.getElementById('theme-select').value,
+        width: parseInt(document.getElementById('width-input').value),
+        height: parseInt(document.getElementById('height-input').value),
+        enableVoice: document.getElementById('voice-checkbox').checked,
+        enableTyping: document.getElementById('typing-checkbox').checked,
+        autoResize: document.getElementById('auto-resize-checkbox').checked
+      };
+      
+      programmaticChatbot = new ByteWiseChatbot('#js-chatbot-container', config);
+      
+      // Event listeners
+      programmaticChatbot.on('ready', (data) => {
+        logEvent('✅ Chatbot ready: ' + JSON.stringify(data));
+        document.getElementById('chatbot-status').textContent = 'Chatbot is ready!';
+        document.getElementById('chatbot-status').className = 'status success';
+        document.getElementById('chatbot-status').style.display = 'block';
+      });
+      
+      programmaticChatbot.on('message', (data) => {
+        logEvent('💬 Message sent: ' + data.content);
+      });
+      
+      programmaticChatbot.on('error', (error) => {
+        logEvent('❌ Error: ' + error.message);
+        document.getElementById('chatbot-status').textContent = 'Error: ' + error.message;
+        document.getElementById('chatbot-status').className = 'status error';
+        document.getElementById('chatbot-status').style.display = 'block';
+      });
+      
+      programmaticChatbot.on('resize-request', (data) => {
+        logEvent(`📏 Resize request: ${data.width}x${data.height} (${data.reason})`);
+      });
+      
+      // Update button states
+      document.getElementById('init-chatbot').disabled = true;
+      document.getElementById('destroy-chatbot').disabled = false;
+      document.getElementById('send-test-message').disabled = false;
+      document.getElementById('update-config').disabled = false;
+    });
+    
+    // Destroy chatbot
+    document.getElementById('destroy-chatbot').addEventListener('click', () => {
+      if (programmaticChatbot) {
+        programmaticChatbot.destroy();
+        programmaticChatbot = null;
+        
+        logEvent('🗑️ Chatbot destroyed');
+        document.getElementById('chatbot-status').style.display = 'none';
+        
+        // Reset button states
+        document.getElementById('init-chatbot').disabled = false;
+        document.getElementById('destroy-chatbot').disabled = true;
+        document.getElementById('send-test-message').disabled = true;
+        document.getElementById('update-config').disabled = true;
+      }
+    });
+    
+    // Send test message
+    document.getElementById('send-test-message').addEventListener('click', () => {
+      if (programmaticChatbot) {
+        programmaticChatbot.injectMessage('Hello! This is a test message from the parent page.');
+        logEvent('📤 Test message injected');
+      }
+    });
+    
+    // Update configuration
+    document.getElementById('update-config').addEventListener('click', () => {
+      if (programmaticChatbot) {
+        const newConfig = {
+          theme: document.getElementById('theme-select').value,
+          enableVoice: document.getElementById('voice-checkbox').checked,
+          enableTyping: document.getElementById('typing-checkbox').checked
+        };
+        
+        programmaticChatbot.updateConfig(newConfig);
+        logEvent('⚙️ Configuration updated: ' + JSON.stringify(newConfig));
+      }
+    });
+    
+    // Clear event log
+    document.getElementById('clear-log').addEventListener('click', () => {
+      eventLog.innerHTML = '';
+    });
+    
+    // Advanced chatbot event logging
+    document.addEventListener('DOMContentLoaded', () => {
+      // Find all auto-initialized chatbots and add event logging
+      setTimeout(() => {
+        window.addEventListener('message', (event) => {
+          if (event.data && event.data.source === 'bytewise-chatbot') {
+            logEvent(`🔄 Event: ${event.data.type} - ${JSON.stringify(event.data.data)}`);
+          }
+        });
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
