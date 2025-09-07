@@ -95,7 +95,15 @@
 | proactive-blessing          | Unknown                                   | Unknown                      | ❓ Need to verify     |
 | zucchini-reprieve           | `Bob8259/new-bytewise-backend` (likely) | Unknown                      | ❓ Need to verify     |
 
----
+
+let's do the avatar and text-based chatbot development separately 
+
+avatartutor.hkbu.tech is still linked to https://github.com/Bob8259/new-bytewise-frontend 
+
+
+aitutor.hkbu.tech will be linked to https://github.com/tesolchina/AItutor_text which will be texts-based customised chatbot (no speech or video supported) 
+
+
 
 
 
