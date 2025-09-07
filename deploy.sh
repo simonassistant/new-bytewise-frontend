@@ -47,20 +47,14 @@ echo -e "${YELLOW}⚙️  Setting environment variables for ${ENVIRONMENT}...${N
 
 case $ENVIRONMENT in
     "production")
-        railway variables set NODE_ENV=production
-        railway variables set VITE_APP_DOMAIN=https://avatartutor.hkbu.tech
-        railway variables set VITE_API_BASE_URL=https://new-bytewise-backend-production-8c33.up.railway.app/api
-        railway variables set VITE_APP_TITLE="ByteWise Avatar Tutor"
+        railway variables --set "NODE_ENV=production" --set "VITE_APP_DOMAIN=https://avatartutor.hkbu.tech" --set "VITE_API_BASE_URL=https://new-bytewise-backend-production-8c33.up.railway.app/api" --set "VITE_APP_TITLE=ByteWise Avatar Tutor"
         ;;
     "staging")
-        railway variables set NODE_ENV=staging
-        railway variables set VITE_APP_DOMAIN=https://avatar-test.hkbu.tech
-        railway variables set VITE_API_BASE_URL=https://new-bytewise-backend-production-8c33.up.railway.app/api
-        railway variables set VITE_APP_TITLE="ByteWise Avatar Tutor (Test)"
+        railway variables --set "NODE_ENV=staging" --set "VITE_APP_DOMAIN=https://avatar-test.hkbu.tech" --set "VITE_API_BASE_URL=https://new-bytewise-backend-production-8c33.up.railway.app/api" --set "VITE_APP_TITLE=ByteWise Avatar Tutor (Test)"
         ;;
     *)
         echo -e "${YELLOW}⚠️  Unknown environment: ${ENVIRONMENT}, using production defaults${NC}"
-        railway variables set NODE_ENV=production
+        railway variables --set "NODE_ENV=production"
         ;;
 esac
 
@@ -68,7 +62,7 @@ echo -e "${GREEN}✅ Environment variables set${NC}"
 
 # Show current variables
 echo -e "${YELLOW}📊 Current environment variables:${NC}"
-railway variables list
+railway variables
 
 # Deploy
 echo -e "${YELLOW}📦 Building and deploying...${NC}"
@@ -84,15 +78,15 @@ if railway up --detach; then
     # Show recent logs
     echo -e "${YELLOW}📝 Recent deployment logs:${NC}"
     sleep 5  # Wait a moment for deployment to start
-    railway logs --lines 50
+    railway logs -b
     
     echo -e "${GREEN}🎉 Deployment completed!${NC}"
-    echo -e "${BLUE}Monitor logs with: railway logs --tail${NC}"
+    echo -e "${BLUE}Monitor logs with: railway logs -b${NC}"
     echo -e "${BLUE}Check status with: railway status${NC}"
     
 else
     echo -e "${RED}❌ Deployment failed!${NC}"
     echo -e "${YELLOW}📝 Error logs:${NC}"
-    railway logs --lines 20
+    railway logs -b
     exit 1
 fi

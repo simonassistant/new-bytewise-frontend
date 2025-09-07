@@ -52,12 +52,11 @@ case "$1" in
         ;;
     "vars")
         echo -e "${YELLOW}⚙️  Environment variables:${NC}"
-        railway variables list
+        railway variables
         ;;
     "logs")
-        LINES=${2:-50}
-        echo -e "${YELLOW}📝 Showing last $LINES log lines:${NC}"
-        railway logs --lines $LINES
+        echo -e "${YELLOW}📝 Build logs:${NC}"
+        railway logs -b
         ;;
     "domain")
         echo -e "${YELLOW}🌐 Domain configuration:${NC}"

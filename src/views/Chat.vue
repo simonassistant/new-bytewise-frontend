@@ -78,40 +78,34 @@
           </div>
         </div>
 
-        <!-- Token Usage Counter -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 class="font-semibold text-blue-800 mb-3">
-            📊 Token Usage
+        <!-- Context Window Indicator -->
+        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <h3 class="font-semibold text-orange-800 mb-3">
+            🪟 Context Window
           </h3>
           <div class="space-y-2">
             <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Session Total:</span>
-              <span class="font-mono font-semibold text-blue-700">
-                {{ formatNumber(sessionTokens) }}
+              <span class="text-gray-600">Current Usage:</span>
+              <span class="font-mono font-semibold text-orange-700">
+                {{ formatNumber(calculateContextUsage()) }}
               </span>
             </div>
             <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Monthly Limit ({{ model }}):</span>
+              <span class="text-gray-600">Model Limit:</span>
               <span class="font-mono text-gray-500">
-                {{ formatNumber(getCurrentModelLimit()) }}
+                {{ formatNumber(getCurrentContextLimit()) }}
               </span>
             </div>
             <div class="w-full bg-gray-200 rounded-full h-1.5 mt-2">
               <div 
-                class="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
-                :style="{ width: getUsagePercentage() + '%' }"
+                class="h-1.5 rounded-full transition-all duration-300"
+                :class="getContextUsagePercentage() > 80 ? 'bg-red-500' : getContextUsagePercentage() > 60 ? 'bg-yellow-500' : 'bg-green-500'"
+                :style="{ width: getContextUsagePercentage() + '%' }"
               ></div>
             </div>
             <div class="text-xs text-gray-500 text-center">
-              Session usage only • Resets on new session
+              Model: {{ displayModelName }} • Context resets when conversation is too long
             </div>
-            <!-- Test Button -->
-            <button 
-              @click="testTokenCounter" 
-              class="w-full mt-2 px-3 py-1 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded border border-green-300"
-            >
-              🧪 Test Counter (+100 tokens)
-            </button>
           </div>
         </div>
 
@@ -179,16 +173,31 @@
           </button>
         </div>
       </div>
-      <!-- Chat Messages with WeChat-style bubbles -->
+      <!-- Chat Messages with simple message bubbles -->
       <div class="chat-messages flex-1 overflow-y-auto p-5" ref="chatContainer">
-        <ChatBubble
+        <!-- Simple message display replacing ChatBubble -->
+        <div
           v-for="(msg, i) in displayedMessages"
           :key="i"
-          :message="msg.content"
-          :isUser="msg.role === 'user'"
-          :timestamp="msg.timestamp"
-          :userName="msg.role === 'user' ? 'You' : selectedBot.name"
-        />
+          :class="['message-bubble mb-4 flex', msg.role === 'user' ? 'justify-end' : 'justify-start']"
+        >
+          <div
+            :class="[
+              'max-w-[75%] p-3 rounded-lg shadow',
+              msg.role === 'user' 
+                ? 'bg-indigo-500 text-white rounded-br-sm' 
+                : 'bg-white border rounded-bl-sm'
+            ]"
+          >
+            <div class="text-sm mb-1 opacity-75">
+              {{ msg.role === 'user' ? 'You' : selectedBot.name }}
+            </div>
+            <div class="whitespace-pre-wrap">{{ msg.content }}</div>
+            <div class="text-xs mt-2 opacity-60">
+              {{ msg.timestamp.toLocaleTimeString() }}
+            </div>
+          </div>
+        </div>
         <!-- Typing indicator (if assistant is responding) -->
         <div v-if="isLoading" class="typing-indicator">
           <div class="typing-bubble">
@@ -213,16 +222,8 @@
           Mode: {{ conversationState.mode }} • Step: {{ conversationState.step }}<span v-if="conversationState.topic"> • Topic: {{ conversationState.topic }}</span>
         </div>
 
-        <!-- Input Mode Toggle -->
-        <div class="mb-4">
-          <InputModeToggle 
-            :initialMode="inputMode"
-            @mode-changed="handleModeChange"
-          />
-        </div>
-
-        <!-- Text Input (shown when typing mode) -->
-        <div v-if="inputMode === 'typing'" class="chat-input-wrapper flex items-end gap-3">
+        <!-- Text Input (always typing mode) -->
+        <div class="chat-input-wrapper flex items-end gap-3">
           <textarea
             v-model="messageInput"
             placeholder="Type your message..."
@@ -252,29 +253,6 @@
               ✓
             </button>
           </div>
-        </div>
-
-        <!-- Voice Input (shown when voice mode) -->
-        <div v-else class="voice-input-wrapper flex items-center justify-center gap-4">
-          <button
-            class="voice-record-btn px-8 py-4 rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 disabled:bg-gray-300 shadow-lg transition transform hover:scale-105"
-            :disabled="!isConnected"
-            @click="toggleVoiceRecording"
-            :class="{ 'recording': isRecording }"
-          >
-            <span class="text-2xl">{{ isRecording ? '⏹️' : '🎤' }}</span>
-            <span class="ml-2">{{ isRecording ? 'Stop Recording' : 'Start Recording' }}</span>
-          </button>
-          <button
-            class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow transition transform hover:scale-105"
-            :disabled="
-              !chatHistory || chatHistory.length === 0
-            "
-            @click="showReport = true"
-            title="Finish & View Report"
-          >
-            ✓ Report
-          </button>
         </div>
       </div>
     </div>
@@ -333,6 +311,22 @@ const chatbotStore = useChatbotStore();
 
 const selectedBot = computed(() => chatbotStore.availableBots.find(b => b.id === props.botId));
 
+// Computed property for user-friendly model display
+const displayModelName = computed(() => {
+  const modelName = model.value || 'google/gemini-flash-1.5';
+  console.log('🎯 displayModelName computed - raw model.value:', model.value, 'fallback modelName:', modelName);
+  const friendlyNames = {
+    'google/gemini-flash-1.5': 'Google Gemini Flash 1.5',
+    'anthropic/claude-3-sonnet': 'Claude 3 Sonnet',
+    'meta-llama/llama-2-70b-chat': 'Llama 2 70B',
+    'gpt-4': 'GPT-4',
+    'gpt-4-turbo': 'GPT-4 Turbo'
+  };
+  const result = friendlyNames[modelName] || modelName;
+  console.log('🎯 Final display name result:', result);
+  return result;
+});
+
 const chatHistory = ref([]);
 const MAX_RENDERED_MESSAGES = 200; // limit DOM nodes for memory optimization
 const MAX_STORED_MESSAGES = 1000; // hard cap to prevent unbounded growth
@@ -352,24 +346,23 @@ const messageInput = ref("");
 const showReport = ref(false);
 const isSidebarOpen = ref(true);
 
-// Sprint 1: New data properties for avatar and input mode
-const inputMode = ref('typing'); // 'typing' or 'voice'
-const isRecording = ref(false);
+// Sprint 1: Data properties for input mode (text-based only)
 const isLoading = ref(false);
 const chatContainer = ref(null);
 const textareaRef = ref(null);
 
 // Token counter variables
 const sessionTokens = ref(0);
-const MODEL_LIMITS = {
-  'gpt-4.1': 3000000,
-  'gpt-4.1-mini': 15000000,
-  'gpt-4.1-turbo': 3000000,
-  'gpt-3.5-turbo': 15000000,
-  'gpt-5': 3000000,
-  'gpt-5-mini': 15000000,
-  'o1': 400000,
-  'o3-mini': 5500000
+
+// Context window limits for different models
+const CONTEXT_LIMITS = {
+  'gpt-4': 8192,
+  'gpt-4-turbo': 128000,
+  'gpt-3.5-turbo': 16384,
+  'google/gemini-flash-1.5': 32000,
+  'anthropic/claude-3-sonnet': 200000,
+  'meta-llama/llama-2-70b-chat': 4096,
+  'default': 32000  // Default to Gemini Flash 1.5 context window
 };
 
 // Add conversation state management
@@ -387,21 +380,42 @@ const API_KEY_STORAGE_KEY = 'chatbot_api_key';
 
 // UPDATED onMounted with corrected order of operations
 onMounted(async () => {
+  
+  console.log('🚀 onMounted: Starting bot loading process...');
+  
+  // Clear any problematic localStorage data if needed
+  if (localStorage.getItem('chatbot_api_key') === 'hkbu') {
+    console.log('🧹 Clearing problematic hkbu API key from localStorage');
+    localStorage.removeItem('chatbot_api_key');
+  }
     
   // 1. Load bot configs FIRST, so we have the data we need.
+  console.log('📦 Loading bot configs...');
   await chatbotStore.loadBots();
+  console.log('📦 Available bots:', chatbotStore.availableBots.map(b => ({ id: b.id, name: b.name, model: b.model })));
 
   // Redirect if the bot is not valid
   if (!selectedBot.value) {
+    console.log('❌ No selected bot found, redirecting to home');
     router.push('/');
     return;
   }
+  
+  console.log('🤖 Selected bot:', { 
+    id: selectedBot.value.id, 
+    name: selectedBot.value.name, 
+    model: selectedBot.value.model 
+  });
   
   // 2. Populate component state from the loaded bot config.
   // Now welcomePrompt.value will have the correct text.
   systemPrompt.value = selectedBot.value.systemPrompt;
   welcomePrompt.value = selectedBot.value.welcomePrompt;
   model.value = selectedBot.value.model;
+  
+  console.log('✅ Model set to:', model.value);
+  console.log('✅ System prompt length:', systemPrompt.value?.length || 0);
+  console.log('✅ Welcome prompt:', welcomePrompt.value?.substring(0, 50) + '...');
 
   // 3. Load saved chat history.
   const saved = localStorage.getItem(STORAGE_KEY.value);
@@ -824,6 +838,14 @@ RECENT CONVERSATION CONTEXT:\n${recentMessages}`;
 function startNewSession() {
   chatHistory.value = [];
   sessionTokens.value = 0; // Reset token counter
+  
+  // Clear problematic localStorage entries
+  if (localStorage.getItem('chatbot_api_key') === 'hkbu') {
+    localStorage.removeItem('chatbot_api_key');
+    apiKey.value = "";
+    isConnected.value = false;
+  }
+  
   // Reset conversation state
   conversationState.value = {
     mode: 'welcome',
@@ -858,16 +880,6 @@ function formatNumber(num) {
     return (num / 1000).toFixed(1) + 'K';
   }
   return num.toString();
-}
-
-function getCurrentModelLimit() {
-  return MODEL_LIMITS[model.value] || 0;
-}
-
-function getUsagePercentage() {
-  const limit = getCurrentModelLimit();
-  if (limit === 0) return 0;
-  return Math.min((sessionTokens.value / limit) * 100, 100);
 }
 
 function updateTokenCounter(tokens) {
@@ -907,11 +919,30 @@ function updateTokenCounter(tokens) {
   }
 }
 
-// Test function for token counter
-function testTokenCounter() {
-  console.log('🧪 Testing token counter with 100 tokens');
-  updateTokenCounter(100);
-  notify('Added 100 test tokens to counter', 'success');
+// Context window calculation functions
+function getCurrentContextLimit() {
+  const currentModel = model.value || 'default';
+  return CONTEXT_LIMITS[currentModel] || CONTEXT_LIMITS['default'];
+}
+
+function calculateContextUsage() {
+  if (!chatHistory.value || chatHistory.value.length === 0) return 0;
+  
+  let totalTokens = 0;
+  chatHistory.value.forEach(message => {
+    // Rough estimation: 1 token ≈ 0.75 words, 1 word ≈ 5 characters
+    const text = message.message || '';
+    const wordCount = text.split(/\s+/).filter(word => word.length > 0).length;
+    totalTokens += Math.ceil(wordCount * 1.33); // Convert words to tokens
+  });
+  
+  return totalTokens;
+}
+
+function getContextUsagePercentage() {
+  const contextUsage = calculateContextUsage();
+  const contextLimit = getCurrentContextLimit();
+  return Math.min((contextUsage / contextLimit) * 100, 100);
 }
 
 function adjustTextareaHeight() {
@@ -960,39 +991,6 @@ function trimForContext(text, maxLen = 1200) {
 function summarizeForInline(text, maxLen = 300) {
   const t = text.replace(/\s+/g, ' ').trim();
   return t.length > maxLen ? `${t.slice(0, maxLen - 3)}...` : t;
-}
-
-// Sprint 1: New methods for input mode and voice functionality
-function handleModeChange(newMode) {
-  console.log('Input mode changed to:', newMode);
-  inputMode.value = newMode;
-  
-  // Reset any active recording when switching modes
-  if (isRecording.value) {
-    isRecording.value = false;
-  }
-  
-  // Auto-scroll to latest message when mode changes
-  scrollToBottom();
-}
-
-function toggleVoiceRecording() {
-  if (!isConnected.value) {
-    notify("Please connect your API key first", "error");
-    return;
-  }
-  
-  if (isRecording.value) {
-    // Stop recording
-    isRecording.value = false;
-    // TODO: In Sprint 3, this will integrate with actual voice recording
-    notify("Voice recording stopped (placeholder)", "info");
-  } else {
-    // Start recording
-    isRecording.value = true;
-    // TODO: In Sprint 3, this will integrate with actual voice recording
-    notify("Voice recording started (placeholder)", "info");
-  }
 }
 
 function scrollToBottom() {
