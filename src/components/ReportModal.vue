@@ -1,20 +1,32 @@
 <template>
-  <div
-    v-if="show"
-    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-  >
-    <div
-      class="bg-white w-full max-w-3xl rounded-lg shadow-xl p-6 overflow-y-auto max-h-[90vh]"
-    >
+  <div v-if="show" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white w-full max-w-3xl rounded-lg shadow-xl p-6 overflow-y-auto max-h-[90vh]">
       <!-- Header -->
       <div class="flex justify-between items-center border-b pb-3 mb-4">
         <h2 class="text-lg font-bold">📊 Learning Session Report</h2>
-        <button
-          class="text-gray-500 hover:text-gray-700 text-2xl"
-          @click="$emit('close')"
-        >
+        <button class="text-gray-500 hover:text-gray-700 text-2xl" @click="$emit('close')">
           &times;
         </button>
+      </div>
+
+      <!-- User Input Section -->
+      <div class="mb-6 p-4 bg-gray-50 rounded-lg border">
+        <h3 class="text-md font-semibold mb-3 text-gray-700">📧 Email Settings</h3>
+        <div class="space-y-3">
+          <div>
+            <label for="studentEmail" class="block text-sm font-medium text-gray-700 mb-1">
+              Your Email Address:
+            </label>
+            <input
+              id="studentEmail"
+              v-model="student_email"
+              type="email"
+              placeholder="Enter your email address"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+        </div>
       </div>
 
       <!-- Report Body -->
@@ -23,10 +35,12 @@
       <!-- Footer -->
       <div class="mt-6 flex flex-wrap justify-end gap-1">
         <button
-          class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
+          class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
           @click="sendReportByEmail"
+          :disabled="emailSending || !isValidEmail(student_email)"
         >
-          📧 Send Report
+          <span v-if="emailSending">⏳ Sending...</span>
+          <span v-else>📧 Send Report</span>
         </button>
         <button
           class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
@@ -96,11 +110,7 @@ function createReport(history) {
   const now = new Date();
   const duration =
     history.length > 0
-      ? Math.round(
-          (history[history.length - 1].timestamp - history[0].timestamp) /
-            1000 /
-            60
-        )
+      ? Math.round((history[history.length - 1].timestamp - history[0].timestamp) / 1000 / 60)
       : 0;
 
   const userMessages = history.filter((m) => m.role === "user");
@@ -168,11 +178,9 @@ function analyzeContribution(userMessages) {
   if (!userMessages.length) return "No user messages to analyze.";
 
   const avgLength =
-    userMessages.reduce((sum, msg) => sum + msg.content.length, 0) /
-    userMessages.length;
+    userMessages.reduce((sum, msg) => sum + msg.content.length, 0) / userMessages.length;
   const questionsRatio =
-    userMessages.filter((msg) => msg.content.includes("?")).length /
-    userMessages.length;
+    userMessages.filter((msg) => msg.content.includes("?")).length / userMessages.length;
 
   let analysis = "";
 
@@ -273,11 +281,7 @@ function downloadPDF() {
   const now = new Date();
   const duration =
     history.length > 0
-      ? Math.round(
-          (history[history.length - 1].timestamp - history[0].timestamp) /
-            1000 /
-            60
-        )
+      ? Math.round((history[history.length - 1].timestamp - history[0].timestamp) / 1000 / 60)
       : 0;
 
   doc.setFontSize(12);
@@ -359,9 +363,7 @@ function downloadPDF() {
   doc.text("simonwang@hkbu.edu.hk", 20, yPos);
 
   // Save PDF
-  doc.save(
-    `HKBU_Learning_Report_${new Date().toISOString().split("T")[0]}.pdf`
-  );
+  doc.save(`HKBU_Learning_Report_${new Date().toISOString().split("T")[0]}.pdf`);
 }
 
 function downloadMarkdown() {
@@ -370,9 +372,7 @@ function downloadMarkdown() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `HKBU_Learning_Report_${
-    new Date().toISOString().split("T")[0]
-  }.md`;
+  a.download = `HKBU_Learning_Report_${new Date().toISOString().split("T")[0]}.md`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -383,11 +383,7 @@ function createMarkdownReport(history) {
   const now = new Date();
   const duration =
     history.length > 0
-      ? Math.round(
-          (history[history.length - 1].timestamp - history[0].timestamp) /
-            1000 /
-            60
-        )
+      ? Math.round((history[history.length - 1].timestamp - history[0].timestamp) / 1000 / 60)
       : 0;
 
   let markdown = `# 📊 HKBU Learning Session Report
@@ -410,9 +406,7 @@ ${analyzeContribution(history.filter((m) => m.role === "user"))}
 
   history.forEach((msg) => {
     const role = msg.role === "user" ? "👤 **You**" : "🤖 **Assistant**";
-    markdown += `### ${role} (${msg.timestamp.toLocaleTimeString()})\n\n${
-      msg.content
-    }\n\n`;
+    markdown += `### ${role} (${msg.timestamp.toLocaleTimeString()})\n\n${msg.content}\n\n`;
   });
 
   markdown += `---
@@ -437,9 +431,7 @@ function copyReport() {
   document.body.removeChild(el);
 }
 
-const student_email = ref("23257024@life.hkbu.edu.hk");
-// const teacher_email = ref("simonwang@hkbu.edu.hk");
-const teacher_email = ref("2468668109@qq.com");
+const student_email = ref("");
 const emailSending = ref(false);
 const emailSent = ref(false);
 import { BASE_URL } from "../components/base_url";
@@ -450,6 +442,13 @@ function sendReportByEmail() {
     alert("No conversation to export");
     return;
   }
+
+  // Validate student email address
+  if (!isValidEmail(student_email.value)) {
+    alert("Please enter a valid email address");
+    return;
+  }
+
   emailSending.value = true;
 
   fetch(`${BASE_URL}/sendEmail/send-email`, {
@@ -457,7 +456,6 @@ function sendReportByEmail() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       student_email: student_email.value,
-      teacher_email: teacher_email.value,
       report_md: createMarkdownReport(history),
       report_history: history,
     }),
@@ -476,5 +474,11 @@ function sendReportByEmail() {
     .finally(() => {
       emailSending.value = false;
     });
+}
+
+// Email validation function
+function isValidEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
 </script>
