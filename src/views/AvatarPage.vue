@@ -283,7 +283,7 @@ function goBack() {
   router.push("/");
 }
 
-function connectAPI(isAutoConnect = false) {
+function connectAPI() {
   if (!apiKey.value) return;
   localStorage.setItem("chatbot_api_key", apiKey.value);
   isConnected.value = true;

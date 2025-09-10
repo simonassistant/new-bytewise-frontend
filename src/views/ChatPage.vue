@@ -127,9 +127,10 @@
         v-bind="{
           show: showReport,
           chatHistory,
-          userCount,
-          assistantCount,
-          botName: selectedBot.name,
+          // userCount,
+          // assistantCount,
+          // botName: selectedBot.name,
+          reportGenerationInstructions,
         }"
         @close="showReport = false"
       />
@@ -183,6 +184,7 @@ const apiKey = ref("");
 const systemPrompt = ref("");
 const welcomePrompt = ref("");
 const model = ref("");
+const reportGenerationInstructions = ref("");
 const isConnected = ref(false);
 const isSidebarOpen = ref(true);
 const userText = ref("");
@@ -209,10 +211,6 @@ function renderMarkdown(text) {
   console.log(text);
   return markdown.render(text || "");
 }
-const assistantCount = computed(
-  () => chatHistory.value.filter((m) => m.role === "assistant").length
-);
-const userCount = computed(() => chatHistory.value.filter((m) => m.role === "user").length);
 
 const tokenUsage = computed(() => {
   let total = 0;
@@ -236,6 +234,7 @@ onMounted(async () => {
     systemPrompt: systemPrompt.value,
     welcomePrompt: welcomePrompt.value,
     model: model.value,
+    reportGenerationInstructions: reportGenerationInstructions.value,
   } = selectedBot.value);
 
   const savedApiKey = localStorage.getItem("chatbot_api_key");

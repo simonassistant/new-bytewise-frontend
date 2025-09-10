@@ -1,8 +1,8 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/Home.vue'
-import Chat from '../views/Chat.vue'
-import Avatar from '../views/Avatar.vue'
+import Home from '../views/HomePage.vue'
+import Chat from '../views/ChatPage.vue'
+import Avatar from '../views/AvatarPage.vue'
 
 const routes = [
   {
@@ -11,7 +11,7 @@ const routes = [
     component: Home
   },
   {
-    // This is the new dynamic route. 
+    // This is the new dynamic route.
     // It captures part of the URL as a variable named 'botId'.
     path: '/chat/:botId',
     name: 'Chat',
@@ -20,7 +20,7 @@ const routes = [
     props: true
   },
   {
-    // This is the new dynamic route. 
+    // This is the new dynamic route.
     // It captures part of the URL as a variable named 'botId'.
     path: '/avatar/:avatarId',
     name: 'Avatar',
