@@ -83,6 +83,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  reportGenerationInstructions: {
+    type: String,
+    default: "",
+  },
 });
 const emit = defineEmits(["close"]);
 
@@ -123,11 +127,8 @@ function createReport(history) {
     <p><strong>Your Messages:</strong> ${userMessages.length}</p>
     <p><strong>Assistant Responses:</strong> ${assistantMessages.length}</p>
 
-    <h3>💡 Session Summary</h3>
-    <p>${generateSummary(history)}</p>
-
     <h3>📈 Your Contribution Analysis</h3>
-    <p>${analyzeContribution(userMessages)}</p>
+    <p>${await analyzeContribution(history)}</p>
 
     <h3>📝 Complete Conversation</h3>
     <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto;">
@@ -161,105 +162,102 @@ function createReport(history) {
   return report;
 }
 
-function generateSummary(history) {
-  const topics = extractTopics(history);
-  const questionsAsked = history.filter(
-    (msg) => msg.role === "user" && msg.content.includes("?")
-  ).length;
+// function generateSummary(history) {
+//   const topics = extractTopics(history);
+//   const questionsAsked = history.filter(
+//     (msg) => msg.role === "user" && msg.content.includes("?")
+//   ).length;
 
-  return `This learning session covered ${
-    topics.length > 0 ? topics.join(", ") : "various topics"
-  }. You asked ${questionsAsked} questions and engaged in ${Math.floor(
-    history.length / 2
-  )} conversation exchanges. The session demonstrated active learning through inquiry and discussion.`;
-}
+//   return `This learning session covered ${
+//     topics.length > 0 ? topics.join(", ") : "various topics"
+//   }. You asked ${questionsAsked} questions and engaged in ${Math.floor(
+//     history.length / 2
+//   )} conversation exchanges. The session demonstrated active learning through inquiry and discussion.`;
+// }
 
-function analyzeContribution(userMessages) {
-  if (!userMessages.length) return "No user messages to analyze.";
+async function analyzeContribution(userMessages, props) {
+  try {
+    const res = await fetch(`${BASE_URL}/chatbot/chat_openrouter`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        instructions: props.reportGenerationInstructions, // pass instructions
+        messages: userMessages, // pass chat history
+      }),
+    });
 
-  const avgLength =
-    userMessages.reduce((sum, msg) => sum + msg.content.length, 0) / userMessages.length;
-  const questionsRatio =
-    userMessages.filter((msg) => msg.content.includes("?")).length / userMessages.length;
+    const data = await res.json();
 
-  let analysis = "";
-
-  if (avgLength > 100) {
-    analysis += "You provided detailed and thoughtful messages. ";
-  } else if (avgLength > 50) {
-    analysis += "You engaged with good depth in your responses. ";
-  } else {
-    analysis += "You kept your messages concise and focused. ";
+    // Process and return chatbot response
+    return (
+      data?.choices?.[0]?.message?.content ||
+      data?.error ||
+      "[No response]"
+    );
+  } catch (err) {
+    console.error("Error analyzing contribution:", err);
+    return "[Request failed]";
   }
-
-  if (questionsRatio > 0.5) {
-    analysis += "You showed excellent curiosity by asking many questions. ";
-  } else if (questionsRatio > 0.2) {
-    analysis += "You balanced questions with statements effectively. ";
-  }
-
-  analysis +=
-    "Your engagement shows a positive learning attitude and willingness to explore topics deeply.";
-
-  return analysis;
 }
 
-function extractTopics(history) {
-  const commonWords = [
-    "the",
-    "a",
-    "an",
-    "and",
-    "or",
-    "but",
-    "in",
-    "on",
-    "at",
-    "to",
-    "for",
-    "of",
-    "with",
-    "by",
-    "is",
-    "are",
-    "was",
-    "were",
-    "be",
-    "been",
-    "have",
-    "has",
-    "had",
-    "do",
-    "does",
-    "did",
-    "will",
-    "would",
-    "could",
-    "should",
-    "can",
-    "may",
-    "might",
-    "must",
-  ];
+// function extractTopics(history) {
+//   const commonWords = [
+//     "the",
+//     "a",
+//     "an",
+//     "and",
+//     "or",
+//     "but",
+//     "in",
+//     "on",
+//     "at",
+//     "to",
+//     "for",
+//     "of",
+//     "with",
+//     "by",
+//     "is",
+//     "are",
+//     "was",
+//     "were",
+//     "be",
+//     "been",
+//     "have",
+//     "has",
+//     "had",
+//     "do",
+//     "does",
+//     "did",
+//     "will",
+//     "would",
+//     "could",
+//     "should",
+//     "can",
+//     "may",
+//     "might",
+//     "must",
+//   ];
 
-  const allWords = history
-    .filter((msg) => msg.role === "user")
-    .map((msg) => msg.content.toLowerCase())
-    .join(" ")
-    .replace(/[^\w\s]/g, "")
-    .split(" ")
-    .filter((word) => word.length > 3 && !commonWords.includes(word));
+//   const allWords = history
+//     .filter((msg) => msg.role === "user")
+//     .map((msg) => msg.content.toLowerCase())
+//     .join(" ")
+//     .replace(/[^\w\s]/g, "")
+//     .split(" ")
+//     .filter((word) => word.length > 3 && !commonWords.includes(word));
 
-  const wordCount = {};
-  allWords.forEach((word) => {
-    wordCount[word] = (wordCount[word] || 0) + 1;
-  });
+//   const wordCount = {};
+//   allWords.forEach((word) => {
+//     wordCount[word] = (wordCount[word] || 0) + 1;
+//   });
 
-  return Object.entries(wordCount)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([word]) => word);
-}
+//   return Object.entries(wordCount)
+//     .sort((a, b) => b[1] - a[1])
+//     .slice(0, 5)
+//     .map(([word]) => word);
+// }
 
 // ---------- Actions ----------
 function downloadPDF() {
@@ -388,17 +386,13 @@ function createMarkdownReport(history) {
 
   let markdown = `# 📊 HKBU Learning Session Report
 
-**Generated:** ${now.toLocaleString()}  
-**Duration:** ${duration} minutes  
+**Generated:** ${now.toLocaleString()}
+**Duration:** ${duration} minutes
 **Total Messages:** ${history.length}
-
-## 💡 Session Summary
-
-${generateSummary(history)}
 
 ## 📈 Your Contribution Analysis
 
-${analyzeContribution(history.filter((m) => m.role === "user"))}
+${await analyzeContribution(history)}
 
 ## 📝 Complete Conversation
 
@@ -410,8 +404,8 @@ ${analyzeContribution(history.filter((m) => m.role === "user"))}
   });
 
   markdown += `---
-*Created by: Dr. Simon Wang, Innovation Officer*  
-*Language Centre, Hong Kong Baptist University*  
+*Created by: Dr. Simon Wang, Innovation Officer*
+*Language Centre, Hong Kong Baptist University*
 *simonwang@hkbu.edu.hk*`;
 
   return markdown;
