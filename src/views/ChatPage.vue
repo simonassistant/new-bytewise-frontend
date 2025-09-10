@@ -208,7 +208,6 @@ function focusInput() {
   });
 }
 function renderMarkdown(text) {
-  console.log(text);
   return markdown.render(text || "");
 }
 

@@ -89,16 +89,22 @@ const props = defineProps({
   },
 });
 
-
 // timestamp
 const timestamp = ref("");
+const contributionAnalysis = ref("[Analyzing contribution...]");
 
 // update timestamp whenever modal is opened
 watch(
   () => props.show,
-  (val) => {
+  async (val) => {
     if (val) {
       timestamp.value = new Date().toLocaleString();
+
+      // only fetch once when shown
+      if (props.chatHistory.length) {
+        contributionAnalysis.value = "[Analyzing contribution...]";
+        contributionAnalysis.value = await analyzeContribution(props.chatHistory, props);
+      }
     }
   }
 );
@@ -128,7 +134,7 @@ function createReport(history) {
     <p><strong>Assistant Responses:</strong> ${assistantMessages.length}</p>
 
     <h3>📈 Your Contribution Analysis</h3>
-    <p>${analyzeContribution(history)}</p>
+    <p>${contributionAnalysis.value}</p>
 
     <h3>📝 Complete Conversation</h3>
     <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto;">
@@ -177,87 +183,31 @@ function createReport(history) {
 
 async function analyzeContribution(userMessages, props) {
   try {
+    const chat_history = [
+      {
+        role: "user",
+        content: `${props.reportGenerationInstructions} here are the chat history ${JSON.stringify(
+          userMessages
+        )}`,
+      },
+    ];
     const res = await fetch(`${BASE_URL}/chatbot/chat_openrouter`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        instructions: props.reportGenerationInstructions, // pass instructions
-        messages: userMessages, // pass chat history
+        chat_history,
+        api_key: "", // fill in if required
+        model_name: "gpt-4.1-mini",
       }),
     });
 
     const data = await res.json();
-
-    // Process and return chatbot response
-    return (
-      data?.choices?.[0]?.message?.content ||
-      data?.error ||
-      "[No response]"
-    );
+    return data?.choices?.[0]?.message?.content || data?.error || "[No response]";
   } catch (err) {
     console.error("Error analyzing contribution:", err);
     return "[Request failed]";
   }
 }
-
-// function extractTopics(history) {
-//   const commonWords = [
-//     "the",
-//     "a",
-//     "an",
-//     "and",
-//     "or",
-//     "but",
-//     "in",
-//     "on",
-//     "at",
-//     "to",
-//     "for",
-//     "of",
-//     "with",
-//     "by",
-//     "is",
-//     "are",
-//     "was",
-//     "were",
-//     "be",
-//     "been",
-//     "have",
-//     "has",
-//     "had",
-//     "do",
-//     "does",
-//     "did",
-//     "will",
-//     "would",
-//     "could",
-//     "should",
-//     "can",
-//     "may",
-//     "might",
-//     "must",
-//   ];
-
-//   const allWords = history
-//     .filter((msg) => msg.role === "user")
-//     .map((msg) => msg.content.toLowerCase())
-//     .join(" ")
-//     .replace(/[^\w\s]/g, "")
-//     .split(" ")
-//     .filter((word) => word.length > 3 && !commonWords.includes(word));
-
-//   const wordCount = {};
-//   allWords.forEach((word) => {
-//     wordCount[word] = (wordCount[word] || 0) + 1;
-//   });
-
-//   return Object.entries(wordCount)
-//     .sort((a, b) => b[1] - a[1])
-//     .slice(0, 5)
-//     .map(([word]) => word);
-// }
 
 // ---------- Actions ----------
 function downloadPDF() {
@@ -330,7 +280,7 @@ function downloadPDF() {
 
     // Message content
     // const cleanContent = msg.content.replace(/[^\x01-\x7F]/g, "");
-      const cleanContent = msg.content.replace("", "");
+    const cleanContent = msg.content.replace("", "");
     const lines = doc.splitTextToSize(cleanContent, 170);
     lines.forEach((line) => {
       if (yPos > 270) {
@@ -393,7 +343,7 @@ function createMarkdownReport(history) {
 
 ## 📈 Your Contribution Analysis
 
-${analyzeContribution(history)}
+${contributionAnalysis.value}
 
 ## 📝 Complete Conversation
 
@@ -420,7 +370,7 @@ function copyReport() {
   try {
     document.execCommand("copy");
     alert("Report copied to clipboard!");
-  } catch  {
+  } catch {
     alert("Failed to copy report");
   }
   document.body.removeChild(el);
