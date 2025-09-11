@@ -68,9 +68,9 @@
               {{ msgSenderLabel(msg.role) }}
             </div>
             <div
-              class="prose max-w-none break-words [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:whitespace-pre-wrap"
+              class="prose prose-sm max-w-none break-words [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:whitespace-pre-wrap [&_ol]:list-decimal [&_ol]:ml-6 [&_ul]:list-disc"
               v-html="renderMarkdown(msg.content)"
-            ></div>
+            />
             <div class="text-xs text-gray-400 mt-2 text-right">
               {{ msg.timestamp.toLocaleTimeString() }}
             </div>
@@ -85,7 +85,13 @@
           v-if="!isConnected && selectedProvider === 'hkbu'"
           class="absolute inset-0 flex items-center justify-center bg-white/70 text-gray-600 text-sm font-medium z-10"
         >
-          🔑 Please connect your API key first
+          🔑 Please connect your HKBU API key first
+        </div>
+        <div
+          v-else-if="!isConnected && selectedProvider === 'openrouter'"
+          class="absolute inset-0 flex items-center justify-center bg-white/70 text-gray-600 text-sm font-medium z-10"
+        >
+          🔑 Please connect to Open Router first
         </div>
 
         <div class="flex items-end space-x-2">
@@ -97,16 +103,14 @@
             rows="1"
             placeholder="Type your message..."
             class="flex-1 p-3 rounded-2xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 resize-none disabled:bg-gray-100"
-            :disabled="(!isConnected && selectedProvider === 'hkbu') || isLoading"
+            :disabled="!isConnected || isLoading"
             @input="autoResize"
           ></textarea>
 
           <button
             class="px-6 py-3 rounded-full bg-indigo-600 text-white font-bold shadow-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             @click="sendTextToChatbot"
-            :disabled="
-              (!isConnected && selectedProvider === 'hkbu') || !userText.trim() || isLoading
-            "
+            :disabled="!isConnected || !userText.trim() || isLoading"
           >
             Send
           </button>
@@ -127,9 +131,6 @@
         v-bind="{
           show: showReport,
           chatHistory,
-          // userCount,
-          // assistantCount,
-          // botName: selectedBot.name,
           reportGenerationInstructions,
         }"
         @close="showReport = false"
@@ -169,9 +170,13 @@ import { BASE_URL } from "../components/base_url";
 import LeftSidebar from "../components/avatar/LeftSidebar.vue";
 import ReportModal from "../components/ReportModal.vue";
 import MarkdownIt from "markdown-it";
-import MarkdownItKatex from "markdown-it-katex";
-const markdown = new MarkdownIt();
-markdown.use(MarkdownItKatex);
+
+// ✅ Only use markdown-it (no katex plugin)
+const markdown = new MarkdownIt({
+  html: false,        // disallow raw HTML in user messages
+  linkify: true,      // auto-detect URLs
+  typographer: true,  // nicer quotes & dashes
+});
 
 const props = defineProps({ botId: String });
 const router = useRouter();
@@ -302,10 +307,13 @@ async function sendTextToChatbot() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chat_history: chatHistory.value.map(({ role, content }) => ({
-          role,
-          content,
-        })),
+        chat_history: [
+          { role: "system", content: systemPrompt.value }, // wrap systemPrompt as system role
+          ...chatHistory.value.map(({ role, content }) => ({
+            role,
+            content,
+          })),
+        ],
         api_key: apiKey.value,
         model_name: model.value,
       }),
