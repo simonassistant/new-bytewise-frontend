@@ -173,9 +173,9 @@ import MarkdownIt from "markdown-it";
 
 // ✅ Only use markdown-it (no katex plugin)
 const markdown = new MarkdownIt({
-  html: false,        // disallow raw HTML in user messages
-  linkify: true,      // auto-detect URLs
-  typographer: true,  // nicer quotes & dashes
+  html: false, // disallow raw HTML in user messages
+  linkify: true, // auto-detect URLs
+  typographer: true, // nicer quotes & dashes
 });
 
 const props = defineProps({ botId: String });
@@ -286,6 +286,7 @@ function startNewSession() {
 }
 
 async function sendTextToChatbot() {
+  if (!userText.value.trim()) return;
   chatHistory.value.push(newMessage("user", userText.value));
   userText.value = "";
   scrollToBottom();
