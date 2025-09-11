@@ -14,7 +14,7 @@
         isConnected,
         tokenUsage,
         selectedProvider,
-        isLoading,
+        isConnecting,
       }"
       @update:isOpen="isSidebarOpen = $event"
       @update:apiKey="apiKey = $event"
@@ -205,6 +205,7 @@ const isConnected = ref(false);
 const isSidebarOpen = ref(true);
 const userText = ref("");
 const isLoading = ref(false);
+const isConnecting = ref(false);
 const showReport = ref(false);
 const selectedProvider = ref("hkbu");
 
@@ -277,7 +278,7 @@ async function connectAPI(auto = false) {
     localStorage.setItem("chatbot_api_key", apiKey.value);
     isConnected.value = true;
   }
-  isLoading.value = true;
+  isConnecting.value = true;
   // 🔍 test provider connection by sending a dummy message
   try {
     let providerUrl = "";
@@ -316,7 +317,7 @@ async function connectAPI(auto = false) {
     showNotification("❌ Failed to connect.", "error");
     isConnected.value = false;
   } finally {
-    isLoading.value = false;
+    isConnecting.value = false;
   }
 
   // welcome message only if chat is empty

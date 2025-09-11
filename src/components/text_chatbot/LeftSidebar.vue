@@ -74,14 +74,14 @@
         <button
           class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium"
           @click="$emit('connectAPI')"
-          :disabled="isLoading"
+          :disabled="isConnecting"
         >
-          {{ isLoading ? "🔄 Connecting..." : "✅ Connect" }}
+          {{ isConnecting ? "🔄 Connecting..." : "✅ Connect" }}
         </button>
         <button
           class="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm font-medium"
           @click="$emit('clearAPI')"
-          :disabled="isLoading"
+          :disabled="isConnecting"
         >
           🗑️ Clear
         </button>
@@ -131,7 +131,7 @@ defineProps({
   isConnected: Boolean,
   tokenUsage: Number,
   selectedProvider: String,
-  isLoading: Boolean,
+  isConnecting: Boolean,
 });
 
 defineEmits([

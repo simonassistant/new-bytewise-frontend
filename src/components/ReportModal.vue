@@ -242,23 +242,20 @@ function downloadPDF() {
   doc.text(`Total Messages: ${history.length}`, 20, yPos);
   yPos += 15;
 
-  // Session Summary
+  // ✅ Contribution Analysis (keep this)
   doc.setFontSize(14);
-  doc.text("Session Summary", 20, yPos);
+  doc.text("Your Contribution Analysis", 20, yPos);
   yPos += 7;
-
   doc.setFontSize(11);
-  // const summary = generateSummary(history).replace(/[^\x00-\x7F]/g, "");
-  // const summaryLines = doc.splitTextToSize(summary, 170);
-  // summaryLines.forEach((line) => {
-  //   if (yPos > 270) {
-  //     doc.addPage();
-  //     yPos = 20;
-  //   }
-  //   doc.text(line, 20, yPos);
-  //   yPos += 6;
-  // });
-
+  const analysisLines = doc.splitTextToSize(contributionAnalysis.value, 170);
+  analysisLines.forEach((line) => {
+    if (yPos > 270) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.text(line, 20, yPos);
+    yPos += 6;
+  });
   yPos += 10;
 
   // Conversation
@@ -273,17 +270,13 @@ function downloadPDF() {
       yPos = 20;
     }
 
-    // Role
     const role = msg.role === "user" ? "You:" : "Assistant:";
     doc.setFont(undefined, "bold");
     doc.text(role, 20, yPos);
     doc.setFont(undefined, "normal");
     yPos += 6;
 
-    // Message content
-    // const cleanContent = msg.content.replace(/[^\x01-\x7F]/g, "");
-    const cleanContent = msg.content.replace("", "");
-    const lines = doc.splitTextToSize(cleanContent, 170);
+    const lines = doc.splitTextToSize(msg.content, 170);
     lines.forEach((line) => {
       if (yPos > 270) {
         doc.addPage();
@@ -293,7 +286,6 @@ function downloadPDF() {
       yPos += 6;
     });
 
-    // Timestamp
     doc.setFontSize(9);
     doc.text(msg.timestamp.toLocaleTimeString(), 20, yPos);
     doc.setFontSize(11);
@@ -313,7 +305,6 @@ function downloadPDF() {
   yPos += 5;
   doc.text("simonwang@hkbu.edu.hk", 20, yPos);
 
-  // Save PDF
   doc.save(`HKBU_Learning_Report_${new Date().toISOString().split("T")[0]}.pdf`);
 }
 
@@ -416,6 +407,7 @@ function sendReportByEmail() {
       recipients, // <-- send as an array of email addresses
       report_md: createMarkdownReport(history),
       report_history: history,
+      contributionAnalysis: contributionAnalysis.value,
     }),
   })
     .then((response) => {
