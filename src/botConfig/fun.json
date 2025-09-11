@@ -4,5 +4,6 @@
   "welcomePrompt": "Hey there! 🎉 Ready for some fun?",
   "systemPrompt": "You are a witty, playful chatbot that tells jokes and entertains.",
   "reportGenerationInstructions": "Summarize the funniest parts of the conversation. If there were no jokes or fun elements, state that the conversation was straightforward.",
-  "model": "gpt-4.1-mini"
+  "model": "gpt-4.1-mini",
+  "teacherEmail": ["21253153@life.hkbu.edu.hk", "zhang_kt@hkbu.edu.hk"]
 }

@@ -85,7 +85,9 @@ const props = defineProps({
   },
   reportGenerationInstructions: {
     type: String,
-    default: "",
+  },
+  teacherEmail: {
+    type: Array,
   },
 });
 
@@ -396,11 +398,22 @@ function sendReportByEmail() {
 
   emailSending.value = true;
 
+  // Normalize teacherEmail (convert to array if needed)
+  let teacherEmails = Array.isArray(props.teacherEmail)
+    ? props.teacherEmail
+    : props.teacherEmail
+        .split(",")
+        .map((e) => e.trim())
+        .filter(Boolean);
+
+  // Combine student + teachers into one recipients list
+  const recipients = [student_email.value, ...teacherEmails];
+
   fetch(`${BASE_URL}/sendEmail/send-email`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      student_email: student_email.value,
+      recipients, // <-- send as an array of email addresses
       report_md: createMarkdownReport(history),
       report_history: history,
     }),
@@ -408,7 +421,9 @@ function sendReportByEmail() {
     .then((response) => {
       if (response.ok) {
         emailSent.value = true;
-        alert("Report sent successfully!");
+        alert(
+          "Report sent successfully! (It may take a few minutes to arrive, please check your spam folder)"
+        );
       } else {
         throw new Error("Failed to send email");
       }
