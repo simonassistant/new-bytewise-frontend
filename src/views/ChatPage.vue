@@ -14,6 +14,7 @@
         isConnected,
         tokenUsage,
         selectedProvider,
+        isLoading,
       }"
       @update:isOpen="isSidebarOpen = $event"
       @update:apiKey="apiKey = $event"
@@ -160,6 +161,14 @@
       <span class="text-white text-2xl font-semibold">Loading Chatbot...</span>
     </div>
   </div>
+  <!-- Notification -->
+  <div
+    v-if="notification.visible"
+    class="fixed top-5 right-5 z-50 px-4 py-3 rounded-lg shadow-lg text-white"
+    :class="notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'"
+  >
+    {{ notification.message }}
+  </div>
 </template>
 
 <script setup>
@@ -167,7 +176,7 @@ import { ref, computed, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useChatbotStore } from "../components/chatbotStore";
 import { BASE_URL } from "../components/base_url";
-import LeftSidebar from "../components/avatar/LeftSidebar.vue";
+import LeftSidebar from "../components/text_chatbot/LeftSidebar.vue";
 import ReportModal from "../components/ReportModal.vue";
 import MarkdownIt from "markdown-it";
 
@@ -199,6 +208,12 @@ const selectedProvider = ref("hkbu");
 
 const chatMessages = ref(null);
 const chatInput = ref(null);
+const notification = ref({ message: "", type: "success", visible: false });
+
+function showNotification(msg, type = "success") {
+  notification.value = { message: msg, type, visible: true };
+  setTimeout(() => (notification.value.visible = false), 3000);
+}
 
 function scrollToBottom() {
   nextTick(() => {
@@ -251,18 +266,58 @@ onMounted(async () => {
 
 const goBack = () => router.push("/");
 
-function connectAPI(auto = false) {
-  // ✅ If provider is openrouter, do not check or save API key
+async function connectAPI(auto = false) {
   if (selectedProvider.value === "openrouter") {
     isConnected.value = true;
   } else {
-    if (!apiKey.value && !auto) return; // only require API key for hkbu
+    if (!apiKey.value && !auto) return;
     localStorage.setItem("chatbot_api_key", apiKey.value);
     isConnected.value = true;
   }
+  isLoading.value = true;
+  // 🔍 test provider connection by sending a dummy message
+  try {
+    let providerUrl = "";
+    if (selectedProvider.value === "hkbu") {
+      providerUrl = `${BASE_URL}/chatbot/chat`;
+    } else if (selectedProvider.value === "openrouter") {
+      providerUrl = `${BASE_URL}/chatbot/chat_openrouter`;
+    }
 
-  // Welcome message only if chat is empty
-  if (!chatHistory.value.length) {
+    const res = await fetch(providerUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_history: [
+          { role: "system", content: "connection test, return 1 if you can read the text." },
+          { role: "user", content: "Hello!" },
+        ],
+        api_key: apiKey.value,
+        model_name: model.value,
+      }),
+    });
+
+    const data = await res.json();
+
+    // ✅ check if provider replied with content
+    const reply = data?.choices?.[0]?.message?.content || data?.response || data?.message || "";
+
+    if (reply && reply.trim().length > 0) {
+      showNotification("✅ Connected and working!", "success");
+    } else {
+      showNotification("⚠️ Connected, but no valid reply received.", "error");
+      isConnected.value = false;
+    }
+  } catch (err) {
+    console.error(err);
+    showNotification("❌ Failed to connect.", "error");
+    isConnected.value = false;
+  } finally {
+    isLoading.value = false;
+  }
+
+  // welcome message only if chat is empty
+  if (!chatHistory.value.length && isConnected.value) {
     chatHistory.value.push(newMessage("assistant", welcomePrompt.value));
     scrollToBottom();
   }

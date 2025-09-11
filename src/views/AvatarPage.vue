@@ -47,10 +47,7 @@
           >
             🔄 New Session
           </button>
-          <button
-            class="bg-white/20 px-3 py-1 rounded-lg hover:bg-white/30"
-            @click="goBack()"
-          >
+          <button class="bg-white/20 px-3 py-1 rounded-lg hover:bg-white/30" @click="goBack()">
             ⬅ Back
           </button>
         </div>
@@ -228,9 +225,7 @@ import ReportModal from "../components/ReportModal.vue";
 const props = defineProps({ avatarId: { type: String, required: true } });
 const router = useRouter();
 const chatbotStore = useChatbotStore();
-const selectedBot = computed(() =>
-  chatbotStore.availableBots.find((b) => b.id === props.avatarId)
-);
+const selectedBot = computed(() => chatbotStore.availableBots.find((b) => b.id === props.avatarId));
 const assistantCount = computed(
   () => chatHistory.value.filter((m) => m.role === "assistant").length
 );
@@ -257,9 +252,7 @@ let audioChunks = [];
 let socket = null;
 let chunks = [];
 
-const userCount = computed(
-  () => chatHistory.value.filter((m) => m.role === "user").length
-);
+const userCount = computed(() => chatHistory.value.filter((m) => m.role === "user").length);
 
 onMounted(async () => {
   await chatbotStore.loadBots();
@@ -457,10 +450,13 @@ async function sendTextToChatbot() {
       },
       body: JSON.stringify({
         // Corrected payload keys to match backend
-        chat_history: chatHistory.value.map((m) => ({
-          role: m.role,
-          content: m.content,
-        })),
+        chat_history: [
+          { role: "system", content: systemPrompt.value }, // wrap systemPrompt as system role
+          ...chatHistory.value.map(({ role, content }) => ({
+            role,
+            content,
+          })),
+        ],
         api_key: apiKey.value,
         model_name: model.value,
       }),
@@ -473,8 +469,7 @@ async function sendTextToChatbot() {
     const data = await response.json();
 
     // Extract the content from the API response
-    const assistantReply =
-      data?.choices?.[0]?.message?.content || data?.error || "[No response]";
+    const assistantReply = data?.choices?.[0]?.message?.content || data?.error || "[No response]";
 
     // Update the placeholder with the actual assistant reply
     chatHistory.value[assistantMessageIndex] = {
