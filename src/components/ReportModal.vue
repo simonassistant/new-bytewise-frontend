@@ -33,7 +33,7 @@
       <div class="prose max-w-none text-sm" v-html="reportHtml"></div>
 
       <!-- Footer -->
-      <div class="mt-6 flex flex-wrap justify-end gap-1">
+      <div class="mt-6 flex flex-wrap justify-end gap-1" v-if="!generatingAnalysis">
         <button
           class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
           @click="sendReportByEmail"
@@ -67,7 +67,9 @@
           Close
         </button>
       </div>
-
+      <div v-else class="mt-6 text-center text-gray-500">
+        ⏳ Generating analysis, please wait...
+      </div>
       <div class="text-sm text-gray-500 mt-4">Generated: {{ timestamp }}</div>
     </div>
   </div>
@@ -94,7 +96,7 @@ const props = defineProps({
 // timestamp
 const timestamp = ref("");
 const contributionAnalysis = ref("[Analyzing contribution...]");
-
+const generatingAnalysis = ref(true);
 // update timestamp whenever modal is opened
 watch(
   () => props.show,
@@ -170,20 +172,8 @@ function createReport(history) {
   return report;
 }
 
-// function generateSummary(history) {
-//   const topics = extractTopics(history);
-//   const questionsAsked = history.filter(
-//     (msg) => msg.role === "user" && msg.content.includes("?")
-//   ).length;
-
-//   return `This learning session covered ${
-//     topics.length > 0 ? topics.join(", ") : "various topics"
-//   }. You asked ${questionsAsked} questions and engaged in ${Math.floor(
-//     history.length / 2
-//   )} conversation exchanges. The session demonstrated active learning through inquiry and discussion.`;
-// }
-
 async function analyzeContribution(userMessages, props) {
+  generatingAnalysis.value = true;
   try {
     const chat_history = [
       {
@@ -208,6 +198,8 @@ async function analyzeContribution(userMessages, props) {
   } catch (err) {
     console.error("Error analyzing contribution:", err);
     return "[Request failed]";
+  } finally {
+    generatingAnalysis.value = false;
   }
 }
 
