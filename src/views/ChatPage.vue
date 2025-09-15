@@ -133,7 +133,8 @@
           show: showReport,
           chatHistory,
           reportGenerationInstructions,
-          teacherEmail,
+          bccEmail,
+          ccEmail,
         }"
         @close="showReport = false"
       />
@@ -200,7 +201,8 @@ const systemPrompt = ref("");
 const welcomePrompt = ref("");
 const model = ref("");
 const reportGenerationInstructions = ref("");
-const teacherEmail = ref("");
+const bccEmail = ref([]);
+const ccEmail = ref([]);
 const isConnected = ref(false);
 const isSidebarOpen = ref(true);
 const userText = ref("");
@@ -257,7 +259,8 @@ onMounted(async () => {
     welcomePrompt: welcomePrompt.value,
     model: model.value,
     reportGenerationInstructions: reportGenerationInstructions.value,
-    teacherEmail: teacherEmail.value,
+    bccEmail: bccEmail.value,
+    ccEmail: ccEmail.value,
   } = selectedBot.value);
 
   const savedApiKey = localStorage.getItem("chatbot_api_key");

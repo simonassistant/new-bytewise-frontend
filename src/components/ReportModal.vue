@@ -88,7 +88,10 @@ const props = defineProps({
   reportGenerationInstructions: {
     type: String,
   },
-  teacherEmail: {
+  bccEmail: {
+    type: Array,
+  },
+  ccEmail: {
     type: Array,
   },
 });
@@ -381,22 +384,13 @@ function sendReportByEmail() {
 
   emailSending.value = true;
 
-  // Normalize teacherEmail (convert to array if needed)
-  let teacherEmails = Array.isArray(props.teacherEmail)
-    ? props.teacherEmail
-    : props.teacherEmail
-        .split(",")
-        .map((e) => e.trim())
-        .filter(Boolean);
-
-  // Combine student + teachers into one recipients list
-  const recipients = [student_email.value, ...teacherEmails];
-
   fetch(`${BASE_URL}/sendEmail/send-email`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      recipients, // <-- send as an array of email addresses
+      student_email: student_email.value,
+      bccEmail: props.bccEmail,
+      ccEmail: props.ccEmail,
       report_md: createMarkdownReport(history),
       report_history: history,
       contributionAnalysis: contributionAnalysis.value,
