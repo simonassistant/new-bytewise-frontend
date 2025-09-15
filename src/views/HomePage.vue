@@ -8,6 +8,7 @@
         Select a chatbot to start a conversation.
       </p>
 
+      <!-- Mode Toggle -->
       <div class="flex justify-center items-center space-x-2">
         <span :class="['font-semibold transition-colors', isAvatarMode ? 'text-gray-400' : 'text-indigo-700']">Chatbot</span>
         <button
@@ -21,9 +22,10 @@
         <span :class="['font-semibold transition-colors', isAvatarMode ? 'text-purple-700' : 'text-gray-400']">Avatar</span>
       </div>
 
+      <!-- Bot List -->
       <div class="space-y-4">
         <button
-          v-for="bot in chatbotStore.availableBots"
+          v-for="bot in paginatedBots"
           :key="bot.id"
           :class="['w-full p-5 rounded-xl bg-gradient-to-r text-white font-semibold shadow hover:opacity-90 transition', bot.styleClass]"
           @click="chooseBot(bot)"
@@ -31,38 +33,100 @@
           {{ bot.name }}
         </button>
       </div>
+
+      <!-- Pagination Controls -->
+      <div v-if="totalPages > 1" class="flex justify-center items-center space-x-2 pt-4">
+        <button
+          @click="prevPage"
+          :disabled="currentPage === 1"
+          class="px-3 py-1 rounded-lg bg-indigo-600 text-white disabled:opacity-40"
+        >
+          Prev
+        </button>
+
+        <div class="flex space-x-1">
+          <button
+            v-for="page in totalPages"
+            :key="page"
+            @click="goToPage(page)"
+            :class="['px-3 py-1 rounded-lg',
+              page === currentPage
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-200 hover:bg-gray-300']"
+          >
+            {{ page }}
+          </button>
+        </div>
+
+        <button
+          @click="nextPage"
+          :disabled="currentPage === totalPages"
+          class="px-3 py-1 rounded-lg bg-indigo-600 text-white disabled:opacity-40"
+        >
+          Next
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useChatbotStore } from '../components/chatbotStore';
 
 const router = useRouter();
 const chatbotStore = useChatbotStore();
 
-// A reactive variable to control the mode (Chatbot or Avatar)
+// Toggle state
 const isAvatarMode = ref(false);
 
+// Pagination state
+const currentPage = ref(1);
+const itemsPerPage = 6; // adjust how many bots per page
+
+// Load bots
 onMounted(() => {
   chatbotStore.loadBots();
 });
 
-// Toggles the isAvatarMode variable
+// Toggle Chatbot/Avatar mode
 function toggleMode() {
   isAvatarMode.value = !isAvatarMode.value;
 }
 
-// Function to handle navigation based on the selected mode
+// Go to bot
 function chooseBot(bot) {
   if (isAvatarMode.value) {
-    // Navigate to the avatar URL
     router.push({ name: 'Avatar', params: { avatarId: bot.id } });
   } else {
-    // Navigate to the chatbot URL
     router.push({ name: 'Chat', params: { botId: bot.id } });
   }
+}
+
+// Computed pagination
+const totalPages = computed(() =>
+  Math.ceil(chatbotStore.availableBots.length / itemsPerPage)
+);
+
+const paginatedBots = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return chatbotStore.availableBots.slice(start, end);
+});
+
+// Navigation functions
+function prevPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+  }
+}
+function nextPage() {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+  }
+}
+function goToPage(page) {
+  currentPage.value = page;
 }
 </script>
