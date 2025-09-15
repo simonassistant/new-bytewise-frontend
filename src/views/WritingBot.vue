@@ -1,6 +1,6 @@
 <template>
-  <div class="bg-white text-gray-900 transition-colors duration-300 min-h-screen">
-    <div class="container mx-auto max-w-6xl p-4">
+  <div class="bg-white text-gray-900 transition-colors duration-300 min-h-screen flex flex-col">
+    <div class="container mx-auto max-w-6xl p-4 flex-1">
       <!-- Header -->
       <div class="text-center mb-6">
         <h1 class="text-3xl font-bold mb-2">EEGC Human-AI Collaboration Chatbot</h1>
@@ -106,16 +106,16 @@
             <div class="text-sm bg-white p-4 rounded border italic">
               "As a university student, I agree with that internet has positive impact on our lives.
               During the Covid-19, schools were using Zoom to maintain their teaching. Until now,
-              students had discovered many side of zoom. They use zoom to take tutorial classes, have
-              meeting with group mates and so on. Internet not only allow students to study at home, but
-              also provide a new learning style. Apart from that, the internet is also contributes to
-              our health. With the rapid development of the 5G technology, doctors are able to operate
-              more precisely Robot-Assist surgery (RAs). This means we can have less trauma, less covery
-              time and better surgery effect. And it all thanks to the high speed and stable internet.
-              Some people may worried about their privacy issue while using the internet. However, in my
-              opinion, as long as we pay more attention to our behaviour such as not viewing strange
-              website, not giving out our personal information and so on. We can protect our privacy to
-              a certain extent. (170 words)"
+              students had discovered many side of zoom. They use zoom to take tutorial classes,
+              have meeting with group mates and so on. Internet not only allow students to study at
+              home, but also provide a new learning style. Apart from that, the internet is also
+              contributes to our health. With the rapid development of the 5G technology, doctors
+              are able to operate more precisely Robot-Assist surgery (RAs). This means we can have
+              less trauma, less covery time and better surgery effect. And it all thanks to the high
+              speed and stable internet. Some people may worried about their privacy issue while
+              using the internet. However, in my opinion, as long as we pay more attention to our
+              behaviour such as not viewing strange website, not giving out our personal information
+              and so on. We can protect our privacy to a certain extent. (170 words)"
             </div>
           </div>
         </div>
@@ -143,21 +143,85 @@
         </div>
       </div>
     </div>
+
+    <!-- Chat Section -->
+    <div class="border-t bg-gray-50 p-4">
+      <div class="max-w-6xl mx-auto flex flex-col h-96">
+        <!-- Message list -->
+        <div ref="chatMessages" class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
+          <div
+            v-for="(msg, i) in chatHistory"
+            :key="i"
+            class="flex"
+            :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
+          >
+            <div
+              class="max-w-lg md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl shadow text-base break-words"
+              :class="msgClasses(msg, i)"
+            >
+              <div class="font-semibold text-xs mb-1">
+                {{ msgSenderLabel(msg.role) }}
+              </div>
+              <div
+                class="prose prose-sm max-w-none break-words [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:whitespace-pre-wrap [&_ol]:list-decimal [&_ol]:ml-6 [&_ul]:list-disc"
+                v-html="renderMarkdown(msg.content)"
+              />
+              <div class="text-xs text-gray-400 mt-2 text-right">
+                {{ msg.timestamp.toLocaleTimeString() }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input -->
+        <div class="mt-2 flex gap-2">
+          <input
+            v-model="userMessage"
+            type="text"
+            placeholder="Type your message..."
+            class="flex-1 border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            @keyup.enter="sendMessage"
+            :disabled="isThinking"
+          />
+          <button
+            @click="sendMessage"
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="isThinking"
+          >
+            {{ isThinking ? "Thinking..." : "Send" }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, h, defineComponent } from "vue";
+import { ref, computed, h, defineComponent, nextTick } from "vue";
+import { BASE_URL } from "../components/base_url";
+import MarkdownIt from "markdown-it";
 
+// ✅ Only use markdown-it (no katex plugin)
+const markdown = new MarkdownIt({
+  html: false, // disallow raw HTML in user messages
+  linkify: true, // auto-detect URLs
+  typographer: true, // nicer quotes & dashes
+});
 /* ------------ State ------------ */
 const currentMode = ref("training");
-const stats = ref({
-  exchanges: 0,
-  questions: 0,
-  revisions: 0,
-});
+const stats = ref({ exchanges: 0, questions: 0, revisions: 0 });
 const originalDraft = ref("");
 const finalDraft = ref("");
+
+const chatHistory = ref([]);
+const userMessage = ref("");
+const chatMessages = ref(null);
+const isThinking = ref(false); // ✅ new state
+
+const greetings = {
+  training: `Hello! I'm here to help you improve your essay through AI collaboration. Let's start by choosing which aspect of your essay you'd like to work on. Would you like to focus on:\n1) Content & Ideas\n2) Organisation & Structure\n3) Vocabulary\n4) Grammar & Sentence Structure`,
+  assessment: `I am here to help you revise the essay. Please share an essay draft.`,
+};
 
 const activeBtn =
   "px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity";
@@ -167,12 +231,7 @@ const inactiveBtn =
 /* ------------ Components ------------ */
 const SkillBadge = defineComponent({
   name: "SkillBadge",
-  props: {
-    borderColor: String,
-    title: String,
-    textColor: String,
-    points: Array,
-  },
+  props: { borderColor: String, title: String, textColor: String, points: Array },
   setup(props) {
     return () =>
       h("div", { class: `border-l-4 pl-4 mb-4 ${props.borderColor}` }, [
@@ -188,11 +247,7 @@ const SkillBadge = defineComponent({
 
 const SessionStat = defineComponent({
   name: "SessionStat",
-  props: {
-    label: String,
-    value: Number,
-    color: String,
-  },
+  props: { label: String, value: Number, color: String },
   setup(props) {
     const map = {
       blue: "bg-blue-100 text-blue-800",
@@ -213,13 +268,87 @@ const SessionStat = defineComponent({
   },
 });
 
+/* ------------ Chat Helpers ------------ */
+function msgSenderLabel(role) {
+  return role === "user" ? "You" : "AI Assistant";
+}
+function msgClasses(msg) {
+  return msg.role === "user"
+    ? "bg-indigo-600 text-white rounded-br-none"
+    : "bg-gray-100 text-gray-800 rounded-bl-none";
+}
+
+function renderMarkdown(text) {
+  return markdown.render(text || "");
+}
+
 /* ------------ Methods ------------ */
 function switchMode(mode) {
   currentMode.value = mode;
   stats.value = { exchanges: 0, questions: 0, revisions: 0 };
+  chatHistory.value = [{ role: "assistant", content: greetings[mode], timestamp: new Date() }];
+  scrollToBottom();
+}
+
+async function sendMessage() {
+  if (!userMessage.value.trim() || isThinking.value) return;
+
+  chatHistory.value.push({
+    role: "user",
+    content: userMessage.value,
+    timestamp: new Date(),
+  });
+  stats.value.exchanges++;
+  userMessage.value = "";
+  scrollToBottom();
+
+  isThinking.value = true; // ✅ disable input & button
+
+  try {
+    const res = await fetch(`${BASE_URL}/chatbot/chat_openrouter`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_history: chatHistory.value }),
+    });
+
+    const data = await res.json();
+    const reply = data?.choices?.[0]?.message?.content || data?.response || data?.message || "";
+
+    if (reply) {
+      chatHistory.value.push({ role: "assistant", content: reply, timestamp: new Date() });
+      scrollToBottom();
+    }
+  } catch {
+    chatHistory.value.push({
+      role: "assistant",
+      content: "⚠️ Error connecting to server.",
+      timestamp: new Date(),
+    });
+  } finally {
+    isThinking.value = false; // ✅ re-enable input & button
+  }
+}
+
+function scrollToBottom() {
+  nextTick(() => {
+    if (chatMessages.value) {
+      chatMessages.value.scrollTop = chatMessages.value.scrollHeight;
+    }
+  });
 }
 
 function exportChatHistory() {
-  alert("No conversation history to export yet.");
+  const blob = new Blob([JSON.stringify(chatHistory.value, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "chat_history.json";
+  a.click();
+  URL.revokeObjectURL(url);
 }
+
+// ✅ Auto-init
+switchMode(currentMode.value);
 </script>
