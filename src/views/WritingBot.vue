@@ -302,13 +302,31 @@ async function sendMessage() {
   userMessage.value = "";
   scrollToBottom();
 
-  isThinking.value = true; // ✅ disable input & button
+  isThinking.value = true;
 
   try {
+    // --- Build payload history separately from visible chatHistory ---
+    let payloadHistory = [...chatHistory.value];
+
+    if (currentMode.value === "assessment") {
+      // Insert **system message with both drafts** only for backend
+      payloadHistory = [
+        {
+          role: "system",
+          content:
+            `You are in assessment mode.\n\n` +
+            `Original Draft:\n${originalDraft.value || "_(empty)_"}\n\n` +
+            `Final Draft:\n${finalDraft.value || "_(empty)_"}\n\n` +
+            `Please help the user critically reflect on differences, improvements, and remaining weaknesses.`,
+        },
+        ...payloadHistory,
+      ];
+    }
+
     const res = await fetch(`${BASE_URL}/chatbot/chat_openrouter`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_history: chatHistory.value }),
+      body: JSON.stringify({ chat_history: payloadHistory }),
     });
 
     const data = await res.json();
@@ -325,7 +343,7 @@ async function sendMessage() {
       timestamp: new Date(),
     });
   } finally {
-    isThinking.value = false; // ✅ re-enable input & button
+    isThinking.value = false;
   }
 }
 
