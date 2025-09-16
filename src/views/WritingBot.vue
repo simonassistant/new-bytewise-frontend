@@ -314,9 +314,9 @@ async function sendMessage() {
         {
           role: "system",
           content:
-            `You are in assessment mode.\n\n` +
-            `Original Draft:\n${originalDraft.value || "_(empty)_"}\n\n` +
-            `Final Draft:\n${finalDraft.value || "_(empty)_"}\n\n` +
+            `You are in assessment mode. You need to assess the user's draft.` +
+            `Original Draft:${originalDraft.value || "_(empty)_"}\n\n` +
+            `Final Draft:${finalDraft.value || "_(empty)_"}\n\n` +
             `Please help the user critically reflect on differences, improvements, and remaining weaknesses.`,
         },
         ...payloadHistory,
