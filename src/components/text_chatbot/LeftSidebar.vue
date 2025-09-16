@@ -63,10 +63,10 @@
           @change="$emit('update:model', $event.target.value)"
           class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
         >
+          <option value="gpt-5-mini" v-if="selectedProvider === 'hkbu'">GPT-5 Mini</option>
+          <option value="gpt-5" v-if="selectedProvider === 'hkbu'">GPT-5</option>
           <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
           <option value="gpt-4.1">GPT-4.1</option>
-          <option value="gpt-5" v-if="selectedProvider === 'hkbu'">GPT-5</option>
-          <option value="gpt-5-mini" v-if="selectedProvider === 'hkbu'">GPT-5 Mini</option>
           <option value="gpt-4o" v-if="selectedProvider === 'openrouter'">GPT-4o</option>
         </select>
       </div>
