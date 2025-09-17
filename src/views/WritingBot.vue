@@ -321,6 +321,15 @@ async function sendMessage() {
         },
         ...payloadHistory,
       ];
+    } else if (currentMode.value === "training") {
+      // Insert system message  for backend
+      payloadHistory = [
+        {
+          role: "system",
+          content: greetings[currentMode.value],
+        },
+        ...payloadHistory,
+      ];
     }
 
     const res = await fetch(`${BASE_URL}/chatbot/chat_openrouter`, {
