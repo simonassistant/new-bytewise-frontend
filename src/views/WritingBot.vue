@@ -314,10 +314,17 @@ async function sendMessage() {
         {
           role: "system",
           content:
-            `You are in assessment mode. You need to assess the user's draft.` +
-            `Original Draft:${originalDraft.value || "_(empty)_"}\n\n` +
-            `Final Draft:${finalDraft.value || "_(empty)_"}\n\n` +
-            `Please help the user critically reflect on differences, improvements, and remaining weaknesses.`,
+            "You are in *Assessment Mode*. Your task is to evaluate the user's drafts.\n\n" +
+            "Here are the drafts:\n" +
+            "Original Draft:\n---\n" +
+            "${originalDraft.value || '(empty)'}\n---\n\n" +
+            "Final Draft:\n---\n" +
+            "${finalDraft.value || '(empty)'}\n---\n\n" +
+            "Please provide a critical reflection that:\n" +
+            "1. Identifies key differences between the drafts.\n" +
+            "2. Highlights specific improvements (clarity, structure, tone, persuasiveness, etc.).\n" +
+            "3. Points out remaining weaknesses or areas that could still be enhanced.\n" +
+            "4. Offers constructive, actionable suggestions for revision.",
         },
         ...payloadHistory,
       ];
