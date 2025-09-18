@@ -3,24 +3,27 @@
     v-if="selectedBot"
     class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800"
   >
+    <!-- Left Sidebar -->
     <LeftSidebar
-      :isOpen="isSidebarOpen"
+      v-model:isOpen="isSidebarOpen"
+      v-model:apiKey="apiKey"
+      v-model:model="model"
+      v-model:selectedProvider="selectedProvider"
       :systemPrompt="systemPrompt"
       :welcomePrompt="welcomePrompt"
-      :model="model"
-      :apiKey="apiKey"
       :isConnected="isConnected"
-      @update:isOpen="(val) => (isSidebarOpen = val)"
-      @update:apiKey="(val) => (apiKey = val)"
-      @update:model="(val) => (model = val)"
+      :tokenUsage="tokenUsage"
+      :isConnecting="isConnecting"
       @connectAPI="connectAPI"
       @clearAPI="clearAPI"
     />
 
+    <!-- Main Chat Area -->
     <div
       class="flex flex-col flex-1 bg-white shadow-lg overflow-hidden transition-all duration-300"
       :class="{ 'mr-80': isRightSidebarOpen }"
     >
+      <!-- Header -->
       <div
         class="chat-header flex justify-between items-center p-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
       >
@@ -30,58 +33,35 @@
         </div>
         <div class="flex gap-2">
           <button
+            v-for="btn in headerButtons"
+            :key="btn.id"
             class="bg-white/20 px-3 py-1 rounded-lg hover:bg-white/30"
-            @click="isSidebarOpen = !isSidebarOpen"
+            @click="btn.action"
           >
-            {{ isSidebarOpen ? "⬅ Hide Left" : "➡ Show Left" }}
-          </button>
-          <button
-            class="bg-white/20 px-3 py-1 rounded-lg hover:bg-white/30"
-            @click="isRightSidebarOpen = !isRightSidebarOpen"
-          >
-            {{ isRightSidebarOpen ? "Hide Right ➡" : "⬅ Show Right" }}
-          </button>
-          <button
-            class="new-session-btn bg-white/20 px-3 py-1 rounded-lg hover:bg-white/30"
-            @click="startNewSession"
-          >
-            🔄 New Session
-          </button>
-          <button class="bg-white/20 px-3 py-1 rounded-lg hover:bg-white/30" @click="goBack()">
-            ⬅ Back
+            {{ btn.label }}
           </button>
         </div>
       </div>
 
-      <div class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
-        <div
-          v-for="(msg, i) in chatHistory"
-          :key="i"
-          class="flex"
-          :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
-        >
+      <!-- Messages -->
+      <div ref="messagesContainer" class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
+        <div v-for="(msg, i) in formattedMessages" :key="i" class="flex" :class="msg.align">
           <div
             class="max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl shadow text-base break-words"
-            :class="
-              msg.role === 'user'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-br-none'
-                : 'bg-gray-100 border border-gray-200 text-gray-800 rounded-bl-none'
-            "
+            :class="msg.style"
           >
-            <div class="font-semibold text-xs mb-1">
-              {{ msg.role === "user" ? "👤 You" : "🤖 Assistant" }}
-            </div>
-            <div class="text-base whitespace-pre-wrap">
-              {{ msg.content }}
-            </div>
+            <div class="font-semibold text-xs mb-1">{{ msg.label }}</div>
+            <div class="text-base whitespace-pre-wrap">{{ msg.content }}</div>
             <div class="text-xs text-gray-400 mt-2 text-right">
-              {{ msg.timestamp.toLocaleTimeString() }}
+              {{ msg.time }}
             </div>
           </div>
         </div>
       </div>
 
+      <!-- Input -->
       <div class="chat-input-container p-4 border-t bg-gray-50 relative">
+        <!-- Overlay if not connected -->
         <div
           v-if="!isConnected"
           class="absolute inset-0 flex items-center justify-center bg-white/70 text-gray-600 text-sm font-medium z-10"
@@ -89,11 +69,12 @@
           🔑 Please connect your API key first
         </div>
 
+        <!-- Mode Toggle -->
         <div class="flex justify-end mb-4">
           <div class="flex items-center space-x-2">
             <span class="text-sm font-medium text-gray-700">Audio Mode</span>
             <button
-              @click="inputMode = inputMode === 'audio' ? 'text' : 'audio'"
+              @click="toggleInputMode"
               :class="[
                 'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
                 inputMode === 'audio' ? 'bg-indigo-600' : 'bg-gray-200',
@@ -110,6 +91,7 @@
           </div>
         </div>
 
+        <!-- Audio Input -->
         <div v-if="inputMode === 'audio'">
           <div class="flex justify-center">
             <button
@@ -121,21 +103,11 @@
             </button>
           </div>
           <div class="mt-4 flex justify-center" v-if="audioUrl">
-            <audio
-              :src="audioUrl"
-              autoplay
-              @play="
-                isPlaying = true;
-                avatarState = 'speaking';
-              "
-              @ended="
-                isPlaying = false;
-                avatarState = 'idle';
-              "
-            ></audio>
+            <audio :src="audioUrl" autoplay @play="onAudioPlay" @ended="onAudioEnd"></audio>
           </div>
         </div>
 
+        <!-- Text Input -->
         <div v-else class="flex items-center space-x-2">
           <input
             v-model="userText"
@@ -154,7 +126,7 @@
           </button>
           <button
             class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow transition transform hover:scale-105"
-            :disabled="!chatHistory || chatHistory.length === 0"
+            :disabled="!chatHistory.length"
             @click="showReport = true"
             title="Finish & View Report"
           >
@@ -162,7 +134,8 @@
           </button>
         </div>
       </div>
-      <!-- Modals (no changes here) -->
+
+      <!-- Report Modal -->
       <ReportModal
         :show="showReport"
         :chatHistory="chatHistory"
@@ -173,6 +146,7 @@
       />
     </div>
 
+    <!-- Right Sidebar -->
     <aside
       class="fixed right-0 top-0 h-full bg-white/90 backdrop-blur shadow-xl flex flex-col items-center justify-center border-l w-80 transition-all duration-300 ease-in-out"
       :class="isRightSidebarOpen ? 'translate-x-0' : 'translate-x-full'"
@@ -181,6 +155,7 @@
     </aside>
   </div>
 
+  <!-- Loader -->
   <div
     v-else
     class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 items-center justify-center"
@@ -209,10 +184,19 @@
       <span class="text-white text-2xl font-semibold">Loading Chatbot...</span>
     </div>
   </div>
+
+  <!-- Notification -->
+  <div
+    v-if="notification.visible"
+    class="fixed top-5 right-5 z-50 px-4 py-3 rounded-lg shadow-lg text-white"
+    :class="notificationClass"
+  >
+    {{ notification.message }}
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, nextTick} from "vue";
 import { useRouter } from "vue-router";
 import { useChatbotStore } from "../components/chatbotStore";
 import { io } from "socket.io-client";
@@ -225,10 +209,8 @@ import ReportModal from "../components/ReportModal.vue";
 const props = defineProps({ avatarId: { type: String, required: true } });
 const router = useRouter();
 const chatbotStore = useChatbotStore();
-const selectedBot = computed(() => chatbotStore.availableBots.find((b) => b.id === props.avatarId));
-const assistantCount = computed(
-  () => chatHistory.value.filter((m) => m.role === "assistant").length
-);
+
+// --- State ---
 const chatHistory = ref([]);
 const apiKey = ref("");
 const systemPrompt = ref("");
@@ -242,18 +224,67 @@ const isPlaying = ref(false);
 const audioUrl = ref(null);
 const isRecognizing = ref(false);
 const isRightSidebarOpen = ref(true);
-const inputMode = ref("audio"); // 'audio' or 'text'
+const inputMode = ref("audio");
 const userText = ref("");
 const isLoading = ref(false);
 const showReport = ref(false);
+const selectedProvider = ref("hkbu");
+const isConnecting = ref(false);
+const notification = ref({ message: "", type: "success", visible: false });
+const messagesContainer = ref(null);
 
 let mediaRecorder = null;
 let audioChunks = [];
 let socket = null;
 let chunks = [];
 
+// --- Computeds ---
+const selectedBot = computed(() => chatbotStore.availableBots.find((b) => b.id === props.avatarId));
+const assistantCount = computed(
+  () => chatHistory.value.filter((m) => m.role === "assistant").length
+);
 const userCount = computed(() => chatHistory.value.filter((m) => m.role === "user").length);
+const tokenUsage = computed(() => {
+  let total = 0;
+  chatHistory.value.forEach((m, i) => {
+    if (m.role === "user") total += m.content?.length || 0;
+    if (m.role === "assistant" && i !== 0) {
+      total += m.content?.length || 0;
+    }
+  });
+  return Math.floor((total * 3) / 4);
+});
+const formattedMessages = computed(() =>
+  chatHistory.value.map((m) => ({
+    ...m,
+    align: m.role === "user" ? "justify-end" : "justify-start",
+    style:
+      m.role === "user"
+        ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-br-none"
+        : "bg-gray-100 border border-gray-200 text-gray-800 rounded-bl-none",
+    label: m.role === "user" ? "👤 You" : "🤖 Assistant",
+    time: m.timestamp.toLocaleTimeString(),
+  }))
+);
+const notificationClass = computed(() =>
+  notification.value.type === "success" ? "bg-green-500" : "bg-red-500"
+);
+const headerButtons = [
+  {
+    id: "left",
+    label: computed(() => (isSidebarOpen.value ? "⬅ Hide Left" : "➡ Show Left")),
+    action: () => (isSidebarOpen.value = !isSidebarOpen.value),
+  },
+  {
+    id: "right",
+    label: computed(() => (isRightSidebarOpen.value ? "Hide Right ➡" : "⬅ Show Right")),
+    action: () => (isRightSidebarOpen.value = !isRightSidebarOpen.value),
+  },
+  { id: "new", label: "🔄 New Session", action: () => startNewSession() },
+  { id: "back", label: "⬅ Back", action: () => goBack() },
+];
 
+// --- Lifecycle ---
 onMounted(async () => {
   await chatbotStore.loadBots();
   if (!selectedBot.value) {
@@ -272,24 +303,82 @@ onMounted(async () => {
   }
 });
 
+// --- Helpers ---
+const newMessage = (role, content) => ({
+  role,
+  content,
+  timestamp: new Date(),
+});
+function scrollToBottom() {
+  nextTick(() => {
+    const el = messagesContainer.value;
+    if (el) el.scrollTop = el.scrollHeight;
+  });
+}
 function goBack() {
   router.push("/");
 }
-
-function connectAPI() {
-  if (!apiKey.value) return;
-  localStorage.setItem("chatbot_api_key", apiKey.value);
-  isConnected.value = true;
-  if (chatHistory.value.length === 0) {
-    chatHistory.value.push({
-      role: "assistant",
-      content: welcomePrompt.value,
-      timestamp: new Date(),
-    });
-  }
-  connectWebSocket();
+function toggleInputMode() {
+  inputMode.value = inputMode.value === "audio" ? "text" : "audio";
+}
+function showNotification(msg, type = "success") {
+  notification.value = { message: msg, type, visible: true };
+  setTimeout(() => (notification.value.visible = false), 3000);
 }
 
+async function apiCall(endpoint, payload) {
+  const res = await fetch(`${BASE_URL}${endpoint}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+// --- API Connect ---
+async function connectAPI(auto = false) {
+  if (!apiKey.value && !auto && selectedProvider.value !== "openrouter") return;
+
+  localStorage.setItem("chatbot_api_key", apiKey.value);
+  isConnecting.value = true;
+  isConnected.value = false;
+
+  try {
+    let providerUrl =
+      selectedProvider.value === "openrouter" ? "/chatbot/chat_openrouter" : "/chatbot/chat";
+
+    const data = await apiCall(providerUrl, {
+      chat_history: [
+        { role: "system", content: "connection test, return 1 if you can read." },
+        { role: "user", content: "Hello!" },
+      ],
+      api_key: apiKey.value,
+      model_name: model.value,
+    });
+
+    const reply = data?.choices?.[0]?.message?.content || data?.response || data?.message;
+
+    if (reply?.trim()) {
+      isConnected.value = true;
+      showNotification("✅ Connected and working!");
+    } else {
+      showNotification("⚠️ Connected, but no valid reply.", "error");
+    }
+  } catch (e) {
+    console.error(e);
+    showNotification("❌ Failed to connect.", "error");
+  } finally {
+    isConnecting.value = false;
+  }
+
+  connectWebSocket();
+
+  if (!chatHistory.value.length && isConnected.value) {
+    chatHistory.value.push(newMessage("assistant", welcomePrompt.value));
+    scrollToBottom();
+  }
+}
 function clearAPI() {
   localStorage.removeItem("chatbot_api_key");
   apiKey.value = "";
@@ -297,42 +386,37 @@ function clearAPI() {
   chatHistory.value = [];
 }
 
+// --- WebSocket ---
 function connectWebSocket() {
   socket = io(`${BASE_URL}/streaming-avatar`, { transports: ["websocket"] });
 
-  socket.on("connect", () => {
-    console.log("WS connected");
-    chunks = [];
-  });
+  socket.on("connect", () => (chunks = []));
   socket.on("audio_chunk", (chunk) => {
     if (chunk instanceof ArrayBuffer) chunks.push(new Uint8Array(chunk));
   });
-
   socket.on("audio_complete", () => {
-    console.log("Audio complete, total chunks:", chunks.length);
     const blob = new Blob(chunks, { type: "audio/mpeg" });
     audioUrl.value = URL.createObjectURL(blob);
     chunks = [];
     isRecognizing.value = false;
   });
   socket.on("stt_result", (result) => {
-    if (result && typeof result.text === "string") {
-      chatHistory.value.push({
-        role: "user",
-        content: result.text,
-        timestamp: new Date(),
-      });
-
-      // Call Flask streaming endpoint
+    if (typeof result?.text === "string") {
+      chatHistory.value.push(newMessage("user", result.text));
       sendUserAudioMessage(result.text);
     }
   });
-
-  socket.on("disconnect", () => {
-    console.log("WS disconnected");
-  });
+}
+function onAudioPlay() {
+  isPlaying.value = true;
+  avatarState.value = "speaking";
+}
+function onAudioEnd() {
+  isPlaying.value = false;
+  avatarState.value = "idle";
 }
 
+// --- Audio Recording ---
 async function toggleRecording() {
   if (!isRecording.value) {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -349,141 +433,86 @@ async function toggleRecording() {
     avatarState.value = "thinking";
   }
 }
-
 async function sendAudioToBackend() {
   const blob = new Blob(audioChunks, { type: "audio/webm" });
   const arrayBuffer = await blob.arrayBuffer();
 
-  // Decode WebM → AudioBuffer
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
-  // Convert AudioBuffer → WAV
   const wavArrayBuffer = audioBufferToWav(audioBuffer);
   const wavBlob = new Blob([wavArrayBuffer], { type: "audio/wav" });
 
-  if (socket && socket.connected) {
-    socket.emit("user_audio", await wavBlob.arrayBuffer()); // send WAV
+  if (socket?.connected) {
+    socket.emit("user_audio", await wavBlob.arrayBuffer());
     isRecognizing.value = true;
   }
-
-  // reset
   audioChunks = [];
 }
 
+// --- Chat Actions ---
 function startNewSession() {
   chatHistory.value = [];
   if (isConnected.value) {
-    chatHistory.value.push({
-      role: "assistant",
-      content: welcomePrompt.value,
-      timestamp: new Date(),
-    });
+    chatHistory.value.push(newMessage("assistant", welcomePrompt.value));
   }
 }
+function sendUserAudioMessage(text) {
+  if (!isConnected.value || !text.trim() || !socket) return;
+  chatHistory.value.push(newMessage("assistant", "⏳ Avatar is thinking..."));
+  const idx = chatHistory.value.length - 1;
 
-function sendUserAudioMessage(userText) {
-  if (!isConnected.value || !userText.trim() || !socket) return;
-  // Add a placeholder assistant reply while waiting
-  chatHistory.value.push({
-    role: "assistant",
-    content: "⏳ Avatar is thinking...",
-    timestamp: new Date(),
-  });
-  const msgIndex = chatHistory.value.length - 1;
-
-  // Send through websocket
   socket.emit("user_message", {
-    text: userText,
+    text,
     system_prompt: systemPrompt.value,
     api_key: apiKey.value,
     model: model.value,
-    history: chatHistory.value.map((m) => ({
-      role: m.role,
-      content: m.content,
-    })),
+    provider: selectedProvider.value,
+    history: chatHistory.value.map(({ role, content }) => ({ role, content })),
   });
 
-  // Listen for assistant reply
   socket.once("assistant_reply", (reply) => {
-    chatHistory.value[msgIndex] = {
-      ...chatHistory.value[msgIndex],
+    chatHistory.value[idx] = {
+      ...chatHistory.value[idx],
       content: reply?.content || "[No response]",
       timestamp: new Date(),
     };
   });
 }
-
 async function sendTextToChatbot() {
-  if (!isConnected.value || !userText.value.trim() || isLoading.value) {
-    return;
-  }
+  if (!isConnected.value || !userText.value.trim() || isLoading.value) return;
 
-  const message = userText.value.trim();
-
-  // Add the user's message to chat history
-  chatHistory.value.push({
-    role: "user",
-    content: message,
-    timestamp: new Date(),
-  });
-
-  // Clear the input field
+  chatHistory.value.push(newMessage("user", userText.value.trim()));
   userText.value = "";
 
-  // Add a placeholder for the assistant's reply
-  chatHistory.value.push({
-    role: "assistant",
-    content: "⏳ Thinking...",
-    timestamp: new Date(),
-  });
-  const assistantMessageIndex = chatHistory.value.length - 1;
+  chatHistory.value.push(newMessage("assistant", "⏳ Thinking..."));
+  const idx = chatHistory.value.length - 1;
 
   isLoading.value = true;
   avatarState.value = "thinking";
 
   try {
-    const response = await fetch(`${BASE_URL}/chatbot/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        // Corrected payload keys to match backend
-        chat_history: [
-          { role: "system", content: systemPrompt.value }, // wrap systemPrompt as system role
-          ...chatHistory.value.map(({ role, content }) => ({
-            role,
-            content,
-          })),
-        ],
-        api_key: apiKey.value,
-        model_name: model.value,
-      }),
+    let providerUrl =
+      selectedProvider.value === "openrouter" ? "/chatbot/chat_openrouter" : "/chatbot/chat";
+
+    const data = await apiCall(providerUrl, {
+      chat_history: [
+        { role: "system", content: systemPrompt.value },
+        ...chatHistory.value.map(({ role, content }) => ({ role, content })),
+      ],
+      api_key: apiKey.value,
+      model_name: model.value,
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    const reply = data?.choices?.[0]?.message?.content || data?.error || "[No response]";
 
-    const data = await response.json();
-
-    // Extract the content from the API response
-    const assistantReply = data?.choices?.[0]?.message?.content || data?.error || "[No response]";
-
-    // Update the placeholder with the actual assistant reply
-    chatHistory.value[assistantMessageIndex] = {
-      role: "assistant",
-      content: assistantReply,
-      timestamp: new Date(),
-    };
-  } catch (error) {
-    console.error("Error sending text to chatbot:", error);
-    chatHistory.value[assistantMessageIndex] = {
-      role: "assistant",
-      content: "❌ Sorry, an error occurred. Please try again.",
-      timestamp: new Date(),
-    };
+    chatHistory.value[idx] = newMessage("assistant", reply);
+  } catch (e) {
+    console.error(e);
+    chatHistory.value[idx] = newMessage(
+      "assistant",
+      "❌ Sorry, an error occurred. Please try again."
+    );
   } finally {
     isLoading.value = false;
     avatarState.value = "idle";

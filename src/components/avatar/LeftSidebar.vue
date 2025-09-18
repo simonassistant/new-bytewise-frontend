@@ -16,8 +16,22 @@
 
     <!-- Content -->
     <div v-if="isOpen" class="p-5 space-y-6 flex-1 overflow-y-auto">
+      <!-- Provider Selector -->
+      <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <h3 class="font-semibold mb-3">🌐 Select Provider</h3>
+        <select
+          :value="selectedProvider"
+          @change="$emit('update:selectedProvider', $event.target.value)"
+          class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
+        >
+          <option value="hkbu">HKBU Chatbot</option>
+          <option value="openrouter">OpenRouter</option>
+        </select>
+      </div>
+
       <!-- API Config (only for HKBU) -->
       <div
+        v-if="selectedProvider === 'hkbu'"
         class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"
       >
         <h3 class="font-semibold text-yellow-800 mb-3">🔑 API Configuration</h3>
@@ -49,9 +63,11 @@
           @change="$emit('update:model', $event.target.value)"
           class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
         >
+          <option value="gpt-5-mini" v-if="selectedProvider === 'hkbu'">GPT-5 Mini</option>
+          <option value="gpt-5" v-if="selectedProvider === 'hkbu'">GPT-5</option>
           <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
           <option value="gpt-4.1">GPT-4.1</option>
-          <option value="gpt-o1">GPT-o1</option>
+          <option value="gpt-4o" v-if="selectedProvider === 'openrouter'">GPT-4o</option>
         </select>
       </div>
 
@@ -60,12 +76,14 @@
         <button
           class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium"
           @click="$emit('connectAPI')"
+          :disabled="isConnecting"
         >
-          ✅ Connect
+          {{ isConnecting ? "🔄 Connecting..." : "✅ Connect" }}
         </button>
         <button
           class="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm font-medium"
           @click="$emit('clearAPI')"
+          :disabled="isConnecting"
         >
           🗑️ Clear
         </button>
@@ -114,12 +132,15 @@ defineProps({
   apiKey: String,
   isConnected: Boolean,
   tokenUsage: Number,
+  selectedProvider: String,
+  isConnecting: Boolean,
 });
 
 defineEmits([
   "update:isOpen",
   "update:apiKey",
   "update:model",
+  "update:selectedProvider", // ✅ NEW
   "connectAPI",
   "clearAPI",
 ]);
