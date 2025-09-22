@@ -196,7 +196,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick} from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useChatbotStore } from "../components/chatbotStore";
 import { io } from "socket.io-client";
@@ -228,7 +228,7 @@ const inputMode = ref("audio");
 const userText = ref("");
 const isLoading = ref(false);
 const showReport = ref(false);
-const selectedProvider = ref("hkbu");
+const selectedProvider = ref("openrouter");
 const isConnecting = ref(false);
 const notification = ref({ message: "", type: "success", visible: false });
 const messagesContainer = ref(null);
@@ -390,7 +390,7 @@ function clearAPI() {
 function connectWebSocket() {
   socket = io(`${BASE_URL}/streaming-avatar`, { transports: ["websocket"] });
 
-  socket.on("connect", () => (chunks = []));
+  socket.on("connect", () => ((chunks = []), console.log("WebSocket connected")));
   socket.on("audio_chunk", (chunk) => {
     if (chunk instanceof ArrayBuffer) chunks.push(new Uint8Array(chunk));
   });

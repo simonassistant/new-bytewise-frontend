@@ -76,9 +76,11 @@
         <button
           class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium"
           @click="$emit('connectAPI')"
-          :disabled="isConnecting"
+          :disabled="isConnecting || isConnected"
         >
-          {{ isConnecting ? "🔄 Connecting..." : "✅ Connect" }}
+          <span v-if="isConnecting">🔄 Connecting...</span>
+          <span v-else-if="isConnected">✔️ Connected</span>
+          <span v-else>✅ Connect</span>
         </button>
         <button
           class="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm font-medium"
