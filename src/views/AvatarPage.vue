@@ -21,7 +21,6 @@
     <!-- Main Chat Area -->
     <div
       class="flex flex-col flex-1 bg-white shadow-lg overflow-hidden transition-all duration-300"
-      :class="{ 'mr-80': isRightSidebarOpen }"
     >
       <!-- Header -->
       <div
@@ -41,6 +40,14 @@
             {{ btn.label }}
           </button>
         </div>
+      </div>
+
+      <!-- Avatar moved here -->
+      <div
+        v-if="showAvatar"
+        class="chat-avatar-container flex justify-center items-center py-4 border-b"
+      >
+        <AvatarComponent :state="avatarState" />
       </div>
 
       <!-- Messages -->
@@ -99,7 +106,7 @@
               :disabled="!isConnected || isPlaying || isRecognizing"
               @click="toggleRecording"
             >
-              {{ isRecording ? "⏹ Stop" : "🎤 Speak" }}
+              {{ isRecording ? "⏹ Listening" : "🎤 Speak" }}
             </button>
           </div>
         </div>
@@ -142,14 +149,6 @@
         @close="showReport = false"
       />
     </div>
-
-    <!-- Right Sidebar -->
-    <aside
-      class="fixed right-0 top-0 h-full bg-white/90 backdrop-blur shadow-xl flex flex-col items-center justify-center border-l w-80 transition-all duration-300 ease-in-out"
-      :class="isRightSidebarOpen ? 'translate-x-0' : 'translate-x-full'"
-    >
-      <AvatarComponent :state="avatarState" />
-    </aside>
   </div>
 
   <!-- Loader -->
@@ -219,7 +218,6 @@ const avatarState = ref("idle");
 const isRecording = ref(false);
 const isPlaying = ref(false);
 const isRecognizing = ref(false);
-const isRightSidebarOpen = ref(true);
 const inputMode = ref("audio");
 const userText = ref("");
 const isLoading = ref(false);
@@ -228,6 +226,7 @@ const selectedProvider = ref("openrouter");
 const isConnecting = ref(false);
 const notification = ref({ message: "", type: "success", visible: false });
 const messagesContainer = ref(null);
+const showAvatar = ref(true);
 
 let socket = null;
 
@@ -247,6 +246,7 @@ const tokenUsage = computed(() => {
   });
   return Math.floor((total * 3) / 4);
 });
+
 const formattedMessages = computed(() =>
   chatHistory.value.map((m) => ({
     ...m,
@@ -269,9 +269,9 @@ const headerButtons = [
     action: () => (isSidebarOpen.value = !isSidebarOpen.value),
   },
   {
-    id: "right",
-    label: computed(() => (isRightSidebarOpen.value ? "Hide Right ➡" : "⬅ Show Right")),
-    action: () => (isRightSidebarOpen.value = !isRightSidebarOpen.value),
+    id: "up",
+    label: computed(() => (showAvatar.value ? "⬆️ Hide Avatar" : "⬇️ Show Avatar")),
+    action: () => (showAvatar.value = !showAvatar.value),
   },
   { id: "new", label: "🔄 New Session", action: () => startNewSession() },
   { id: "back", label: "⬅ Back", action: () => goBack() },
@@ -400,7 +400,6 @@ async function speakReplySequentially(replyText) {
     for (const sentence of sentences) {
       // Start synthesis immediately
       const synthPromise = synthesizeToBuffer(sentence);
-      console.log("Started synthesis for:", sentence);
       // When synthesis finishes, enqueue playback to happen *after previous one finishes*
       playPromise = playPromise.then(async () => {
         try {
@@ -567,12 +566,12 @@ function sendUserAudioMessage(text) {
   });
   socket.once("assistant_reply", async (reply) => {
     const responseText = reply?.content || "[No response]";
-    console.log("Received reply:", responseText);
     chatHistory.value[idx] = {
       ...chatHistory.value[idx],
       content: responseText,
       timestamp: new Date(),
     };
+    scrollToBottom();
     await speakReplySequentially(responseText);
   });
 }

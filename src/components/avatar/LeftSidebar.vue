@@ -37,9 +37,11 @@
           class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
         >
           <option value="openai/gpt-4.1-nano">GPT-4.1 Nano</option>
-          <option value="mistralai/ministral-3b">Ministral-3B</option>
+          <option value="openai/gpt-4.1-mini">GPT-4.1 Mini</option>
+          <option value="openai/gpt-5-chat">GPT-5 Chat</option>
           <option value="meta-llama/llama-4-scout">Llama-4 Scout</option>
           <option value="google/gemini-2.5-flash-lite-preview-06-17">Gemini-2.5 Flash</option>
+          <option value="deepseek/deepseek-chat-v3.1:free">Deepseek V3.1</option>
         </select>
       </div>
 
