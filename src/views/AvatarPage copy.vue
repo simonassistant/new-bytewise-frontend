@@ -102,6 +102,9 @@
               {{ isRecording ? "⏹ Stop" : "🎤 Speak" }}
             </button>
           </div>
+          <div class="mt-4 flex justify-center" v-if="audioUrl">
+            <audio :src="audioUrl" autoplay @play="onAudioPlay" @ended="onAudioEnd"></audio>
+          </div>
         </div>
 
         <!-- Text Input -->
@@ -218,6 +221,7 @@ const isSidebarOpen = ref(true);
 const avatarState = ref("idle");
 const isRecording = ref(false);
 const isPlaying = ref(false);
+const audioUrl = ref(null);
 const isRecognizing = ref(false);
 const isRightSidebarOpen = ref(true);
 const inputMode = ref("audio");
@@ -230,6 +234,7 @@ const notification = ref({ message: "", type: "success", visible: false });
 const messagesContainer = ref(null);
 
 let socket = null;
+let chunks = [];
 
 // --- Computeds ---
 const selectedBot = computed(() => chatbotStore.availableBots.find((b) => b.id === props.avatarId));
@@ -296,13 +301,13 @@ onMounted(async () => {
   }
 });
 
-// --- Cookie helpers ---
 function setCookie(name, value, minutes) {
   const d = new Date();
   d.setTime(d.getTime() + minutes * 60 * 1000);
   const expires = "expires=" + d.toUTCString();
   document.cookie = `${name}=${encodeURIComponent(value)};${expires};path=/`;
 }
+
 function getCookie(name) {
   const decodedCookie = decodeURIComponent(document.cookie);
   const cookies = decodedCookie.split("; ");
@@ -313,151 +318,75 @@ function getCookie(name) {
   return null;
 }
 
-// --- Azure Token ---
 async function getAzureToken() {
+  // First check cookies
   const cachedToken = getCookie("azureToken");
   const cachedRegion = getCookie("azureRegion");
+
   if (cachedToken && cachedRegion) {
     return { authToken: cachedToken, region: cachedRegion };
   }
+
+  // If not in cookie, fetch new
   try {
     const res = await fetch(`${BASE_URL}/streaming-avatar/get-speech-token`);
     if (!res.ok) throw new Error("Failed to fetch speech token");
     const data = await res.json();
+
+    // Store in cookies for 9 minutes
     setCookie("azureToken", data.token, 9);
     setCookie("azureRegion", data.region, 9);
+
     return { authToken: data.token, region: data.region };
   } catch (err) {
     console.error("Azure token fetch error:", err);
     return { authToken: null, region: null };
   }
 }
-
-// --- Azure TTS helpers ---
-function splitIntoSentences(text) {
-  return text.replace(/\s+/g, " ").match(/[^.!?]+[.!?]+/g) || [text];
-}
-
-// Convert text → ArrayBuffer (not auto-play)
-async function synthesizeToBuffer(sentence) {
-  const tokenObj = await getAzureToken();
-  if (!tokenObj.authToken) throw new Error("No Azure token");
-
-  const speechConfig = speechsdk.SpeechConfig.fromAuthorizationToken(
-    tokenObj.authToken,
-    tokenObj.region
-  );
-  speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural";
-
-  return new Promise((resolve, reject) => {
-    const pushStream = speechsdk.AudioOutputStream.createPullStream();
-    const audioConfig = speechsdk.AudioConfig.fromStreamOutput(pushStream);
-    const synthesizer = new speechsdk.SpeechSynthesizer(speechConfig, audioConfig);
-
-    synthesizer.speakTextAsync(
-      sentence,
-      (result) => {
-        synthesizer.close();
-        if (result.reason === speechsdk.ResultReason.SynthesizingAudioCompleted) {
-          // Collect audio data into a Blob
-          const buffer = result.audioData;
-          resolve(buffer);
-        } else {
-          reject(result.errorDetails);
-        }
-      },
-      (err) => {
-        synthesizer.close();
-        reject(err);
-      }
-    );
-  });
-}
-
-// Plays a buffer sequentially
-function playAudioBuffer(buffer) {
-  return new Promise((resolve) => {
-    const blob = new Blob([buffer], { type: "audio/wav" });
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    audio.onended = () => {
-      URL.revokeObjectURL(url);
-      resolve();
-    };
-    audio.play();
-  });
-}
-
-// Speak reply with pipelined synthesis + playback
-async function speakReplySequentially(replyText) {
-  const sentences = splitIntoSentences(replyText);
-  isPlaying.value = true;
-  avatarState.value = "speaking";
-
-  try {
-    let playPromise = Promise.resolve(); // chain for ordered playback
-
-    for (const sentence of sentences) {
-      // Start synthesis immediately
-      const synthPromise = synthesizeToBuffer(sentence);
-      console.log("Started synthesis for:", sentence);
-      // When synthesis finishes, enqueue playback to happen *after previous one finishes*
-      playPromise = playPromise.then(async () => {
-        try {
-          const buffer = await synthPromise;
-          await playAudioBuffer(buffer);
-        } catch (err) {
-          console.error("TTS sentence error:", err);
-        }
-      });
-    }
-
-    // Wait until last playback finishes
-    await playPromise;
-  } catch (err) {
-    console.error("Pipeline TTS error:", err);
-  } finally {
-    isPlaying.value = false;
-    avatarState.value = "idle";
-  }
-}
-
-// --- Speech Recognition ---
+// --- Audio Recording with Azure ---
 async function toggleRecording() {
   if (isRecording.value) {
+    // Stop: handled automatically by recognizeOnceAsync
     isRecording.value = false;
     avatarState.value = "idle";
     return;
   }
+
   try {
     const tokenObj = await getAzureToken();
     if (!tokenObj.authToken) {
       showNotification("❌ Could not get Azure token", "error");
       return;
     }
+
     isRecording.value = true;
     avatarState.value = "listening";
     isRecognizing.value = true;
+
     const speechConfig = speechsdk.SpeechConfig.fromAuthorizationToken(
       tokenObj.authToken,
       tokenObj.region
     );
     speechConfig.speechRecognitionLanguage = "en-US";
+
     const audioConfig = speechsdk.AudioConfig.fromDefaultMicrophoneInput();
     const recognizer = new speechsdk.SpeechRecognizer(speechConfig, audioConfig);
+
     recognizer.recognizeOnceAsync((result) => {
       isRecording.value = false;
       isRecognizing.value = false;
       avatarState.value = "thinking";
+
       if (result.reason === speechsdk.ResultReason.RecognizedSpeech) {
         const recognizedText = result.text.trim();
         if (recognizedText) {
           chatHistory.value.push(newMessage("user", recognizedText));
-          sendUserAudioMessage(recognizedText);
+          sendUserAudioMessage(recognizedText); // already in your code
         }
       } else {
         showNotification("⚠️ Speech not recognized", "error");
       }
+
       recognizer.close();
     });
   } catch (err) {
@@ -470,7 +399,11 @@ async function toggleRecording() {
 }
 
 // --- Helpers ---
-const newMessage = (role, content) => ({ role, content, timestamp: new Date() });
+const newMessage = (role, content) => ({
+  role,
+  content,
+  timestamp: new Date(),
+});
 function scrollToBottom() {
   nextTick(() => {
     const el = messagesContainer.value;
@@ -487,6 +420,7 @@ function showNotification(msg, type = "success") {
   notification.value = { message: msg, type, visible: true };
   setTimeout(() => (notification.value.visible = false), 3000);
 }
+
 async function apiCall(endpoint, payload) {
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     method: "POST",
@@ -500,12 +434,15 @@ async function apiCall(endpoint, payload) {
 // --- API Connect ---
 async function connectAPI(auto = false) {
   if (!apiKey.value && !auto && selectedProvider.value !== "openrouter") return;
+
   localStorage.setItem("chatbot_api_key", apiKey.value);
   isConnecting.value = true;
   isConnected.value = false;
+
   try {
     let providerUrl =
       selectedProvider.value === "openrouter" ? "/chatbot/chat_openrouter" : "/chatbot/chat";
+
     const data = await apiCall(providerUrl, {
       chat_history: [
         { role: "system", content: "connection test, return 1 if you can read." },
@@ -514,7 +451,9 @@ async function connectAPI(auto = false) {
       api_key: apiKey.value,
       model_name: model.value,
     });
+
     const reply = data?.choices?.[0]?.message?.content || data?.response || data?.message;
+
     if (reply?.trim()) {
       isConnected.value = true;
       showNotification("✅ Connected and working!");
@@ -527,7 +466,9 @@ async function connectAPI(auto = false) {
   } finally {
     isConnecting.value = false;
   }
+
   connectWebSocket();
+
   if (!chatHistory.value.length && isConnected.value) {
     chatHistory.value.push(newMessage("assistant", welcomePrompt.value));
     scrollToBottom();
@@ -543,7 +484,25 @@ function clearAPI() {
 // --- WebSocket ---
 function connectWebSocket() {
   socket = io(`${BASE_URL}/streaming-avatar`, { transports: ["websocket"] });
-  socket.on("connect", () => console.log("WebSocket connected"));
+
+  socket.on("connect", () => ((chunks = []), console.log("WebSocket connected")));
+  socket.on("audio_chunk", (chunk) => {
+    if (chunk instanceof ArrayBuffer) chunks.push(new Uint8Array(chunk));
+  });
+  socket.on("audio_complete", () => {
+    const blob = new Blob(chunks, { type: "audio/mpeg" });
+    audioUrl.value = URL.createObjectURL(blob);
+    chunks = [];
+    isRecognizing.value = false;
+  });
+}
+function onAudioPlay() {
+  isPlaying.value = true;
+  avatarState.value = "speaking";
+}
+function onAudioEnd() {
+  isPlaying.value = false;
+  avatarState.value = "idle";
 }
 
 // --- Chat Actions ---
@@ -557,6 +516,7 @@ function sendUserAudioMessage(text) {
   if (!isConnected.value || !text.trim() || !socket) return;
   chatHistory.value.push(newMessage("assistant", "⏳ Avatar is thinking..."));
   const idx = chatHistory.value.length - 1;
+
   socket.emit("user_message", {
     text,
     system_prompt: systemPrompt.value,
@@ -565,28 +525,31 @@ function sendUserAudioMessage(text) {
     provider: selectedProvider.value,
     history: chatHistory.value.map(({ role, content }) => ({ role, content })),
   });
-  socket.once("assistant_reply", async (reply) => {
-    const responseText = reply?.content || "[No response]";
-    console.log("Received reply:", responseText);
+
+  socket.once("assistant_reply", (reply) => {
     chatHistory.value[idx] = {
       ...chatHistory.value[idx],
-      content: responseText,
+      content: reply?.content || "[No response]",
       timestamp: new Date(),
     };
-    await speakReplySequentially(responseText);
   });
 }
 async function sendTextToChatbot() {
   if (!isConnected.value || !userText.value.trim() || isLoading.value) return;
+
   chatHistory.value.push(newMessage("user", userText.value.trim()));
   userText.value = "";
+
   chatHistory.value.push(newMessage("assistant", "⏳ Thinking..."));
   const idx = chatHistory.value.length - 1;
+
   isLoading.value = true;
   avatarState.value = "thinking";
+
   try {
     let providerUrl =
       selectedProvider.value === "openrouter" ? "/chatbot/chat_openrouter" : "/chatbot/chat";
+
     const data = await apiCall(providerUrl, {
       chat_history: [
         { role: "system", content: systemPrompt.value },
@@ -595,9 +558,10 @@ async function sendTextToChatbot() {
       api_key: apiKey.value,
       model_name: model.value,
     });
+
     const reply = data?.choices?.[0]?.message?.content || data?.error || "[No response]";
+
     chatHistory.value[idx] = newMessage("assistant", reply);
-    await speakReplySequentially(reply);
   } catch (e) {
     console.error(e);
     chatHistory.value[idx] = newMessage(
