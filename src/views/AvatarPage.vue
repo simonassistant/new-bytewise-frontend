@@ -566,12 +566,12 @@ function sendUserAudioMessage(text) {
   });
   socket.once("assistant_reply", async (reply) => {
     const responseText = reply?.content || "[No response]";
-    console.log("Received reply:", responseText);
     chatHistory.value[idx] = {
       ...chatHistory.value[idx],
       content: responseText,
       timestamp: new Date(),
     };
+    scrollToBottom();
     await speakReplySequentially(responseText);
   });
 }
