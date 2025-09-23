@@ -16,33 +16,20 @@
 
     <!-- Content -->
     <div v-if="isOpen" class="p-5 space-y-6 flex-1 overflow-y-auto">
-      <!-- Provider Selector -->
-      <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h3 class="font-semibold mb-3">🌐 Select Provider</h3>
-        <select
-          :value="selectedProvider"
-          @change="$emit('update:selectedProvider', $event.target.value)"
-          class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
-        >
-          <option value="hkbu">HKBU Chatbot</option>
-          <option value="openrouter">OpenRouter</option>
-        </select>
-      </div>
 
-      <!-- API Config (only for HKBU) -->
+      <!-- API Config -->
       <div
-        v-if="selectedProvider === 'hkbu'"
         class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"
       >
         <h3 class="font-semibold text-yellow-800 mb-3">🔑 API Configuration</h3>
         <input
           type="password"
           :value="apiKey"
-          @input="$emit('update:apiKey', $event.target.value)"
+          @input="onApiKeyInput($event.target.value)"
           placeholder="Paste your API key..."
           class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
         />
-        <p class="text-xs text-gray-600 mt-2">
+        <p class="text-xs text-gray-600 mt-2" v-if="selectedProvider === 'hkbu'">
           Get your key from the
           <a
             href="https://genai.hkbu.edu.hk/settings/api-docs"
@@ -52,6 +39,9 @@
           >
             HKBU Generative AI Platform </a
           >.
+        </p>
+        <p class="text-xs text-green-700 mt-2" v-if="selectedProvider === 'openrouter'">
+          ✅ Using <strong>OpenRouter</strong> as provider (via <code>iamfeelinglucky</code>).
         </p>
       </div>
 
@@ -126,7 +116,8 @@
 </template>
 
 <script setup>
-defineProps({
+// eslint-disable-next-line no-unused-vars
+const props = defineProps({
   isOpen: Boolean,
   systemPrompt: String,
   welcomePrompt: String,
@@ -138,12 +129,21 @@ defineProps({
   isConnecting: Boolean,
 });
 
-defineEmits([
+const emit = defineEmits([
   "update:isOpen",
   "update:apiKey",
   "update:model",
-  "update:selectedProvider", // ✅ NEW
+  "update:selectedProvider",
   "connectAPI",
   "clearAPI",
 ]);
+
+function onApiKeyInput(value) {
+  emit("update:apiKey", value);
+  if (value.trim() === "iamfeelinglucky") {
+    emit("update:selectedProvider", "openrouter");
+  } else {
+    emit("update:selectedProvider", "hkbu");
+  }
+}
 </script>

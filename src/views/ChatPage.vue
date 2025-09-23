@@ -274,13 +274,9 @@ onMounted(async () => {
 const goBack = () => router.push("/");
 
 async function connectAPI(auto = false) {
-  if (selectedProvider.value === "openrouter") {
-    isConnected.value = true;
-  } else {
-    if (!apiKey.value && !auto) return;
-    localStorage.setItem("chatbot_api_key", apiKey.value);
-    isConnected.value = true;
-  }
+  if (!apiKey.value && !auto) return;
+  localStorage.setItem("chatbot_api_key", apiKey.value);
+
   isConnecting.value = true;
   // 🔍 test provider connection by sending a dummy message
   try {
@@ -311,6 +307,7 @@ async function connectAPI(auto = false) {
 
     if (reply && reply.trim().length > 0) {
       showNotification("✅ Connected and working!", "success");
+      isConnected.value = true;
     } else {
       showNotification("⚠️ Connected, but no valid reply received.", "error");
       isConnected.value = false;

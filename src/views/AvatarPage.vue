@@ -73,7 +73,7 @@
           v-if="!isConnected"
           class="absolute inset-0 flex items-center justify-center bg-white/70 text-gray-600 text-sm font-medium z-10"
         >
-          🔑 Please connect your API key first
+          🔑 Please connect to Openrouter first
         </div>
 
         <!-- Mode Toggle -->
