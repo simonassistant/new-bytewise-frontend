@@ -1,13 +1,12 @@
 import { defineStore } from 'pinia';
 
 export const useChatbotStore = defineStore('chatbot', {
-  // 1. ADD `availableBots` to the state
   state: () => ({
     selectedBot: null,
-    availableBots: [], // This will hold our list of bots from the JSON files
+    availableBots: [],
     currentState: {
-      mode: null, // 'welcome', 'menu', 'brainstorm', 'review', 'feedback'
-      context: null, // Store current context (e.g., essay topic)
+      mode: null,
+      context: null,
     },
   }),
 
@@ -16,28 +15,24 @@ export const useChatbotStore = defineStore('chatbot', {
       this.selectedBot = bot;
     },
 
-    /**
-     * 2. ADD a new action to load all bot configs automatically.
-     * This uses Vite's glob import feature.
-     */
     async loadBots() {
-      // If we've already loaded them, don't do it again.
       if (this.availableBots.length > 0) return;
 
+      // Grab all imports
       const modules = import.meta.glob('../botConfig/*.json');
-      const bots = [];
 
-      for (const path in modules) {
-        const module = await modules[path]();
-        // Get a unique 'id' from the filename (e.g., 'learning' from 'learning.json')
+      // Kick off all imports in parallel
+      const loadPromises = Object.entries(modules).map(async ([path, loader]) => {
+        const module = await loader();
         const id = path.split('/').pop().replace('.json', '');
-        
-        bots.push({
-          id, // e.g., 'learning'
-          ...module.default, // The content of the JSON file
-        });
-      }
-      this.availableBots = bots;
+        return {
+          id,
+          ...module.default,
+        };
+      });
+
+      // Wait for all to complete
+      this.availableBots = await Promise.all(loadPromises);
     },
 
     setConversationState(mode, context = null) {
