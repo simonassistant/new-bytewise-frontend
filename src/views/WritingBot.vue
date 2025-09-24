@@ -116,18 +116,7 @@
           <div class="mb-6 p-4 bg-gray-50 rounded-lg">
             <h3 class="font-bold mb-2">Sample Essay for Practice:</h3>
             <div class="text-sm bg-white p-4 rounded border italic">
-              "As a university student, I agree with that internet has positive impact on our lives.
-              During the Covid-19, schools were using Zoom to maintain their teaching. Until now,
-              students had discovered many side of zoom. They use zoom to take tutorial classes,
-              have meeting with group mates and so on. Internet not only allow students to study at
-              home, but also provide a new learning style. Apart from that, the internet is also
-              contributes to our health. With the rapid development of the 5G technology, doctors
-              are able to operate more precisely Robot-Assist surgery (RAs). This means we can have
-              less trauma, less covery time and better surgery effect. And it all thanks to the high
-              speed and stable internet. Some people may worried about their privacy issue while
-              using the internet. However, in my opinion, as long as we pay more attention to our
-              behaviour such as not viewing strange website, not giving out our personal information
-              and so on. We can protect our privacy to a certain extent. (170 words)"
+              {{ sampleEssay }}
             </div>
           </div>
         </div>
@@ -141,7 +130,15 @@
               rows="8"
               placeholder="Paste or write the original draft here..."
               class="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              :disabled="isOriginalDraftConfirmed"
             ></textarea>
+            <button
+              @click="confirmDraft"
+              class="w-full mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="isOriginalDraftConfirmed"
+            >
+              {{ isOriginalDraftConfirmed ? "Draft Confirmed" : "Confirm Original Draft" }}
+            </button>
           </div>
           <div class="bg-white p-6 rounded-lg shadow-lg">
             <h2 class="text-lg font-bold mb-2">Final Draft</h2>
@@ -150,7 +147,15 @@
               rows="8"
               placeholder="Paste or write the improved draft here..."
               class="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              :disabled="!isOriginalDraftConfirmed"
             ></textarea>
+            <button
+              @click="confirmFinalDraft"
+              class="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="!isOriginalDraftConfirmed"
+            >
+              Confirm Final Draft & Generate Report
+            </button>
           </div>
         </div>
       </div>
@@ -310,15 +315,15 @@
           <input
             v-model="userMessage"
             type="text"
-            placeholder="Type your message..."
+            :placeholder="isConnected ? 'Type your message...' : 'Please connect to API first...'"
             class="flex-1 border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             @keyup.enter="sendMessage"
-            :disabled="isThinking"
+            :disabled="isThinking || !isConnected"
           />
           <button
             @click="sendMessage"
             class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="isThinking"
+            :disabled="isThinking || !isConnected"
           >
             {{ isThinking ? "Thinking..." : "Send" }}
           </button>
@@ -437,6 +442,28 @@ const activeBtn =
 const inactiveBtn =
   "px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:opacity-90 transition-opacity";
 
+// API Connection State
+const isConnected = ref(false);
+const isConnecting = ref(false);
+const apiKey = ref("");
+const notification = ref({ message: "", type: "success", visible: false });
+const model = ref("gpt-5-mini");
+
+const sampleEssay = ref(`As a university student, I agree with that internet has positive impact on our lives.
+              During the Covid-19, schools were using Zoom to maintain their teaching. Until now,
+              students had discovered many side of zoom. They use zoom to take tutorial classes,
+              have meeting with group mates and so on. Internet not only allow students to study at
+              home, but also provide a new learning style. Apart from that, the internet is also
+              contributes to our health. With the rapid development of the 5G technology, doctors
+              are able to operate more precisely Robot-Assist surgery (RAs). This means we can have
+              less trauma, less covery time and better surgery effect. And it all thanks to the high
+              speed and stable internet. Some people may worried about their privacy issue while
+              using the internet. However, in my opinion, as long as we pay more attention to our
+              behaviour such as not viewing strange website, not giving out our personal information
+              and so on. We can protect our privacy to a certain extent. (170 words)`);
+
+const isOriginalDraftConfirmed = ref(false);
+
 /* ------------ Components ------------ */
 const SkillBadge = defineComponent({
   name: "SkillBadge",
@@ -500,7 +527,7 @@ function switchMode(mode) {
 }
 
 async function sendMessage() {
-  if (!userMessage.value.trim() || isThinking.value) return;
+  if (!userMessage.value.trim() || isThinking.value || !isConnected.value || !apiKey.value) return;
 
   chatHistory.value.push({
     role: "user",
@@ -523,17 +550,22 @@ async function sendMessage() {
         {
           role: "system",
           content:
-            "You are in *Assessment Mode*. Your task is to evaluate the user's drafts.\n\n" +
+            "You are an expert writing assistant tasked with helping a student revise their own " +
+            "point-of-view essay draft without any specific prompts. Engage in a detailed, " +
+            "open-ended conversation to guide the student in improving their draft based on the " +
+            "provided rubric (Content and Ideas, Organisation and Logical Progression, Vocabulary, " +
+            "Grammar and Sentence Structure). Offer tailored feedback to enhance the essay’s relevance, " +
+            "clarity, depth, logical flow, vocabulary, and grammar. Ask insightful, multi-level questions " +
+            "to encourage critical thinking and help the student evaluate their work. Support an iterative " +
+            "revision process by suggesting specific improvements and encouraging the student to justify their " +
+            "choices. Ensure all exchanges are well-documented, showcasing the depth of the conversation and the student’s " +
+            "critical engagement with your suggestions.\n"+
             "Here are the drafts:\n" +
             "Original Draft:\n---\n" +
             `${originalDraft.value || '(empty)'}\n---\n\n` +
             "Final Draft:\n---\n" +
-            `${finalDraft.value || '(empty)'}\n---\n\n` +
-            "Please provide a critical reflection that:\n" +
-            "1. Identifies key differences between the drafts.\n" +
-            "2. Highlights specific improvements (clarity, structure, tone, persuasiveness, etc.).\n" +
-            "3. Points out remaining weaknesses or areas that could still be enhanced.\n" +
-            "4. Offers constructive, actionable suggestions for revision.",
+            `${finalDraft.value || '(empty)'}\n---\n\n`
+            ,
         },
         ...payloadHistory,
       ];
@@ -542,16 +574,40 @@ async function sendMessage() {
       payloadHistory = [
         {
           role: "system",
-          content: greetings[currentMode.value],
+          content: "You are an expert writing assistant designed to help students revise"+ 
+          "a teacher-provided draft to improve its quality as a point-of-view essay. "+
+          "Your role is to engage in an in-depth conversation with the student, providing "+
+          "clear, constructive feedback based on the provided rubric (Content and Ideas, "+
+          "Organisation and Logical Progression, Vocabulary, Grammar and Sentence Structure). "+
+          "Offer specific suggestions to enhance the draft’s relevance, clarity, depth, organisation, "+
+          "vocabulary, and grammar. Ask targeted questions to guide the student in critically evaluating "+
+          "the draft and encourage them to justify their revision choices. Provide appropriate prompts to "+
+          "ensure the conversation remains focused and productive, fostering a robust iterative revision process. "+
+          "Document all exchanges clearly to reflect the depth of the conversation and the student’s engagement.\n"+
+          "Teacher-provided Draft:\n---\n" +
+          `${sampleEssay.value}`
+          ,
         },
         ...payloadHistory,
       ];
     }
 
-    const res = await fetch(`${BASE_URL}/chatbot/chat_openrouter`, {
+    //using openrouter chatbot
+    // const res = await fetch(`${BASE_URL}/chatbot/chat`, {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ chat_history: payloadHistory }),
+    // });
+    
+    // using hkbu chatbot
+    const res = await fetch(`${BASE_URL}/chatbot/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_history: payloadHistory }),
+      body: JSON.stringify({
+        chat_history: payloadHistory,
+        api_key: apiKey.value,
+        model_name: model.value
+      }),
     });
 
     const data = await res.json();
@@ -594,13 +650,6 @@ function exportChatHistory() {
 
 // ✅ Auto-init
 switchMode(currentMode.value);
-
-// API Connection State
-const isConnected = ref(false);
-const isConnecting = ref(false);
-const apiKey = ref("");
-const notification = ref({ message: "", type: "success", visible: false });
-const model = ref("gpt-5-mini");
 
 // API Key Input Handler
 function onApiKeyInput(value) {
@@ -664,6 +713,23 @@ function clearAPI() {
 function showNotification(msg, type = "success") {
   notification.value = { message: msg, type, visible: true };
   setTimeout(() => (notification.value.visible = false), 3000);
+}
+
+function confirmDraft(){
+  if(originalDraft.value.trim()){
+    isOriginalDraftConfirmed.value = true;
+    finalDraft.value = originalDraft.value;
+  }else{
+    alert("Please paste the original draft first.");
+  }
+}
+
+function confirmFinalDraft(){
+  if(isOriginalDraftConfirmed.value && originalDraft.value.trim() && finalDraft.value.trim()){
+    alert("Report generated.");
+  }else{
+    alert("Please paste the final draft first.");
+  }
 }
 
 onMounted(async () => {
