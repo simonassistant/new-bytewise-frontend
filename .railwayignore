@@ -1,10 +1,9 @@
 # Railway deployment ignore file
-# Exclude documentation that might cause path issues during deployment
+# Exclude files that might cause deployment issues
 
 # Development files
 *.md
 *.txt
-docs/
 .vscode/
 .obsidian/
 
