@@ -133,13 +133,9 @@
       <div ref="chatMessages" class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
         <div class="w-full mx-auto flex flex-1 gap-4">
           <!-- Left: Chat messages + input -->
-          <div class="flex flex-col w-1/2">
+          <div class="flex flex-col w-1/2" style="height: 70vh">
             <!-- Message list -->
-            <div
-              ref="chatMessages"
-              class="chat-messages flex-1 overflow-y-auto p-5 space-y-4"
-              style="max-height: 60vh;"
-            >
+            <div ref="chatMessages" class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
               <div
                 v-for="(msg, i) in chatHistory"
                 :key="i"
