@@ -28,3 +28,23 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+# Railway deployment
+.railway/
+railway.json
+railway.toml
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Build outputs
+build/
+out/
+
+# Temporary files during deployment
+temp/
+tmp/

@@ -1,0 +1,47 @@
+# Railway deployment ignore file
+# Exclude documentation that might cause path issues during deployment
+
+# Development files
+*.md
+*.txt
+docs/
+.vscode/
+.obsidian/
+
+# Environment files
+.env.local
+.env.development
+.env.test
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Node modules (redundant but explicit)
+node_modules/
+
+# Build artifacts that shouldn't be deployed
+dist/
+build/
+.next/
+
+# Testing files
+coverage/
+*.test.js
+*.spec.js
+
+# IDE files
+.idea/
+*.sublime-*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git files
+.git/
