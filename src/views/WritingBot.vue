@@ -275,7 +275,7 @@ const isThinking = ref(false); // ✅ new state
 const showReport = ref(false);
 const reportChatHistory = ref([]);
 const reportGenerationInstructions = ref(
-  "Please generate a detailed report based on the chat history and drafts provided."
+  "Please generate a short report based on the chat history and drafts provided. Remember to be short and concise."
 );
 const bccEmail = ref([]);
 const ccEmail = ref([]);
