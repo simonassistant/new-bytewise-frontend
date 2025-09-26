@@ -137,7 +137,7 @@
             <!-- Message list -->
             <div ref="chatMessages" class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
               <div
-                v-for="(msg, i) in chatHistory"
+                v-for="(msg, i) in activeChatHistory"
                 :key="i"
                 class="flex"
                 :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
@@ -231,6 +231,16 @@
       <BriefMode />
     </div>
   </div>
+  <ReportModal
+    v-bind="{
+      show: showReport,
+      chatHistory: reportChatHistory,
+      reportGenerationInstructions,
+      bccEmail,
+      ccEmail,
+    }"
+    @close="showReport = false"
+  />
 </template>
 
 <script setup>
@@ -238,6 +248,7 @@ import { ref, nextTick, onMounted } from "vue";
 import { BASE_URL } from "../components/base_url";
 import MarkdownIt from "markdown-it";
 import BriefMode from "@/components/writing_bot/BriefMode.vue";
+import ReportModal from "../components/ReportModal.vue";
 import SkillesDeveloped from "@/components/writing_bot/SkillesDeveloped.vue";
 import { Sample_Essay } from "@/components/writing_bot/sampleEssay.js";
 import { Trainging_Mode_Prompt } from "@/components/writing_bot/sampleEssay.js";
@@ -255,10 +266,19 @@ const stats = ref({ exchanges: 0, questions: 0, revisions: 0 });
 const originalDraft = ref(Sample_Essay);
 const finalDraft = ref("");
 const showSkills = ref(true);
-const chatHistory = ref([]);
+const trainingChatHistory = ref([]);
+const assessmentChatHistory = ref([]);
+const activeChatHistory = ref([]);
 const userMessage = ref("");
 const chatMessages = ref(null);
 const isThinking = ref(false); // ✅ new state
+const showReport = ref(false);
+const reportChatHistory = ref([]);
+const reportGenerationInstructions = ref(
+  "Please generate a detailed report based on the chat history and drafts provided."
+);
+const bccEmail = ref([]);
+const ccEmail = ref([]);
 
 const greetings = {
   training: `Hello! I'm here to help you improve your essay through AI collaboration. Let's start by choosing which aspect of your essay you'd like to work on. Would you like to focus on:\n1) Content & Ideas\n2) Organisation & Structure\n3) Vocabulary\n4) Grammar & Sentence Structure`,
@@ -297,15 +317,34 @@ function renderMarkdown(text) {
 function switchMode(mode) {
   currentMode.value = mode;
   stats.value = { exchanges: 0, questions: 0, revisions: 0 };
-  if (chatHistory.value.length < 2)
-    chatHistory.value = [{ role: "assistant", content: greetings[mode], timestamp: new Date() }];
+  if (mode === "training") {
+    activeChatHistory.value = trainingChatHistory.value;
+    if (trainingChatHistory.value.length === 0) {
+      trainingChatHistory.value.push({
+        role: "assistant",
+        content: greetings.training,
+        timestamp: new Date(),
+      });
+    }
+  } else if (mode === "assessment") {
+    activeChatHistory.value = assessmentChatHistory.value;
+    if (assessmentChatHistory.value.length === 0) {
+      assessmentChatHistory.value.push({
+        role: "assistant",
+        content: greetings.assessment,
+        timestamp: new Date(),
+      });
+    }
+  } else {
+    activeChatHistory.value = [];
+  }
   scrollToBottom();
 }
 
 async function sendMessage() {
   if (!userMessage.value.trim() || isThinking.value || !isConnected.value || !apiKey.value) return;
 
-  chatHistory.value.push({
+  activeChatHistory.value.push({
     role: "user",
     content: userMessage.value,
     timestamp: new Date(),
@@ -317,8 +356,8 @@ async function sendMessage() {
   isThinking.value = true;
 
   try {
-    // --- Build payload history separately from visible chatHistory ---
-    let payloadHistory = [...chatHistory.value];
+    // --- Build payload history separately from visible activeChatHistory ---
+    let payloadHistory = [...activeChatHistory.value];
 
     if (currentMode.value === "assessment") {
       // Insert **system message with both drafts** only for backend
@@ -350,13 +389,6 @@ async function sendMessage() {
       ];
     }
 
-    //using openrouter chatbot
-    // const res = await fetch(`${BASE_URL}/chatbot/chat`, {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ chat_history: payloadHistory }),
-    // });
-    // using hkbu chatbot
     const res = await fetch(`${BASE_URL}/chatbot/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -371,11 +403,11 @@ async function sendMessage() {
     const reply = data?.choices?.[0]?.message?.content || data?.response || data?.message || "";
 
     if (reply) {
-      chatHistory.value.push({ role: "assistant", content: reply, timestamp: new Date() });
+      activeChatHistory.value.push({ role: "assistant", content: reply, timestamp: new Date() });
       scrollToBottom();
     }
   } catch {
-    chatHistory.value.push({
+    activeChatHistory.value.push({
       role: "assistant",
       content: "⚠️ Error connecting to server.",
       timestamp: new Date(),
@@ -449,7 +481,7 @@ function clearAPI() {
   localStorage.removeItem("chatbot_api_key");
   apiKey.value = "";
   isConnected.value = false;
-  chatHistory.value = [];
+  activeChatHistory.value = [];
 }
 
 function showNotification(msg, type = "success") {
@@ -468,7 +500,21 @@ function confirmDraft() {
 
 function confirmFinalDraft() {
   if (isOriginalDraftConfirmed.value && originalDraft.value.trim() && finalDraft.value.trim()) {
-    alert("Report generated.");
+    bccEmail.value = ["simonwanghkteacher@gmail.com"];
+    reportChatHistory.value = [...activeChatHistory.value];
+    reportChatHistory.value = [
+      {
+        role: "system",
+        content:
+          "Original Draft:\n---\n" +
+          `${originalDraft.value || "(empty)"}\n---\n\n` +
+          "Final Draft:\n---\n" +
+          `${finalDraft.value || "(empty)"}\n---\n\n`,
+        timestamp: new Date(),
+      },
+      ...reportChatHistory.value,
+    ];
+    showReport.value = true;
   } else {
     alert("Please paste the final draft first.");
   }
