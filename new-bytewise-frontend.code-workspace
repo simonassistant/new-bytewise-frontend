@@ -1,0 +1,47 @@
+{
+	"folders": [
+		{
+			"name": "new-bytewise-frontend",
+			"path": "."
+		},
+		{
+			"name": "WritingBotDev",
+			"path": "C:\\Users\\simonwang\\Documents\\Vault4sync\\WritingBotDev"
+		}
+	],
+	"settings": {
+		"editor.tabSize": 2,
+		"editor.insertSpaces": true,
+		"editor.detectIndentation": false,
+		"files.eol": "\n",
+		"files.trimTrailingWhitespace": true,
+		"files.insertFinalNewline": true,
+		"emmet.includeLanguages": {
+			"vue-html": "html"
+		},
+		"vetur.validation.template": false,
+		"vetur.validation.script": false,
+		"vetur.validation.style": false,
+		"eslint.validate": [
+			"javascript",
+			"javascriptreact",
+			"vue"
+		],
+		"editor.codeActionsOnSave": {
+			"source.fixAll.eslint": "explicit"
+		},
+		"typescript.preferences.importModuleSpecifier": "relative",
+		"javascript.preferences.importModuleSpecifier": "relative"
+	},
+	"extensions": {
+		"recommendations": [
+			"vue.volar",
+			"vue.vscode-typescript-vue-plugin",
+			"dbaeumer.vscode-eslint",
+			"esbenp.prettier-vscode",
+			"bradlc.vscode-tailwindcss",
+			"ms-vscode.vscode-typescript-next"
+		]
+	}
+}
+

@@ -2,7 +2,7 @@
   <div class="w-full p-4 flex-1 flex flex-col">
     <!-- Header -->
     <div class="text-center mb-6">
-      <h1 class="text-3xl font-bold mb-2">EEGC Human-AI Collaboration Chatbot</h1>
+      <h1 class="text-3xl font-bold mb-2">EditForge: Human-AI Collaboration System</h1>
       <p class="text-gray-600">Practice and assess your AI interaction skills</p>
     </div>
 
