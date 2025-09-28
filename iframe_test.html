@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poe iframe Test</title>
+    <style>
+        body {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .test-container {
+            border: 2px solid #ccc;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+        }
+        .info {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Poe TrainingModeMockup iframe Test</h1>
+
+    <div class="info">
+        <strong>Testing URL:</strong> https://poe.com/TrainingModeMockup
+    </div>
+
+    <div class="test-container">
+        <h2>iframe Embed Test</h2>
+        <iframe
+            src="https://poe.com/TrainingModeMockup"
+            title="Poe Training Mode Mockup"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+            loading="lazy">
+            <p>Your browser does not support iframes. The content cannot be displayed.</p>
+        </iframe>
+    </div>
+
+    <div class="info">
+        <h3>What to look for:</h3>
+        <ul>
+            <li>If the iframe loads successfully, you'll see the Poe content</li>
+            <li>If it's blocked, you might see a blank frame or error message</li>
+            <li>Check browser console for any X-Frame-Options or CSP errors</li>
+            <li>Some sites block iframe embedding for security reasons</li>
+        </ul>
+    </div>
+
+    <script>
+        // Monitor iframe load events
+        const iframe = document.querySelector('iframe');
+
+        iframe.addEventListener('load', function() {
+            console.log('iframe loaded successfully');
+        });
+
+        iframe.addEventListener('error', function() {
+            console.log('iframe failed to load');
+        });
+
+        // Check for blocked iframe after a delay
+        setTimeout(() => {
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                if (!iframeDoc) {
+                    console.log('iframe content is not accessible - likely blocked by X-Frame-Options');
+                }
+            } catch (e) {
+                console.log('iframe access blocked:', e.message);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

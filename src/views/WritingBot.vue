@@ -186,11 +186,13 @@
           <div class="flex-1 space-y-4 overflow-y-auto h-full">
             <!-- Original Draft -->
             <div class="bg-white p-4 rounded-lg shadow">
-              <h2 class="text-lg font-bold mb-2">Original Draft</h2>
+              <h2 class="text-lg font-bold mb-2">
+                {{ currentMode === 'assessment' ? 'Your Original Essay' : 'Original Draft' }}
+              </h2>
               <textarea
                 v-model="originalDraft"
                 rows="6"
-                placeholder="Paste or write the original draft here..."
+                :placeholder="currentMode === 'assessment' ? 'Paste your original essay here...' : 'Paste or write the original draft here...'"
                 class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 :disabled="isOriginalDraftConfirmed"
               ></textarea>
@@ -199,26 +201,35 @@
                 class="w-full mt-2 px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="isOriginalDraftConfirmed"
               >
-                {{ isOriginalDraftConfirmed ? "Draft Confirmed" : "Confirm Original Draft" }}
+                {{ isOriginalDraftConfirmed ? "Essay Confirmed" : (currentMode === 'assessment' ? "Confirm Your Essay" : "Confirm Original Draft") }}
               </button>
             </div>
 
             <!-- Final Draft -->
             <div class="bg-white p-4 rounded-lg shadow">
-              <h2 class="text-lg font-bold mb-2">Final Draft</h2>
+              <h2 class="text-lg font-bold mb-2">
+                {{ currentMode === 'assessment' ? 'Revised Version (Auto-Updated)' : 'Final Draft' }}
+              </h2>
               <textarea
                 v-model="finalDraft"
                 rows="6"
-                placeholder="Paste or write the improved draft here..."
+                :placeholder="currentMode === 'assessment' ? 'This will be updated automatically as you revise through chat...' : 'Paste or write the improved draft here...'"
                 class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                :disabled="!isOriginalDraftConfirmed"
+                :disabled="currentMode === 'assessment' ? isOriginalDraftConfirmed : !isOriginalDraftConfirmed"
+                :readonly="currentMode === 'assessment'"
               ></textarea>
               <button
-                @click="confirmFinalDraft"
-                class="w-full mt-2 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="!isOriginalDraftConfirmed"
+                @click="currentMode === 'assessment' ? submitAssessment() : confirmFinalDraft()"
+                class="w-full mt-2 px-3 py-2 text-white rounded-lg text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                :class="currentMode === 'assessment' ? 'bg-green-600' : 'bg-blue-600'"
+                :disabled="!isOriginalDraftConfirmed || isGeneratingAssessment"
               >
-                Confirm Final Draft & Generate Report
+                <span v-if="isGeneratingAssessment">
+                  {{ currentMode === 'assessment' ? '🔄 Generating Assessment...' : '🔄 Generating Report...' }}
+                </span>
+                <span v-else>
+                  {{ currentMode === 'assessment' ? 'Submit Assessment' : 'Confirm Final Draft & Generate Report' }}
+                </span>
               </button>
             </div>
           </div>
@@ -253,6 +264,7 @@ import SkillesDeveloped from "@/components/writing_bot/SkillesDeveloped.vue";
 import { Sample_Essay } from "@/components/writing_bot/sampleEssay.js";
 import { Trainging_Mode_Prompt } from "@/components/writing_bot/sampleEssay.js";
 import { Assessment_Mode_Prompt } from "@/components/writing_bot/sampleEssay.js";
+import { AssessBot_Prompt } from "@/components/writing_bot/sampleEssay.js";
 
 // ✅ Only use markdown-it (no katex plugin)
 const markdown = new MarkdownIt({
@@ -263,7 +275,7 @@ const markdown = new MarkdownIt({
 /* ------------ State ------------ */
 const currentMode = ref("briefing");
 const stats = ref({ exchanges: 0, questions: 0, revisions: 0 });
-const originalDraft = ref(Sample_Essay);
+const originalDraft = ref("");  // Start empty for assessment mode
 const finalDraft = ref("");
 const showSkills = ref(true);
 const trainingChatHistory = ref([]);
@@ -279,11 +291,64 @@ const reportGenerationInstructions = ref(
 );
 const bccEmail = ref([]);
 const ccEmail = ref([]);
+const isGeneratingAssessment = ref(false);
 
 const greetings = {
-  training: `Hello! I'm here to help you improve your essay through AI collaboration. Let's start by choosing which aspect of your essay you'd like to work on. Would you like to focus on:\n1) Content & Ideas\n2) Organisation & Structure\n3) Vocabulary\n4) Grammar & Sentence Structure`,
-  assessment: `I am here to help you revise the essay. Please share an essay draft.`,
-  briefing: `Welcome! Please configure your API settings to start using the chatbot.`,
+  training: `Thanks for sharing the essay! Tell me about your course and what help you need.
+
+I'm here to help you learn 4 essential AI collaboration skills while we work together to revise this climate change essay:
+
+✅ **Skill 1**: Provide contextual information to AI
+✅ **Skill 2**: Strategic planning and goal negotiation
+✅ **Skill 3**: Critical review of AI suggestions
+✅ **Skill 4**: Independent editing and decision-making
+
+**Here's the sample essay we'll be working on:**
+
+---
+
+**Essay Question**: Some people believe that individual actions are insignificant in the fight against climate change compared to the efforts of governments and large corporations. To what extent do you agree or disagree with this statement?
+
+**Sample Essay** (Current Version - Needs Improvement):
+
+Climate change, it is very huge problem now. I think individual actions not so important like what government and big companies do. But still, I kinda disagree because people also can do stuff to help. I will explain my thoughts here.
+
+First, governments and companies, they got more power. They can do big things. Like, government make laws for no pollution. They can stop plastic bags or tell factories to not make so much smoke. Companies also can change their ways. They can use less energy or make stuff that don't hurt environment. This is good because it change many people life at once. So powerful, you know.
+
+But individual actions, they matter too, I guess. If many people do little things, it add up. Like, turn off lights at home save energy. Or buy things from green companies. Then companies think, oh, we must be green to sell more. But sometimes it hard to know if this really work. People don't always do it. Also, one person doing something. It not enough.
+
+Another thing. When people change their life, like stop using car and walk, government see this. Politicians want votes, so they make rules people like. So individual action can push government to do more. Maybe start big movement. But I not sure how many people need to do this for it to work. Just thinking.
+
+Some say individual action too small. One person cannot fix climate change. True, but if million people try, maybe it help. Every small thing count. Or not? I don't know sometimes.
+
+Anyway, I think both individual and government and companies must work. Individual action seem small but if many do it, it big. We need all to fix this problem. Climate change very bad, so everyone must try hard. That's my opinion.
+
+---
+
+To help you effectively, I'd like to know:
+- What course are you taking?
+- What are your goals for this revision session?
+- Are you familiar with the assessment rubrics?
+
+Once I understand your context, we'll work together to improve this essay. Remember: I'll guide you and make suggestions, but YOU will do all the actual editing. Let's begin! 🚀`,
+  assessment: `Hello! I'm ready to help you revise your essay. Please paste your original essay in the "Your Original Essay" box and click "Confirm Your Essay" to begin.
+
+Here's how assessment mode works:
+
+📝 **Step 1**: Paste your original essay and confirm it (the box will become locked)
+💬 **Step 2**: Tell me what help you need and start our revision conversation
+🔄 **Step 3**: I'll automatically update your "Revised Version" as we work together
+🏁 **Step 4**: When you're satisfied, click "Submit Assessment" to finish
+
+Remember: This is assessment mode, so you'll need to take the lead in our conversation. I'm here to provide suggestions and feedback, but you'll need to:
+
+• Provide context about your assignment and goals
+• Ask for specific feedback on areas you want to improve
+• Guide our revision process through the chat
+• Make final decisions about which suggestions to implement
+
+I'll track the latest version of your essay automatically as we discuss improvements. Let's begin!`,
+  briefing: `Welcome to EditForge! Please configure your API settings to start using the system.`,
 };
 
 const activeBtn =
@@ -317,7 +382,14 @@ function renderMarkdown(text) {
 function switchMode(mode) {
   currentMode.value = mode;
   stats.value = { exchanges: 0, questions: 0, revisions: 0 };
+
+  // Reset draft confirmation state when switching modes
+  isOriginalDraftConfirmed.value = false;
+
   if (mode === "training") {
+    // Training mode uses sample essay
+    originalDraft.value = Sample_Essay;
+    finalDraft.value = "";
     activeChatHistory.value = trainingChatHistory.value;
     if (trainingChatHistory.value.length === 0) {
       trainingChatHistory.value.push({
@@ -327,6 +399,9 @@ function switchMode(mode) {
       });
     }
   } else if (mode === "assessment") {
+    // Assessment mode starts with empty essays (students must provide their own)
+    originalDraft.value = "";
+    finalDraft.value = "";
     activeChatHistory.value = assessmentChatHistory.value;
     if (assessmentChatHistory.value.length === 0) {
       assessmentChatHistory.value.push({
@@ -368,13 +443,14 @@ async function sendMessage() {
             Assessment_Mode_Prompt +
             "Original Draft:\n---\n" +
             `${originalDraft.value || "(empty)"}\n---\n\n` +
-            "Final Draft:\n---\n" +
-            `${finalDraft.value || "(empty)"}\n---\n\n`,
+            "Current Revised Version:\n---\n" +
+            `${finalDraft.value || "(empty)"}\n---\n\n` +
+            "IMPORTANT: If the student makes specific edits or requests changes, provide the updated version of the essay in your response. Always include the full revised text when changes are made.",
         },
         ...payloadHistory,
       ];
     } else if (currentMode.value === "training") {
-      // Insert system message  for backend
+      // Insert system message for backend
       payloadHistory = [
         {
           role: "system",
@@ -404,6 +480,12 @@ async function sendMessage() {
 
     if (reply) {
       activeChatHistory.value.push({ role: "assistant", content: reply, timestamp: new Date() });
+
+      // In assessment mode, try to extract updated essay text from AI response
+      if (currentMode.value === "assessment" && isOriginalDraftConfirmed.value) {
+        extractAndUpdateEssay(reply);
+      }
+
       scrollToBottom();
     }
   } catch {
@@ -423,6 +505,31 @@ function scrollToBottom() {
       chatMessages.value.scrollTop = chatMessages.value.scrollHeight;
     }
   });
+}
+
+// Function to extract and update essay from AI response in assessment mode
+function extractAndUpdateEssay(aiResponse) {
+  // Look for common patterns that indicate a revised essay
+  const patterns = [
+    /(?:Here'?s the revised version|Updated essay|Revised essay|Here'?s your improved essay)[:\s]*([\s\S]*?)(?:\n\n|$)/i,
+    /(?:Revised version|Updated version)[:\s]*([\s\S]*?)(?:\n\n|$)/i,
+    /```([\s\S]*?)```/,  // Text in code blocks
+    /"([\s\S]*?)"/,      // Text in quotes (if it's longer than 100 chars)
+  ];
+
+  for (const pattern of patterns) {
+    const match = aiResponse.match(pattern);
+    if (match && match[1] && match[1].trim().length > 100) {
+      // Only update if we found substantial text (>100 chars)
+      const extractedText = match[1].trim();
+      if (extractedText !== finalDraft.value) {
+        finalDraft.value = extractedText;
+        // Show a brief notification that the essay was updated
+        showNotification("📝 Essay updated automatically", "success");
+        break;
+      }
+    }
+  }
 }
 
 // API Key Input Handler
@@ -492,29 +599,227 @@ function showNotification(msg, type = "success") {
 function confirmDraft() {
   if (originalDraft.value.trim()) {
     isOriginalDraftConfirmed.value = true;
-    finalDraft.value = originalDraft.value;
+
+    if (currentMode.value === "assessment") {
+      // In assessment mode, copy original to final draft to start revision process
+      finalDraft.value = originalDraft.value;
+    } else {
+      // In training mode, copy to final draft for manual editing
+      finalDraft.value = originalDraft.value;
+    }
   } else {
-    alert("Please paste the original draft first.");
+    alert(currentMode.value === "assessment" ? "Please paste your original essay first." : "Please paste the original draft first.");
   }
 }
 
-function confirmFinalDraft() {
+async function submitAssessment() {
+  if (isOriginalDraftConfirmed.value && originalDraft.value.trim()) {
+    // Send "done" message to end assessment session
+    userMessage.value = "done";
+    await sendMessage();
+
+    // Generate comprehensive assessment report using AssessBot after a short delay
+    setTimeout(async () => {
+      isGeneratingAssessment.value = true;
+      try {
+        // Prepare the assessment data for AssessBot
+        const assessmentData = {
+          originalEssay: originalDraft.value,
+          revisedEssay: finalDraft.value,
+          chatHistory: activeChatHistory.value.map(msg => ({
+            role: msg.role,
+            content: msg.content,
+            timestamp: msg.timestamp
+          }))
+        };
+
+        // Create the system prompt for AssessBot with the assessment data
+        const assessmentSystemMessage = {
+          role: "system",
+          content: AssessBot_Prompt + 
+            "\n\nOriginal Essay:\n---\n" + assessmentData.originalEssay + 
+            "\n---\n\nRevised Essay:\n---\n" + assessmentData.revisedEssay + 
+            "\n---\n\nChat History:\n" + 
+            JSON.stringify(assessmentData.chatHistory, null, 2)
+        };
+
+        // Send assessment request to AssessBot
+        const assessmentResponse = await fetch(`${BASE_URL}/chatbot/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_history: [
+              assessmentSystemMessage,
+              {
+                role: "user",
+                content: "Please provide a comprehensive assessment report for this student's performance based on the provided original essay, revised essay, and chat history. Follow the structured format specified in your system prompt."
+              }
+            ],
+            api_key: apiKey.value,
+            model_name: model.value,
+          }),
+        });
+
+        const assessmentData_response = await assessmentResponse.json();
+        const assessmentReport = assessmentData_response?.choices?.[0]?.message?.content || 
+                               assessmentData_response?.response || 
+                               assessmentData_response?.message || 
+                               "Error generating assessment report";
+
+        // Update report generation instructions with the AssessBot report
+        reportGenerationInstructions.value = `COMPREHENSIVE STUDENT ASSESSMENT REPORT
+
+Generated by AssessBot using dual rubric assessment:
+
+${assessmentReport}
+
+This report evaluates both essay writing improvement and human-AI collaboration skills according to LANG 0036 course rubrics.`;
+        
+        bccEmail.value = ["simonwanghkteacher@gmail.com"];
+        reportChatHistory.value = [
+          {
+            role: "system",
+            content:
+              "Original Essay:\n---\n" +
+              `${originalDraft.value || "(empty)"}\n---\n\n` +
+              "Revised Essay:\n---\n" +
+              `${finalDraft.value || "(empty)"}\n---\n\n` +
+              "Assessment Report:\n---\n" +
+              assessmentReport + "\n---\n",
+            timestamp: new Date(),
+          },
+          ...activeChatHistory.value,
+        ];
+        
+        showReport.value = true;
+        showNotification("📊 Assessment report generated successfully!", "success");
+        
+      } catch (error) {
+        console.error("Error generating assessment report:", error);
+        showNotification("⚠️ Error generating assessment report. Using fallback.", "error");
+        
+        // Fallback to original simple report
+        bccEmail.value = ["simonwanghkteacher@gmail.com"];
+        reportChatHistory.value = [
+          {
+            role: "system",
+            content:
+              "Original Essay:\n---\n" +
+              `${originalDraft.value || "(empty)"}\n---\n\n` +
+              "Final Essay:\n---\n" +
+              `${finalDraft.value || "(empty)"}\n---\n\n`,
+            timestamp: new Date(),
+          },
+          ...activeChatHistory.value,
+        ];
+        showReport.value = true;
+      } finally {
+        isGeneratingAssessment.value = false;
+      }
+    }, 1000);
+  } else {
+    alert("Please confirm your original essay first.");
+  }
+}
+
+async function confirmFinalDraft() {
   if (isOriginalDraftConfirmed.value && originalDraft.value.trim() && finalDraft.value.trim()) {
-    bccEmail.value = ["simonwanghkteacher@gmail.com"];
-    reportChatHistory.value = [...activeChatHistory.value];
-    reportChatHistory.value = [
-      {
+    isGeneratingAssessment.value = true;
+    try {
+      // Generate assessment report using AssessBot for training mode as well
+      const assessmentData = {
+        originalEssay: originalDraft.value,
+        revisedEssay: finalDraft.value,
+        chatHistory: activeChatHistory.value.map(msg => ({
+          role: msg.role,
+          content: msg.content,
+          timestamp: msg.timestamp
+        }))
+      };
+
+      // Create the system prompt for AssessBot with the assessment data
+      const assessmentSystemMessage = {
         role: "system",
-        content:
-          "Original Draft:\n---\n" +
-          `${originalDraft.value || "(empty)"}\n---\n\n` +
-          "Final Draft:\n---\n" +
-          `${finalDraft.value || "(empty)"}\n---\n\n`,
-        timestamp: new Date(),
-      },
-      ...reportChatHistory.value,
-    ];
-    showReport.value = true;
+        content: AssessBot_Prompt + 
+          "\n\nOriginal Essay:\n---\n" + assessmentData.originalEssay + 
+          "\n---\n\nRevised Essay:\n---\n" + assessmentData.revisedEssay + 
+          "\n---\n\nChat History:\n" + 
+          JSON.stringify(assessmentData.chatHistory, null, 2)
+      };
+
+      // Send assessment request to AssessBot
+      const assessmentResponse = await fetch(`${BASE_URL}/chatbot/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_history: [
+            assessmentSystemMessage,
+            {
+              role: "user",
+              content: "Please provide a comprehensive assessment report for this student's training performance based on the provided original essay, revised essay, and chat history. Focus on both essay improvement and demonstration of AI collaboration skills during training."
+            }
+          ],
+          api_key: apiKey.value,
+          model_name: model.value,
+        }),
+      });
+
+      const assessmentData_response = await assessmentResponse.json();
+      const assessmentReport = assessmentData_response?.choices?.[0]?.message?.content || 
+                             assessmentData_response?.response || 
+                             assessmentData_response?.message || 
+                             "Error generating assessment report";
+
+      // Update report generation instructions with the AssessBot report
+      reportGenerationInstructions.value = `TRAINING MODE ASSESSMENT REPORT
+
+Generated by AssessBot for training completion:
+
+${assessmentReport}
+
+This report shows the student's progress in learning AI collaboration skills and essay revision during training mode.`;
+      
+      bccEmail.value = ["simonwanghkteacher@gmail.com"];
+      reportChatHistory.value = [
+        {
+          role: "system",
+          content:
+            "Original Essay:\n---\n" +
+            `${originalDraft.value || "(empty)"}\n---\n\n` +
+            "Revised Essay:\n---\n" +
+            `${finalDraft.value || "(empty)"}\n---\n\n` +
+            "Training Assessment Report:\n---\n" +
+            assessmentReport + "\n---\n",
+          timestamp: new Date(),
+        },
+        ...activeChatHistory.value,
+      ];
+      
+      showReport.value = true;
+      showNotification("📊 Training assessment report generated!", "success");
+      
+    } catch (error) {
+      console.error("Error generating training assessment report:", error);
+      showNotification("⚠️ Error generating assessment report. Using fallback.", "error");
+      
+      // Fallback to original simple report
+      bccEmail.value = ["simonwanghkteacher@gmail.com"];
+      reportChatHistory.value = [
+        {
+          role: "system",
+          content:
+            "Original Draft:\n---\n" +
+            `${originalDraft.value || "(empty)"}\n---\n\n` +
+            "Final Draft:\n---\n" +
+            `${finalDraft.value || "(empty)"}\n---\n\n`,
+          timestamp: new Date(),
+        },
+        ...activeChatHistory.value,
+      ];
+      showReport.value = true;
+    } finally {
+      isGeneratingAssessment.value = false;
+    }
   } else {
     alert("Please paste the final draft first.");
   }

@@ -22,6 +22,25 @@
         <span :class="['font-semibold transition-colors', isAvatarMode ? 'text-purple-700' : 'text-gray-400']">Avatar</span>
       </div>
 
+      <!-- Special Tools Section -->
+      <div class="border-t pt-4 space-y-3">
+        <h3 class="text-center text-gray-600 font-semibold">🛠️ Special Tools</h3>
+        <button
+          @click="goToPoeCreator"
+          class="w-full p-4 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white font-semibold shadow hover:opacity-90 transition flex items-center justify-center space-x-2"
+        >
+          <span>🤖</span>
+          <span>Poe App Creator</span>
+        </button>
+        <button
+          @click="goToWritingBot"
+          class="w-full p-4 rounded-xl bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold shadow hover:opacity-90 transition flex items-center justify-center space-x-2"
+        >
+          <span>✍️</span>
+          <span>Writing Bot</span>
+        </button>
+      </div>
+
       <!-- Bot List -->
       <div class="space-y-4">
         <button
@@ -102,6 +121,15 @@ function chooseBot(bot) {
   } else {
     router.push({ name: 'Chat', params: { botId: bot.id } });
   }
+}
+
+// Go to special tools
+function goToPoeCreator() {
+  router.push({ name: 'PoeCreator' });
+}
+
+function goToWritingBot() {
+  router.push({ name: 'WritingBot' });
 }
 
 // Computed pagination

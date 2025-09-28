@@ -1,14 +1,20 @@
 {
 	"folders": [
-		{
-			"name": "new-bytewise-frontend",
-			"path": "."
-		},
-		{
-			"name": "WritingBotDev",
-			"path": "C:\\Users\\simonwang\\Documents\\Vault4sync\\WritingBotDev"
-		}
-	],
+    {
+      "name": "new-bytewise-frontend",
+      "path": "."
+    },
+    {
+      "name": "WritingBotDev",
+      "path": "C:\\Users\\simonwang\\Documents\\Vault4sync\\WritingBotDev"
+    },
+    {
+      "path": "../../../../../Documents/Usage/ObSync/Vault4sync/WritingBotDev"
+    },
+    {
+      "path": "../../AItools/06_LLM_API"
+    }
+  ],
 	"settings": {
 		"editor.tabSize": 2,
 		"editor.insertSpaces": true,

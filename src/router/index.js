@@ -4,6 +4,7 @@ import Home from '../views/HomePage.vue'
 import Chat from '../views/ChatPage.vue'
 import Avatar from '../views/AvatarPage.vue'
 import WritingBot from '../views/WritingBot.vue'
+import PoeCreator from '../components/poe_creator/PoeAppCreator.vue'
 
 const routes = [
   {
@@ -27,6 +28,11 @@ const routes = [
     path: '/writingBot',
     name: 'WritingBot',
     component: WritingBot
+  },
+  {
+    path: '/poe-creator',
+    name: 'PoeCreator',
+    component: PoeCreator
   },
 ]
 
