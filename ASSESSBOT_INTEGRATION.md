@@ -2,7 +2,7 @@
 
 ## Overview
 
-The AssessBot has been successfully integrated into the EditForge Human-AI Collaboration System to provide comprehensive, automated assessment of student performance in the LANG 0036 course's AI essay revision module.
+The AssessBot has been successfully integrated into the LANG 0036: AI Writing Collaboration Lab to provide comprehensive, automated assessment of student performance in the LANG 0036 course's AI essay revision module.
 
 ## Features
 
