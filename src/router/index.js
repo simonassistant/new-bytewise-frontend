@@ -9,17 +9,13 @@ import PoeCreator from '../components/poe_creator/PoeAppCreator.vue'
 const routes = [
   {
     path: '/',
-    name: 'WritingBot',
-    component: WritingBot
-  },
-  {
-    path: '/home',
     name: 'Home',
     component: Home
   },
   {
     path: '/writingBot',
-    redirect: '/'
+    name: 'WritingBot',
+    component: WritingBot
   },
   {
     path: '/chat/:botId',
