@@ -507,7 +507,12 @@ function confirmFinalDraft() {
         role: "system",
         content:
           "Original Draft:\n---\n" +
-          `${originalDraft.value || "(empty)"}\n---\n\n` +
+          `${originalDraft.value || "(empty)"}\n---\n\n`,
+        timestamp: new Date(),
+      },
+      {
+        role: "system",
+        content:
           "Final Draft:\n---\n" +
           `${finalDraft.value || "(empty)"}\n---\n\n`,
         timestamp: new Date(),
