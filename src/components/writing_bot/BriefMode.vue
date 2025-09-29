@@ -3,11 +3,11 @@
     <!-- Briefing Content iFrame -->
     <div class="bg-white rounded-lg shadow-lg overflow-hidden">
       <iframe
-        src="src\components\writing_bot\briefing.html"
+        src="/briefing.html"
         class="w-full h-screen border-0"
-        style="min-height: 800px;"
+        style="min-height: 800px"
         title="Detailed Briefing Information"
-      ></iframe>
+      />
     </div>
   </div>
 </template>
