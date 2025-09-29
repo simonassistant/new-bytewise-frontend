@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [
     vue(),
     // Only include dev tools in development
-    process.env.NODE_ENV === 'development' && vueDevTools(),
+    import.meta.env.DEV && vueDevTools(),
     tailwindcss()
   ].filter(Boolean),
   resolve: {
@@ -31,13 +31,5 @@ export default defineConfig({
       }
     }
   },
-  // Railway deployment settings
-  server: {
-    host: true,
-    port: process.env.PORT || 4173
-  },
-  preview: {
-    host: true,
-    port: process.env.PORT || 4173
-  }
+
 })
