@@ -283,10 +283,10 @@ import { BASE_URL } from "../components/base_url";
 import MarkdownIt from "markdown-it";
 import BriefMode from "@/components/writing_bot/BriefMode.vue";
 import ReportModal from "../components/ReportModal.vue";
-import { Sample_Essay } from "@/components/writing_bot/sampleEssay.js";
-import { Trainging_Mode_Prompt } from "@/components/writing_bot/sampleEssay.js";
-import { Assessment_Mode_Prompt } from "@/components/writing_bot/sampleEssay.js";
-import { AssessBot_Prompt } from "@/components/writing_bot/sampleEssay.js";
+import { Sample_Essay } from "@/components/writing_bot/promptAndEssay.js";
+import { Trainging_Mode_Prompt } from "@/components/writing_bot/promptAndEssay.js";
+import { Assessment_Mode_Prompt } from "@/components/writing_bot/promptAndEssay.js";
+import { AssessBot_Prompt } from "@/components/writing_bot/promptAndEssay.js";
 
 // ✅ Only use markdown-it (no katex plugin)
 const markdown = new MarkdownIt({
