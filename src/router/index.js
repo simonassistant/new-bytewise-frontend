@@ -24,8 +24,8 @@ const routes = [
     props: true
   },
   {
-    path: '/writingBot',
-    name: 'WritingBot',
+    path: '/EEGC',
+    name: 'EEGC',
     component: WritingBot
   },
 ]
