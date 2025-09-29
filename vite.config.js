@@ -9,8 +9,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [
     vue(),
-    // Only include dev tools in development
-    import.meta.env.DEV && vueDevTools(),
+    vueDevTools(),
     tailwindcss()
   ].filter(Boolean),
   resolve: {
