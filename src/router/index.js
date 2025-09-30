@@ -4,7 +4,7 @@ import Home from '../views/HomePage.vue'
 import Chat from '../views/ChatPage.vue'
 import Avatar from '../views/AvatarPage.vue'
 import WritingBot from '../views/WritingBot.vue'
-
+import NotFound from '../views/NotFound.vue'
 const routes = [
   {
     path: '/',
@@ -28,6 +28,11 @@ const routes = [
     name: 'EEGC',
     component: WritingBot
   },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFound
+  }
 ]
 
 const router = createRouter({

@@ -360,3 +360,59 @@ Provide your assessment in the following structured format:
 - Provide actionable recommendations for improvement
 
 Remember: Your assessment serves both summative (grading) and formative (learning) purposes. Provide thorough, evidence-based evaluation that helps students understand their performance and guides their future development in AI-assisted writing and collaboration skills.`
+export const Training_Greetings = 
+`Thanks for sharing the essay! Tell me about your course and what help you need.
+
+I'm here to help you learn 4 essential AI collaboration skills while we work together to revise this climate change essay:
+
+✅ **Skill 1**: Provide contextual information to AI
+✅ **Skill 2**: Strategic planning and goal negotiation
+✅ **Skill 3**: Critical review of AI suggestions
+✅ **Skill 4**: Independent editing and decision-making
+
+**Here's the sample essay we'll be working on:**
+
+---
+
+**Essay Question**: Some people believe that individual actions are insignificant in the fight against climate change compared to the efforts of governments and large corporations. To what extent do you agree or disagree with this statement?
+
+**Sample Essay** (Current Version - Needs Improvement):
+
+Climate change, it is very huge problem now. I think individual actions not so important like what government and big companies do. But still, I kinda disagree because people also can do stuff to help. I will explain my thoughts here.
+
+First, governments and companies, they got more power. They can do big things. Like, government make laws for no pollution. They can stop plastic bags or tell factories to not make so much smoke. Companies also can change their ways. They can use less energy or make stuff that don't hurt environment. This is good because it change many people life at once. So powerful, you know.
+
+But individual actions, they matter too, I guess. If many people do little things, it add up. Like, turn off lights at home save energy. Or buy things from green companies. Then companies think, oh, we must be green to sell more. But sometimes it hard to know if this really work. People don't always do it. Also, one person doing something. It not enough.
+
+Another thing. When people change their life, like stop using car and walk, government see this. Politicians want votes, so they make rules people like. So individual action can push government to do more. Maybe start big movement. But I not sure how many people need to do this for it to work. Just thinking.
+
+Some say individual action too small. One person cannot fix climate change. True, but if million people try, maybe it help. Every small thing count. Or not? I don't know sometimes.
+
+Anyway, I think both individual and government and companies must work. Individual action seem small but if many do it, it big. We need all to fix this problem. Climate change very bad, so everyone must try hard. That's my opinion.
+
+---
+
+To help you effectively, I'd like to know:
+- What course are you taking?
+- What are your goals for this revision session?
+- Are you familiar with the assessment rubrics?
+
+Once I understand your context, we'll work together to improve this essay. Remember: I'll guide you and make suggestions, but YOU will do all the actual editing. Let's begin! 🚀`
+
+export const Assessment_Greetings =`Hello! I'm ready to help you revise your essay. Please paste your original essay in the "Your Original Essay" box and click "Confirm Your Essay" to begin.
+
+Here's how assessment mode works:
+
+📝 **Step 1**: Paste your original essay and confirm it (the box will become locked)
+💬 **Step 2**: Tell me what help you need and start our revision conversation
+🔄 **Step 3**: I'll automatically update your "Revised Version" as we work together
+🏁 **Step 4**: When you're satisfied, click "Submit Assessment" to finish
+
+Remember: This is assessment mode, so you'll need to take the lead in our conversation. I'm here to provide suggestions and feedback, but you'll need to:
+
+• Provide context about your assignment and goals
+• Ask for specific feedback on areas you want to improve
+• Guide our revision process through the chat
+• Make final decisions about which suggestions to implement
+
+I'll track the latest version of your essay automatically as we discuss improvements. Let's begin!`
