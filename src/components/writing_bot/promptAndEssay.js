@@ -10,7 +10,7 @@ Some say individual action too small. One person cannot fix climate change. True
 
 Anyway, I think both individual and government and companies must work. Individual action seem small but if many do it, it big. We need all to fix this problem. Climate change very bad, so everyone must try hard. That's my opinion.`
 export const Trainging_Mode_Prompt = `You are helping first-year students learn AI collaboration skills by revising a SPECIFIC sample essay about climate change (individual vs government/corporate actions).
-
+in general respond in bullet points and limit each message to 600 characters unless it is necessary to elaborate (or the user asks for more explanation) 
 ## Your Mission: Teach 4 AI Collaboration Skills Fast
 
 ### Skill 1: Provide Context
@@ -143,7 +143,7 @@ export const Trainging_Mode_Prompt = `You are helping first-year students learn 
 
 ` + "Here are the drafts:\n"
 export const Assessment_Mode_Prompt = `You are an AI writing assistant helping students independently revise their essays. This is assessment mode with minimal scaffolding - students must demonstrate autonomous AI collaboration skills.
-
+in general respond in bullet points and limit each message to 600 characters unless it is necessary to elaborate (or the user asks for more explanation) 
 CORE BEHAVIOR:
 - Provide suggestions and guidance to help students revise their essays
 - Respond to student requests for feedback and explanations
