@@ -62,7 +62,7 @@
           :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
         >
           <div
-            class="max-w-lg md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl shadow text-base break-words"
+            class="max-w-7xl px-4 py-3 rounded-2xl shadow text-base break-words"
             :class="msgClasses(msg, i)"
           >
             <div class="font-semibold text-xs mb-1">
