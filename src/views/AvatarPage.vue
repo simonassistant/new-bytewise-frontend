@@ -588,7 +588,12 @@ async function sendTextToChatbot() {
       selectedProvider.value === "openrouter" ? "/chatbot/chat_openrouter" : "/chatbot/chat";
     const data = await apiCall(providerUrl, {
       chat_history: [
-        { role: "system", content: systemPrompt.value },
+        {
+          role: "system",
+          content:
+            "Do not reply in markdown, and do not reply any code, do not use bold text. Keep your reply short. Also follow these instructions: " +
+            systemPrompt.value,
+        },
         ...chatHistory.value.map(({ role, content }) => ({ role, content })),
       ],
       api_key: apiKey.value,
