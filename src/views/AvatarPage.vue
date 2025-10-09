@@ -434,6 +434,34 @@ async function toggleRecording() {
       showNotification("❌ Could not get Azure token", "error");
       return;
     }
+    // ----- Start local recording -----
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mediaRecorder = new MediaRecorder(stream);
+    const chunks = [];
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+
+    // When local recording stops, save & download
+    mediaRecorder.onstop = () => {
+      const audioBlob = new Blob(chunks, { type: "audio/webm" });
+      const url = URL.createObjectURL(audioBlob);
+
+      // --- trigger file download ---
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `user_audio_${Date.now()}.webm`; // or .wav if you like
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      console.log("🎧 Audio file downloaded!");
+    };
+
+    mediaRecorder.start();
+  // ----- Start Azure recognition -----
     isRecording.value = true;
     avatarState.value = "listening";
     isRecognizing.value = true;
@@ -445,6 +473,10 @@ async function toggleRecording() {
     const audioConfig = speechsdk.AudioConfig.fromDefaultMicrophoneInput();
     const recognizer = new speechsdk.SpeechRecognizer(speechConfig, audioConfig);
     recognizer.recognizeOnceAsync((result) => {
+        // Stop both Azure and local recording once recognition finishes
+      mediaRecorder.stop();
+      stream.getTracks().forEach((t) => t.stop());
+
       isRecording.value = false;
       isRecognizing.value = false;
       avatarState.value = "thinking";

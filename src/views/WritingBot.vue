@@ -575,6 +575,7 @@ function showNotification(msg, type = "success") {
 }
 
 function confirmDraft() {
+
   if (originalDraft.value.trim()) {
     isOriginalDraftConfirmed.value = true;
 
@@ -710,7 +711,7 @@ async function submitAssessment() {
 
 // Refined confirmFinalDraft
 async function confirmFinalDraft() {
-  if (isOriginalDraftConfirmed.value && originalDraft.value.trim() && finalDraft.value.trim()) {
+  if (originalDraft.value.trim() && finalDraft.value.trim()) {
     await generateAssessmentReport("training");
   } else {
     alert("Please paste the final draft first.");
