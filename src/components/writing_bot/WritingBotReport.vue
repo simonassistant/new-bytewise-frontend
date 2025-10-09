@@ -9,6 +9,35 @@
         </button>
       </div>
 
+      <p><strong>Total Messages:</strong> {{ props.chatHistory.length }}</p>
+      <h3>📈 Your Contribution Analysis</h3>
+      <div
+        class="prose prose-sm max-w-none break-words [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:whitespace-pre-wrap [&_ol]:list-decimal [&_ol]:ml-6 [&_ul]:list-disc"
+        v-html="renderMarkdown(contributionAnalysis)"
+      />
+      <h3>📝 Complete Conversation</h3>
+      <div ref="chatMessages" class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
+        <div
+          v-for="(msg, i) in chatHistory"
+          :key="i"
+          class="flex"
+          :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
+        >
+          <div
+            class="max-w-lg md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl shadow text-base break-words"
+            :class="msgClasses(msg, i)"
+          >
+            <div class="font-semibold text-xs mb-1">
+              {{ msgSenderLabel(msg.role) }}
+            </div>
+
+            <div
+              class="prose prose-sm max-w-none break-words [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:whitespace-pre-wrap [&_ol]:list-decimal [&_ol]:ml-6 [&_ul]:list-disc"
+              v-html="renderMarkdown(msg.content)"
+            />
+          </div>
+        </div>
+      </div>
       <!-- User Input Section -->
       <div class="mb-6 p-4 bg-gray-50 rounded-lg border">
         <h3 class="text-md font-semibold mb-3 text-gray-700">📧 Email Settings</h3>
@@ -28,10 +57,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Report Body -->
-      <div class="prose max-w-none text-sm" v-html="reportHtml"></div>
-
       <!-- Footer -->
       <div class="mt-6 flex flex-wrap justify-end gap-1" v-if="!generatingAnalysis">
         <button
@@ -76,8 +101,14 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch } from "vue";
 import { jsPDF } from "jspdf";
+import MarkdownIt from "markdown-it";
+const markdown = new MarkdownIt({
+  html: false, // disallow raw HTML in user messages
+  linkify: true, // auto-detect URLs
+  typographer: true, // nicer quotes & dashes
+});
 
 const props = defineProps({
   show: Boolean,
@@ -90,6 +121,9 @@ const props = defineProps({
   },
   bccEmail: {
     type: Array,
+  },
+  hiddenReport: {
+    type: String,
   },
   ccEmail: {
     type: Array,
@@ -115,65 +149,19 @@ watch(
     }
   }
 );
-
-// ---------- Report Generation ----------
-const reportHtml = computed(() => createReport(props.chatHistory));
-
-function createReport(history) {
-  if (!history.length) {
-    return `<p>No conversation to report on.</p>`;
-  }
-
-  const now = new Date();
-  const duration =
-    history.length > 0
-      ? Math.round((history[history.length - 1].timestamp - history[0].timestamp) / 1000 / 60)
-      : 0;
-
-  const userMessages = history.filter((m) => m.role === "user");
-  const assistantMessages = history.filter((m) => m.role === "assistant");
-
-  let report = `
-    <p><strong>Generated:</strong> ${now.toLocaleString()}</p>
-    <p><strong>Duration:</strong> ${duration} minutes</p>
-    <p><strong>Total Messages:</strong> ${history.length}</p>
-    <p><strong>Your Messages:</strong> ${userMessages.length}</p>
-    <p><strong>Assistant Responses:</strong> ${assistantMessages.length}</p>
-
-    <h3>📈 Your Contribution Analysis</h3>
-    <p>${contributionAnalysis.value}</p>
-
-    <h3>📝 Complete Conversation</h3>
-    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; max-height: 400px; overflow-y: auto;">
-  `;
-
-  history.forEach((msg) => {
-    report += `
-      <div style="margin-bottom: 15px; padding: 10px; background: ${
-        msg.role === "user" ? "#e3f2fd" : "#f1f8e9"
-      }; border-radius: 6px;">
-        <strong>${msg.role === "user" ? "👤 You" : "🤖 Assistant"}:</strong><br>
-        ${msg.content.replace(/\n/g, "<br>")}
-        <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
-            ${msg.timestamp.toLocaleTimeString()}
-        </div>
-      </div>
-    `;
-  });
-
-  report += "</div>";
-
-  report += `
-    <hr style="margin: 20px 0;">
-    <div style="text-align: center; font-size: 0.9rem; color: #666;">
-        <strong>Created by:</strong> Dr. Simon Wang, Innovation Officer<br>
-        Language Centre, Hong Kong Baptist University<br>
-        <a href="mailto:simonwang@hkbu.edu.hk">simonwang@hkbu.edu.hk</a>
-    </div>
-  `;
-
-  return report;
+function renderMarkdown(text) {
+  return markdown.render(text || "");
 }
+function msgSenderLabel(role) {
+  return role === "user" ? "You" : "AI Assistant";
+}
+
+function msgClasses(msg) {
+  return msg.role === "user"
+    ? "bg-indigo-600 text-white rounded-br-none"
+    : "bg-gray-100 text-gray-800 rounded-bl-none";
+}
+// ---------- Report Generation ----------
 
 async function analyzeContribution(userMessages, props) {
   generatingAnalysis.value = true;
@@ -193,6 +181,7 @@ async function analyzeContribution(userMessages, props) {
         chat_history,
         api_key: "", // fill in if required
         model_name: "gpt-4.1-mini",
+        temperature:0.0
       }),
     });
 
@@ -352,7 +341,7 @@ ${contributionAnalysis.value}
 
 function copyReport() {
   const el = document.createElement("textarea");
-  el.value = reportHtml.value.replace(/<[^>]+>/g, ""); // strip HTML
+
   document.body.appendChild(el);
   el.select();
   try {
@@ -367,7 +356,7 @@ function copyReport() {
 const student_email = ref("");
 const emailSending = ref(false);
 const emailSent = ref(false);
-import { BASE_URL } from "../components/base_url";
+import { BASE_URL } from "@/components/base_url";
 
 function sendReportByEmail() {
   const history = props.chatHistory;
@@ -393,6 +382,7 @@ function sendReportByEmail() {
       ccEmail: props.ccEmail,
       report_md: createMarkdownReport(history),
       report_history: history,
+      hiddenReport: props.hiddenReport,
       contributionAnalysis: contributionAnalysis.value,
     }),
   })

@@ -183,8 +183,6 @@ import { BASE_URL } from "../components/base_url";
 import LeftSidebar from "../components/text_chatbot/LeftSidebar.vue";
 import ReportModal from "../components/ReportModal.vue";
 import MarkdownIt from "markdown-it";
-
-// ✅ Only use markdown-it (no katex plugin)
 const markdown = new MarkdownIt({
   html: false, // disallow raw HTML in user messages
   linkify: true, // auto-detect URLs

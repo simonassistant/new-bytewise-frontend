@@ -41,7 +41,7 @@
           >.
         </p>
         <p class="text-xs text-green-700 mt-2" v-if="selectedProvider === 'openrouter'">
-          ✅ Using <strong>OpenRouter</strong> as provider (via <code>iamfeelinglucky</code>).
+          ✅ Using <strong>OpenRouter</strong> as provider (via <code>feelinglucky</code>).
         </p>
       </div>
 
@@ -140,7 +140,7 @@ const emit = defineEmits([
 
 function onApiKeyInput(value) {
   emit("update:apiKey", value);
-  if (value.trim() === "iamfeelinglucky") {
+  if (value.trim() === "feelinglucky") {
     emit("update:selectedProvider", "openrouter");
   } else {
     emit("update:selectedProvider", "hkbu");

@@ -283,6 +283,7 @@
       show: showReport,
       chatHistory: reportChatHistory,
       reportGenerationInstructions,
+      hiddenReport,
       bccEmail,
       ccEmail,
     }"
@@ -292,10 +293,10 @@
 
 <script setup>
 import { ref, nextTick, onMounted } from "vue";
-import { BASE_URL } from "../components/base_url";
+import { BASE_URL } from "@/components/base_url";
 import MarkdownIt from "markdown-it";
 import BriefMode from "@/components/writing_bot/BriefMode.vue";
-import ReportModal from "../components/ReportModal.vue";
+import ReportModal from "@/components/writing_bot/WritingBotReport.vue";
 import { Sample_Essay } from "@/components/writing_bot/promptAndEssay.js";
 import { Trainging_Mode_Prompt } from "@/components/writing_bot/promptAndEssay.js";
 import { Assessment_Mode_Prompt } from "@/components/writing_bot/promptAndEssay.js";
@@ -333,7 +334,7 @@ const greetings = {
   assessment: Assessment_Greetings,
   briefing: `Welcome to LANG 0036: AI Writing Collaboration Lab! Please configure your API settings to start using the system.`,
 };
-
+const hiddenReport = ref("");
 const activeBtn =
   "px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:opacity-90 transition-opacity";
 const inactiveBtn =
@@ -351,6 +352,7 @@ const isOriginalDraftConfirmed = ref(false);
 function msgSenderLabel(role) {
   return role === "user" ? "You" : "AI Assistant";
 }
+
 function msgClasses(msg) {
   return msg.role === "user"
     ? "bg-indigo-600 text-white rounded-br-none"
@@ -468,6 +470,7 @@ async function sendMessage() {
 }
 
 async function talkToChatbot(chat_history) {
+  
   const res = await fetch(`${BASE_URL}/chatbot/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -575,7 +578,6 @@ function showNotification(msg, type = "success") {
 }
 
 function confirmDraft() {
-
   if (originalDraft.value.trim()) {
     isOriginalDraftConfirmed.value = true;
 
@@ -649,6 +651,7 @@ async function generateAssessmentReport(mode = "final") {
           This report evaluates both essay writing improvement and human-AI collaboration skills according to LANG 0036 course rubrics.`;
 
     bccEmail.value = ["simonwanghkteacher@gmail.com"];
+    hiddenReport.value = assessmentReport;
     reportChatHistory.value = [
       {
         role: "system",
@@ -656,12 +659,7 @@ async function generateAssessmentReport(mode = "final") {
           "Original Essay:\n---\n" +
           `${originalDraft.value || "(empty)"}\n---\n\n` +
           "Revised Essay:\n---\n" +
-          `${finalDraft.value || "(empty)"}\n---\n\n` +
-          (mode === "training"
-            ? "Training Assessment Report:\n---\n"
-            : "Assessment Report:\n---\n") +
-          assessmentReport +
-          "\n---\n",
+          `${finalDraft.value || "(empty)"}\n---\n\n`,
         timestamp: new Date(),
       },
       ...activeChatHistory.value,
