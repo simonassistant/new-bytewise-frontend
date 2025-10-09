@@ -624,8 +624,8 @@ async function generateAssessmentReport(mode = "final") {
 
     const userPrompt =
       mode === "training"
-        ? "Please provide a comprehensive assessment report for this student's training performance based on the provided original essay, revised essay, and chat history. Focus on both essay improvement and demonstration of AI collaboration skills during training."
-        : "Please provide a comprehensive assessment report for this student's performance based on the provided original essay, revised essay, and chat history. Follow the structured format specified in your system prompt.";
+        ? "Please provide a comprehensive assessment report for this student's training performance based on the provided original essay, revised essay, and chat history. Focus on both essay improvement and demonstration of AI collaboration skills during training. The revised essay does not necessarily need to be better than the original draft, you need to judge based on the criteria."
+        : "Please provide a comprehensive assessment report for this student's performance based on the provided original essay, revised essay, and chat history. Follow the structured format specified in your system prompt. The revised essay does not necessarily need to be better than the original draft, you need to judge based on the criteria.";
 
     const assessmentReport = await talkToChatbot([
       assessmentSystemMessage,
