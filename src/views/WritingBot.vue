@@ -3,12 +3,19 @@
     <!-- Main Header for All Modes -->
     <div class="text-center mb-6">
       <h1
-        class="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 bg-clip-text text-transparent"
+        class="text-4xl font-bold mb-4 leading-normal overflow-visible bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 bg-clip-text text-transparent"
       >
         LANG 0036: AI Writing Collaboration Lab
       </h1>
+
+      <h5
+        class="text-4xl font-bold mb-4 leading-normal overflow-visible bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 bg-clip-text text-transparent"
+      >
+        Remember to submit your chat history by clicking on (green mark)~
+      </h5>
+
       <p
-        class="text-lg bg-gradient-to-r from-gray-600 via-blue-500 to-purple-500 bg-clip-text text-transparent"
+        class="text-lg leading-normal overflow-visible bg-gradient-to-r from-gray-600 via-blue-500 to-purple-500 bg-clip-text text-transparent"
       >
         Develop and demonstrate AI literacy and human-AI partnership through guided essay revision
         and assessment
