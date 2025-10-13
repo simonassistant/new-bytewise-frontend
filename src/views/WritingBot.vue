@@ -288,11 +288,12 @@
       ccEmail,
     }"
     @close="showReport = false"
+    @submit="isSubmitted = true"
   />
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted } from "vue";
+import { ref, nextTick, onMounted, onBeforeUnmount } from "vue";
 import { BASE_URL } from "@/components/base_url";
 import MarkdownIt from "markdown-it";
 import BriefMode from "@/components/writing_bot/BriefMode.vue";
@@ -325,6 +326,7 @@ const reportChatHistory = ref([]);
 const reportGenerationInstructions = ref(
   "Please generate a short report based on the chat history and drafts provided. Remember to be short and concise."
 );
+const isSubmitted = ref(false);
 const bccEmail = ref([]);
 const ccEmail = ref([]);
 const isGeneratingAssessment = ref(false);
@@ -470,7 +472,6 @@ async function sendMessage() {
 }
 
 async function talkToChatbot(chat_history) {
-  
   const res = await fetch(`${BASE_URL}/chatbot/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -599,6 +600,7 @@ function confirmDraft() {
 
 async function generateAssessmentReport(mode = "final") {
   isGeneratingAssessment.value = true;
+
   try {
     const assessmentData = {
       originalEssay: originalDraft.value,
@@ -716,13 +718,27 @@ async function confirmFinalDraft() {
   }
 }
 
+// Warn before closing or reloading the page
+const handleBeforeUnload = (event) => {
+  if (isSubmitted.value == false) {
+    event.preventDefault();
+    event.returnValue = "";
+  }
+};
+
 onMounted(async () => {
+  window.addEventListener("beforeunload", handleBeforeUnload);
   const savedApiKey = localStorage.getItem("chatbot_api_key");
   if (savedApiKey) {
     apiKey.value = savedApiKey;
     await connectAPI(true);
   }
   // ✅ Auto-init
+
   switchMode(currentMode.value);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("beforeunload", handleBeforeUnload);
 });
 </script>

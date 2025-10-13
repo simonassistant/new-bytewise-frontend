@@ -109,7 +109,7 @@ const markdown = new MarkdownIt({
   linkify: true, // auto-detect URLs
   typographer: true, // nicer quotes & dashes
 });
-
+const emit = defineEmits(['submit']);
 const props = defineProps({
   show: Boolean,
   chatHistory: {
@@ -392,6 +392,7 @@ function sendReportByEmail() {
         alert(
           "Report sent successfully! (It may take a few minutes to arrive, please check your spam folder if you can not receive the email)"
         );
+        emit('submit')
       } else {
         throw new Error("Failed to send email");
       }
