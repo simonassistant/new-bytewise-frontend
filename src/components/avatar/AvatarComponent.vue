@@ -1,33 +1,28 @@
 <template>
   <div
+    v-if="assetsLoaded"
     class="relative w-48 h-48 rounded-full mx-auto overflow-hidden transition-all duration-300"
     :class="faceClasses"
   >
-    <!-- Avatar -->
+    <!-- Owl avatar -->
     <template v-if="state === 'speaking'">
-      <video
-        autoplay
-        loop
-        muted
-        playsinline
-        class="w-full h-full object-cover"
-      >
-        <source src="./owl_animation.mp4" type="video/mp4" />
+      <video autoplay loop muted playsinline class="w-full h-full object-cover">
+        <source :src="videoSrc" type="video/mp4" />
       </video>
     </template>
-
     <template v-else>
-      <img
-        src="./owl.png"
-        alt="Owl Avatar"
-        class="w-full h-full object-cover"
-      />
+      <img :src="imageSrc" alt="Owl Avatar" class="w-full h-full object-cover" />
     </template>
+  </div>
+
+  <!-- Optional Loader / Placeholder -->
+  <div v-else class="w-48 h-48 flex items-center justify-center text-gray-500 mx-auto">
+    Loading...
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 
 const props = defineProps({
   state: {
@@ -42,6 +37,48 @@ const props = defineProps({
     type: String,
     default: "to-purple-600",
   },
+  imageSrc: {
+    type: String,
+    default: "./owl.png",
+  },
+  videoSrc: {
+    type: String,
+    default: "./owl_animation.mp4",
+  },
+});
+
+const assetsLoaded = ref(false);
+
+const preloadImage = (src) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = src;
+    img.onload = resolve;
+    img.onerror = reject;
+  });
+};
+
+const preloadVideo = (src) => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video");
+    video.src = src;
+    video.preload = "auto";
+    video.oncanplaythrough = resolve;
+    video.onerror = reject;
+  });
+};
+
+onMounted(async () => {
+  try {
+    await Promise.all([
+      preloadImage(props.imageSrc),
+      preloadVideo(props.videoSrc),
+    ]);
+    assetsLoaded.value = true;
+  } catch (e) {
+    console.error("Asset preload failed:", e);
+    assetsLoaded.value = true; // still show something
+  }
 });
 
 const faceClasses = computed(() => {
@@ -49,26 +86,9 @@ const faceClasses = computed(() => {
     "bg-gradient-to-br",
     props.gradientFrom,
     props.gradientTo,
-    props.state === "listening"
-      ? "animate-pulse shadow-xl shadow-indigo-400/50"
-      : "",
+    props.state === "listening" ? "animate-pulse shadow-xl shadow-indigo-400/50" : "",
     props.state === "speaking" ? "animate-glow" : "",
   ];
-});
-
-// ✅ Preload the image and video when the component is mounted
-onMounted(() => {
-  // Preload image
-  const img = new Image();
-  img.src = "./owl.png";
-
-  // Preload video
-  const video = document.createElement("video");
-  video.src = "./owl_animation.mp4";
-  video.preload = "auto";
-
-  // Optionally, you can force the browser to fetch it:
-  video.load();
 });
 </script>
 
