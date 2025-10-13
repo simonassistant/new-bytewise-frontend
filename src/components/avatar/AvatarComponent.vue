@@ -24,10 +24,13 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 
+const imageSrc = new URL("./owl.png", import.meta.url).href;
+const videoSrc = new URL("./owl_animation.mp4", import.meta.url).href;
+
 const props = defineProps({
   state: {
     type: String,
-    default: "idle", // idle | listening | speaking | thinking
+    default: "idle",
   },
   gradientFrom: {
     type: String,
@@ -37,61 +40,45 @@ const props = defineProps({
     type: String,
     default: "to-purple-600",
   },
-  imageSrc: {
-    type: String,
-    default: "./owl.png",
-  },
-  videoSrc: {
-    type: String,
-    default: "./owl_animation.mp4",
-  },
 });
 
 const assetsLoaded = ref(false);
 
-const preloadImage = (src) => {
-  return new Promise((resolve, reject) => {
+const preloadImage = (src) =>
+  new Promise((resolve, reject) => {
     const img = new Image();
     img.src = src;
     img.onload = resolve;
     img.onerror = reject;
   });
-};
 
-const preloadVideo = (src) => {
-  return new Promise((resolve, reject) => {
+const preloadVideo = (src) =>
+  new Promise((resolve, reject) => {
     const video = document.createElement("video");
     video.src = src;
     video.preload = "auto";
     video.oncanplaythrough = resolve;
     video.onerror = reject;
   });
-};
 
 onMounted(async () => {
   try {
-    await Promise.all([
-      preloadImage(props.imageSrc),
-      preloadVideo(props.videoSrc),
-    ]);
+    await Promise.all([preloadImage(imageSrc), preloadVideo(videoSrc)]);
+  } catch (err) {
+    console.warn("Asset preload failed:", err);
+  } finally {
     assetsLoaded.value = true;
-  } catch (e) {
-    console.error("Asset preload failed:", e);
-    assetsLoaded.value = true; // still show something
   }
 });
 
-const faceClasses = computed(() => {
-  return [
-    "bg-gradient-to-br",
-    props.gradientFrom,
-    props.gradientTo,
-    props.state === "listening" ? "animate-pulse shadow-xl shadow-indigo-400/50" : "",
-    props.state === "speaking" ? "animate-glow" : "",
-  ];
-});
+const faceClasses = computed(() => [
+  "bg-gradient-to-br",
+  props.gradientFrom,
+  props.gradientTo,
+  props.state === "listening" ? "animate-pulse shadow-xl shadow-indigo-400/50" : "",
+  props.state === "speaking" ? "animate-glow" : "",
+]);
 </script>
-
 <style scoped>
 @keyframes glow {
   0% {
