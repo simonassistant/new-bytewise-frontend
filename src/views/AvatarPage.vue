@@ -445,19 +445,19 @@ async function toggleRecording() {
 
     // When local recording stops, save & download
     mediaRecorder.onstop = () => {
-      const audioBlob = new Blob(chunks, { type: "audio/webm" });
-      const url = URL.createObjectURL(audioBlob);
+      // const audioBlob = new Blob(chunks, { type: "audio/webm" });
+      // const url = URL.createObjectURL(audioBlob);
 
-      // --- trigger file download ---
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `user_audio_${Date.now()}.webm`; // or .wav if you like
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      // // --- trigger file download ---
+      // const a = document.createElement("a");
+      // a.href = url;
+      // a.download = `user_audio_${Date.now()}.webm`; // or .wav if you like
+      // document.body.appendChild(a);
+      // a.click();
+      // document.body.removeChild(a);
+      // URL.revokeObjectURL(url);
 
-      console.log("🎧 Audio file downloaded!");
+      // console.log("🎧 Audio file downloaded!");
     };
 
     mediaRecorder.start();
