@@ -101,24 +101,14 @@
         <!-- Audio Input -->
         <div v-if="inputMode === 'audio'">
           <div class="flex justify-center">
-          <button
-  class="px-6 py-3 rounded-full bg-red-500 text-white text-lg font-bold shadow-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-  :disabled="!isConnected || isPlaying || isRecognizing"
-  @click="toggleRecording"
->
-  {{ isRecording ? "⏹ Listening" : "🎤 Speak" }}
-</button>
-
-<button
-  class="px-6 py-3 rounded-full bg-green-600 text-white text-lg font-bold shadow-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed ml-4"
-  :disabled="!chatHistory.length"
-  @click="showReport = true"
-  title="Finish & View Report"
->
-  ✓ Finish
-</button>
+            <button
+              class="px-6 py-3 rounded-full bg-red-500 text-white text-lg font-bold shadow-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              :disabled="!isConnected || isPlaying || isRecognizing"
+              @click="toggleRecording"
+            >
+              {{ isRecording ? "⏹ Listening" : "🎤 Speak" }}
+            </button>
           </div>
-                  
         </div>
 
         <!-- Text Input -->
@@ -638,11 +628,8 @@ async function sendTextToChatbot() {
       api_key: apiKey.value,
       model_name: model.value,
     });
-    scrollToBottom()
     const reply = data?.choices?.[0]?.message?.content || data?.error || "[No response]";
-    
     chatHistory.value[idx] = newMessage("assistant", reply);
-    scrollToBottom()
     await speakReplySequentially(reply);
   } catch (e) {
     console.error(e);
