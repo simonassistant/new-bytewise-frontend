@@ -420,7 +420,6 @@ async function speakReplySequentially(replyText) {
     avatarState.value = "idle";
   }
 }
-
 // --- Speech Recognition ---
 async function toggleRecording() {
   if (isRecording.value) {
@@ -447,7 +446,6 @@ async function toggleRecording() {
     mediaRecorder.onstop = () => {
       // const audioBlob = new Blob(chunks, { type: "audio/webm" });
       // const url = URL.createObjectURL(audioBlob);
-
       // // --- trigger file download ---
       // const a = document.createElement("a");
       // a.href = url;
@@ -456,12 +454,11 @@ async function toggleRecording() {
       // a.click();
       // document.body.removeChild(a);
       // URL.revokeObjectURL(url);
-
       // console.log("🎧 Audio file downloaded!");
     };
 
     mediaRecorder.start();
-  // ----- Start Azure recognition -----
+    // ----- Start Azure recognition -----
     isRecording.value = true;
     avatarState.value = "listening";
     isRecognizing.value = true;
@@ -473,7 +470,7 @@ async function toggleRecording() {
     const audioConfig = speechsdk.AudioConfig.fromDefaultMicrophoneInput();
     const recognizer = new speechsdk.SpeechRecognizer(speechConfig, audioConfig);
     recognizer.recognizeOnceAsync((result) => {
-        // Stop both Azure and local recording once recognition finishes
+      // Stop both Azure and local recording once recognition finishes
       mediaRecorder.stop();
       stream.getTracks().forEach((t) => t.stop());
 
