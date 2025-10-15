@@ -73,7 +73,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useChatbotStore } from '../components/text_chatbot/chatbotStore';
+import { useChatbotStore } from '@/components/text_chatbot/chatbotStore';
 
 const router = useRouter();
 const chatbotStore = useChatbotStore();

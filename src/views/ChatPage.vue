@@ -178,10 +178,10 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
-import { useChatbotStore } from "../components/text_chatbot/chatbotStore";
-import { BASE_URL } from "../components/base_url";
-import LeftSidebar from "../components/text_chatbot/LeftSidebar.vue";
-import ReportModal from "../components/text_chatbot/ReportModal.vue";
+import { useChatbotStore } from "@/components/text_chatbot/chatbotStore";
+import { BASE_URL } from "@/components/base_url";
+import LeftSidebar from "@/components/text_chatbot/LeftSidebar.vue";
+import ReportModal from "@/components/text_chatbot/ReportModal.vue";
 import MarkdownIt from "markdown-it";
 const markdown = new MarkdownIt({
   html: false, // disallow raw HTML in user messages

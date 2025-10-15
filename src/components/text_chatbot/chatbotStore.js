@@ -19,7 +19,7 @@ export const useChatbotStore = defineStore('chatbot', {
       if (this.availableBots.length > 0) return;
 
       // Grab all imports
-      const modules = import.meta.glob('../botConfig/*.json');
+      const modules = import.meta.glob('@/botConfig/*.json');
 
       // Kick off all imports in parallel
       const loadPromises = Object.entries(modules).map(async ([path, loader]) => {
