@@ -367,7 +367,7 @@ function copyReport() {
 const student_email = ref("");
 const emailSending = ref(false);
 const emailSent = ref(false);
-import { BASE_URL } from "../components/base_url";
+import { BASE_URL } from "../base_url";
 
 function sendReportByEmail() {
   const history = props.chatHistory;

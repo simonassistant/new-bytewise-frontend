@@ -194,12 +194,12 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
-import { useChatbotStore } from "../components/chatbotStore";
+import { useChatbotStore } from "../components/text_chatbot/chatbotStore";
 import { io } from "socket.io-client";
 import { BASE_URL } from "../components/base_url";
 import AvatarComponent from "../components/avatar/AvatarComponent.vue";
 import LeftSidebar from "../components/avatar/LeftSidebar.vue";
-import ReportModal from "../components/ReportModal.vue";
+import ReportModal from "../components/text_chatbot/ReportModal.vue";
 import * as speechsdk from "microsoft-cognitiveservices-speech-sdk";
 
 const props = defineProps({ avatarId: { type: String, required: true } });
