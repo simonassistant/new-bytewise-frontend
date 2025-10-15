@@ -109,7 +109,7 @@ const markdown = new MarkdownIt({
   linkify: true, // auto-detect URLs
   typographer: true, // nicer quotes & dashes
 });
-const emit = defineEmits(['submit']);
+const emit = defineEmits(["submit"]);
 const props = defineProps({
   show: Boolean,
   chatHistory: {
@@ -181,7 +181,7 @@ async function analyzeContribution(userMessages, props) {
         chat_history,
         api_key: "", // fill in if required
         model_name: "gpt-4.1-mini",
-        temperature:0.0
+        temperature: 0.0,
       }),
     });
 
@@ -327,18 +327,15 @@ ${contributionAnalysis.value}
   return markdown;
 }
 
-function copyReport() {
-  const el = document.createElement("textarea");
-
-  document.body.appendChild(el);
-  el.select();
+async function copyReport() {
   try {
-    document.execCommand("copy");
-    alert("Report copied to clipboard!");
-  } catch {
-    alert("Failed to copy report");
+    const report = createMarkdownReport(props.chatHistory);
+    await navigator.clipboard.writeText(report);
+    alert("✅ Full markdown report copied to clipboard!");
+  } catch (error) {
+    console.error("Failed to copy report:", error);
+    alert("❌ Failed to copy report.");
   }
-  document.body.removeChild(el);
 }
 
 const student_email = ref("");
@@ -380,7 +377,7 @@ function sendReportByEmail() {
         alert(
           "Report sent successfully! (It may take a few minutes to arrive, please check your spam folder if you can not receive the email)"
         );
-        emit('submit')
+        emit("submit");
       } else {
         throw new Error("Failed to send email");
       }
