@@ -213,15 +213,9 @@ function downloadPDF() {
 
   // Metadata
   const now = new Date();
-  const duration =
-    history.length > 0
-      ? Math.round((history[history.length - 1].timestamp - history[0].timestamp) / 1000 / 60)
-      : 0;
 
   doc.setFontSize(12);
   doc.text(`Generated: ${now.toLocaleString()}`, 20, yPos);
-  yPos += 7;
-  doc.text(`Duration: ${duration} minutes`, 20, yPos);
   yPos += 7;
   doc.text(`Total Messages: ${history.length}`, 20, yPos);
   yPos += 15;
@@ -307,15 +301,9 @@ function downloadMarkdown() {
 
 function createMarkdownReport(history) {
   const now = new Date();
-  const duration =
-    history.length > 0
-      ? Math.round((history[history.length - 1].timestamp - history[0].timestamp) / 1000 / 60)
-      : 0;
-
   let markdown = `# 📊 HKBU Learning Session Report
 
 **Generated:** ${now.toLocaleString()}
-**Duration:** ${duration} minutes
 **Total Messages:** ${history.length}
 
 ## 📈 Your Contribution Analysis
