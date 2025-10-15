@@ -111,6 +111,7 @@
       <BriefMode />
     </template>
 
+    <!-- Chat Interface -->
     <ChatInterface
       v-else
       v-model:userMessage="userMessage"
@@ -130,6 +131,7 @@
       @confirmFinalDraft="confirmFinalDraft"
     />
 
+    <!-- Report Modal -->
     <ReportModal
       v-bind="{
         show: showReport,
@@ -146,7 +148,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount } from "vue";
 import BriefMode from "@/components/writing_bot/BriefMode.vue";
 import ReportModal from "@/components/writing_bot/WritingBotReport.vue";
 import ChatInterface from "@/components/writing_bot/ChatInterface.vue";
@@ -161,12 +163,24 @@ import {
 /* ------------ State ------------ */
 const currentMode = ref("briefing");
 const stats = ref({ exchanges: 0, questions: 0, revisions: 0 });
+
+/* Separate drafts by mode */
+const trainingOriginalDraft = ref("");
+const trainingFinalDraft = ref("");
+const assessmentOriginalDraft = ref("");
+const assessmentFinalDraft = ref("");
+
+/* Active working drafts */
 const originalDraft = ref("");
 const finalDraft = ref("");
 const userMessage = ref("");
+
+/* Chat histories per mode */
 const trainingChatHistory = ref([]);
 const assessmentChatHistory = ref([]);
 const activeChatHistory = ref([]);
+
+/* Other UI and session states */
 const showReport = ref(false);
 const reportChatHistory = ref([]);
 const reportGenerationInstructions = ref("");
@@ -219,36 +233,67 @@ const { sendMessage, talkToChatbot } = useChatFunctions({
   isUpdatingDraft,
 });
 
-/* ------------ Methods ------------ */
-const showNotification = (msg, type = "success") => {
-  notification.value = { message: msg, type, visible: true };
-  setTimeout(() => (notification.value.visible = false), 3000);
-};
-
+/* ------------ Mode Switching ------------ */
 function switchMode(mode) {
+  // Save current drafts before switching
+  if (currentMode.value === "training") {
+    trainingOriginalDraft.value = originalDraft.value;
+    trainingFinalDraft.value = finalDraft.value;
+  } else if (currentMode.value === "assessment") {
+    assessmentOriginalDraft.value = originalDraft.value;
+    assessmentFinalDraft.value = finalDraft.value;
+  }
+
+  // Switch mode
   currentMode.value = mode;
   stats.value = { exchanges: 0, questions: 0, revisions: 0 };
   isOriginalDraftConfirmed.value = false;
 
-  const chatMap = { training: trainingChatHistory, assessment: assessmentChatHistory };
+  const chatMap = {
+    training: trainingChatHistory,
+    assessment: assessmentChatHistory,
+  };
+
   if (mode in chatMap) {
     activeChatHistory.value = chatMap[mode].value;
-    if (!chatMap[mode].value.length) {
+    if (!chatMap[mode].value.length)
       chatMap[mode].value.push(makeChatHistoryEntry("assistant", greetings[mode]));
-    }
-    originalDraft.value = mode === "training" ? Sample_Essay : "";
-    finalDraft.value = "";
+
+    // Load saved drafts for this mode
+    originalDraft.value =
+      mode === "training"
+        ? trainingOriginalDraft.value || Sample_Essay
+        : assessmentOriginalDraft.value || "";
+    finalDraft.value = mode === "training" ? trainingFinalDraft.value : assessmentFinalDraft.value;
   } else {
     activeChatHistory.value = [];
   }
 }
 
+/* Sync draft changes to their mode-specific refs */
+watch([originalDraft, finalDraft, currentMode], () => {
+  if (currentMode.value === "training") {
+    trainingOriginalDraft.value = originalDraft.value;
+    trainingFinalDraft.value = finalDraft.value;
+  } else if (currentMode.value === "assessment") {
+    assessmentOriginalDraft.value = originalDraft.value;
+    assessmentFinalDraft.value = finalDraft.value;
+  }
+});
+
+/* ------------ Utilities ------------ */
 const makeChatHistoryEntry = (role, content) => ({
   role,
   content,
   timestamp: new Date(),
 });
 
+const showNotification = (msg, type = "success") => {
+  notification.value = { message: msg, type, visible: true };
+  setTimeout(() => (notification.value.visible = false), 3000);
+};
+
+/* ------------ API and Chat ------------ */
 async function connectAPI(auto = false) {
   if (!apiKey.value && !auto) return;
   localStorage.setItem("chatbot_api_key", apiKey.value);
@@ -259,7 +304,6 @@ async function connectAPI(auto = false) {
       { role: "system", content: "connection test, return 1" },
       { role: "user", content: "Hello!" },
     ]);
-
     isConnected.value = reply?.trim().length > 0;
     showNotification(
       isConnected.value ? "✅ Connected!" : "⚠️ No valid reply",
@@ -291,6 +335,7 @@ const confirmDraft = () => {
   finalDraft.value = originalDraft.value;
 };
 
+/* ------------ Report Generation ------------ */
 async function generateAssessmentReport(mode = "final") {
   isGeneratingAssessment.value = true;
   try {
