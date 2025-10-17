@@ -1,22 +1,22 @@
 <template>
   <div
     v-if="assetsLoaded"
-    class="relative w-48 h-48 rounded-full mx-auto overflow-hidden transition-all duration-300"
+    class="relative w-64 h-64 rounded-full mx-auto overflow-hidden transition-all duration-300"
     :class="faceClasses"
   >
     <!-- Owl avatar -->
     <template v-if="state === 'speaking'">
-      <video autoplay loop muted playsinline class="w-full h-full object-cover">
+      <video autoplay loop muted playsinline class="avatar-media w-full h-full object-cover">
         <source :src="videoSrc" type="video/mp4" />
       </video>
     </template>
     <template v-else>
-      <img :src="imageSrc" alt="Owl Avatar" class="w-full h-full object-cover" />
+      <img :src="imageSrc" alt="Owl Avatar" class="avatar-media w-full h-full object-cover" />
     </template>
   </div>
 
   <!-- Optional Loader / Placeholder -->
-  <div v-else class="w-48 h-48 flex items-center justify-center text-gray-500 mx-auto">
+  <div v-else class="w-64 h-64 flex items-center justify-center text-gray-500 mx-auto">
     Loading...
   </div>
 </template>
@@ -91,5 +91,8 @@ const faceClasses = computed(() => [
 
 .animate-glow {
   animation: glow 1s infinite alternate;
+}
+.avatar-media {
+  transform: scale(1.6);
 }
 </style>

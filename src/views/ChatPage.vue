@@ -72,7 +72,7 @@
               <div
                 class="prose prose-sm max-w-none break-words [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:whitespace-pre-wrap [&_ol]:list-decimal [&_ol]:ml-6 [&_ul]:list-disc"
                 v-html="renderMarkdown(msg.content)"
-              ></div>
+              />
             </div>
             <div class="text-xs text-gray-400 mt-2 text-right">
               {{ msg.timestamp.toLocaleTimeString() }}

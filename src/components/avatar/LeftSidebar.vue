@@ -8,7 +8,7 @@
       v-if="isOpen"
       class="p-5 border-b bg-gradient-to-r from-indigo-500 to-purple-600 text-white flex justify-between items-center"
     >
-      <h2 class="text-lg font-bold flex items-center gap-2">🤖 Chatbot Configuration</h2>
+      <h2 class="text-lg font-bold flex items-center gap-2">📧 Email Configuration</h2>
       <button class="text-white hover:text-gray-200" @click="$emit('update:isOpen', false)">
         ✖
       </button>
@@ -16,60 +16,44 @@
 
     <!-- Content -->
     <div v-if="isOpen" class="p-5 space-y-6 flex-1 overflow-y-auto">
-      <!-- Provider Selector -->
-      <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h3 class="font-semibold mb-3">🌐 Provider</h3>
-        <select
-          :value="selectedProvider"
-          @change="$emit('update:selectedProvider', $event.target.value)"
-          class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
-        >
-          <option value="openrouter">OpenRouter</option>
-        </select>
-      </div>
+      <!-- User Information -->
+      <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-4">
+        <h3 class="font-semibold text-gray-800 mb-3">👤 User Information</h3>
 
-      <!-- Model Selector -->
-      <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h3 class="font-semibold mb-3">🤖 Choose Model</h3>
-        <select
-          :value="model"
-          @change="$emit('update:model', $event.target.value)"
-          class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
-        >
-          <option value="openai/gpt-4.1-nano">GPT-4.1 Nano</option>
-          <option value="openai/gpt-4.1-mini">GPT-4.1 Mini</option>
-          <option value="openai/gpt-5-chat">GPT-5 Chat</option>
-          <option value="meta-llama/llama-4-scout">Llama-4 Scout</option>
-          <option value="google/gemini-2.5-flash-lite-preview-06-17">Gemini-2.5 Flash</option>
-          <option value="deepseek/deepseek-chat-v3.1:free">Deepseek V3.1</option>
-        </select>
-      </div>
+        <!-- Name Input -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+          <input
+            type="text"
+            v-model="name"
+            @input="emitUserData"
+            placeholder="Enter your full name"
+            class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
+          />
+        </div>
 
-      <!-- Buttons -->
-      <div class="flex gap-2 mt-3">
-        <button
-          class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium"
-          @click="$emit('connectAPI')"
-          :disabled="isConnecting || isConnected"
-        >
-          <span v-if="isConnecting">🔄 Connecting...</span>
-          <span v-else-if="isConnected">✔️ Connected</span>
-          <span v-else>✅ Connect</span>
-        </button>
-        <button
-          class="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 text-gray-700 text-sm font-medium"
-          @click="$emit('clearAPI')"
-          :disabled="isConnecting"
-        >
-          🗑️ Clear
-        </button>
-      </div>
+        <!-- Email Input (Two Rows) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
 
-      <!-- Prompts -->
-      <div>
-        <h3 class="font-semibold mb-2">⚙️ System Prompt</h3>
-        <div class="bg-gray-100 p-3 rounded-lg text-sm shadow-inner">
-          {{ systemPrompt }}
+          <!-- Row 1: Local part -->
+          <input
+            type="text"
+            v-model="emailLocal"
+            @input="emitUserData"
+            placeholder="Enter email username"
+            class="w-full border rounded-lg p-2 text-sm mb-2 focus:ring focus:ring-indigo-300"
+          />
+
+          <!-- Row 2: Domain selector -->
+          <select
+            v-model="emailSuffix"
+            @change="emitUserData"
+            class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
+          >
+            <option value="@hkbu.edu.hk">@hkbu.edu.hk</option>
+            <option value="@life.hkbu.edu.hk">@life.hkbu.edu.hk</option>
+          </select>
         </div>
       </div>
 
@@ -100,24 +84,35 @@
 </template>
 
 <script setup>
-defineProps({
+import { ref, watch } from "vue";
+
+// eslint-disable-next-line no-unused-vars
+const props = defineProps({
   isOpen: Boolean,
-  systemPrompt: String,
-  welcomePrompt: String,
-  model: String,
-  apiKey: String,
-  isConnected: Boolean,
   tokenUsage: Number,
-  selectedProvider: String,
-  isConnecting: Boolean,
 });
 
-defineEmits([
-  "update:isOpen",
-  "update:apiKey",
-  "update:model",
-  "update:selectedProvider",
-  "connectAPI",
-  "clearAPI",
-]);
+const emit = defineEmits(["update:isOpen", "updateUserData"]);
+
+const name = ref("");
+const emailLocal = ref("");
+const emailSuffix = ref("@hkbu.edu.hk");
+
+// Emit combined data
+function emitUserData() {
+  const fullEmail = emailLocal.value ? `${emailLocal.value}${emailSuffix.value}` : "";
+  emit("updateUserData", {
+    name: name.value,
+    email: fullEmail,
+  });
+}
+
+// Automatically emit updates when values change
+watch([name, emailLocal, emailSuffix], emitUserData);
 </script>
+
+<style scoped>
+aside {
+  transition: width 0.3s ease;
+}
+</style>

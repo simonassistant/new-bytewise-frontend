@@ -6,8 +6,16 @@
     <!-- Left Sidebar -->
     <LeftSidebar
       v-model:isOpen="isSidebarOpen"
-      @updateUserData="handleUserDataUpdate"
+      v-model:apiKey="apiKey"
+      v-model:model="model"
+      v-model:selectedProvider="selectedProvider"
+      :systemPrompt="systemPrompt"
+      :welcomePrompt="welcomePrompt"
+      :isConnected="isConnected"
       :tokenUsage="tokenUsage"
+      :isConnecting="isConnecting"
+      @connectAPI="connectAPI"
+      @clearAPI="clearAPI"
     />
 
     <!-- Main Chat Area -->
@@ -46,7 +54,7 @@
       <div ref="messagesContainer" class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
         <div v-for="(msg, i) in formattedMessages" :key="i" class="flex" :class="msg.align">
           <div
-            class="max-w-8xl px-4 py-3 rounded-2xl shadow text-base break-words"
+            class="max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl shadow text-base break-words"
             :class="msg.style"
           >
             <div class="font-semibold text-xs mb-1">{{ msg.label }}</div>
@@ -63,15 +71,9 @@
         <!-- Overlay if not connected -->
         <div
           v-if="!isConnected"
-          class="absolute inset-0 flex items-center justify-center bg-white/70 z-10"
+          class="absolute inset-0 flex items-center justify-center bg-white/70 text-gray-600 text-sm font-medium z-10"
         >
-          <button
-            class="px-6 py-3 rounded-full bg-blue-500 text-white text-lg font-bold shadow-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            @click="connectAPI"
-            :disabled="isConnecting"
-          >
-            {{ isConnecting ? "Connecting..." : "Start" }}
-          </button>
+          🔑 Please connect to Openrouter first
         </div>
 
         <!-- Mode Toggle -->
@@ -153,8 +155,6 @@
         :userCount="userCount"
         :assistantCount="assistantCount"
         :botName="selectedBot.name"
-        :userEmail="userEmail"
-        :userName="userName"
         @close="showReport = false"
       />
     </div>
@@ -189,7 +189,7 @@ import { io } from "socket.io-client";
 import { BASE_URL } from "../components/base_url";
 import AvatarComponent from "../components/avatar/AvatarComponent.vue";
 import LeftSidebar from "../components/avatar/LeftSidebar.vue";
-import ReportModal from "../components/avatar/AvatarReportModal.vue";
+import ReportModal from "../components/text_chatbot/ReportModal.vue";
 import { useAzureSpeech } from "@/components/avatar/useAzureSpeech";
 
 const props = defineProps({ avatarId: { type: String, required: true } });
@@ -213,8 +213,6 @@ const isConnecting = ref(false);
 const notification = ref({ message: "", type: "success", visible: false });
 const messagesContainer = ref(null);
 const showAvatar = ref(true);
-const userName = ref("");
-const userEmail = ref("");
 
 let socket = null;
 const {
@@ -273,10 +271,7 @@ const headerButtons = [
   { id: "new", label: "🔄 New Session", action: () => startNewSession() },
   { id: "back", label: "⬅ Back", action: () => goBack() },
 ];
-function handleUserDataUpdate({ name, email }) {
-  userName.value = name;
-  userEmail.value = email;
-}
+
 // --- Lifecycle ---
 onMounted(async () => {
   await chatbotStore.loadBots();
@@ -291,6 +286,11 @@ onMounted(async () => {
   welcomePrompt.value = selectedBot.value.welcomePrompt;
   model.value = selectedBot.value.model;
   await getAzureToken();
+  const savedApiKey = localStorage.getItem("chatbot_api_key");
+  if (savedApiKey) {
+    apiKey.value = savedApiKey;
+    connectAPI(true);
+  }
 });
 function sendTextToChatbot() {
   return sendMessage(userText.value, "text");
@@ -381,11 +381,14 @@ async function apiCall(endpoint, payload) {
 }
 
 // --- API Connect ---
-async function connectAPI() {
+async function connectAPI(auto = false) {
+  if (!apiKey.value && !auto && selectedProvider.value !== "openrouter") return;
+  localStorage.setItem("chatbot_api_key", apiKey.value);
   isConnecting.value = true;
   isConnected.value = false;
   try {
-    let providerUrl = "/chatbot/chat_openrouter";
+    let providerUrl =
+      selectedProvider.value === "openrouter" ? "/chatbot/chat_openrouter" : "/chatbot/chat";
     const data = await apiCall(providerUrl, {
       chat_history: [
         { role: "system", content: "connection test, return 1 if you can read." },
@@ -412,6 +415,12 @@ async function connectAPI() {
     chatHistory.value.push(newMessage("assistant", welcomePrompt.value));
     scrollToBottom();
   }
+}
+function clearAPI() {
+  localStorage.removeItem("chatbot_api_key");
+  apiKey.value = "";
+  isConnected.value = false;
+  chatHistory.value = [];
 }
 
 // --- WebSocket ---
