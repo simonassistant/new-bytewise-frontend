@@ -27,7 +27,7 @@
             type="text"
             v-model="name"
             @input="emitUserData"
-            placeholder="Enter your full name"
+            placeholder="Enter your name"
             class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
           />
         </div>
@@ -41,7 +41,7 @@
             type="text"
             v-model="emailLocal"
             @input="emitUserData"
-            placeholder="Enter email username"
+            placeholder="Enter student/staff email"
             class="w-full border rounded-lg p-2 text-sm mb-2 focus:ring focus:ring-indigo-300"
           />
 
