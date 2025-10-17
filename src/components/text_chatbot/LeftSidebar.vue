@@ -84,7 +84,7 @@
       <!-- Prompts -->
       <div>
         <h3 class="font-semibold mb-2">⚙️ System Prompt</h3>
-        <div class="bg-gray-100 p-3 rounded-lg text-sm shadow-inner">
+        <div class="bg-gray-100 p-3 rounded-lg text-sm shadow-inner whitespace-pre-line">
           {{ systemPrompt }}
         </div>
       </div>
