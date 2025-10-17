@@ -20,25 +20,25 @@
           :disabled="emailSending"
         >
           <span v-if="emailSending">⏳ Sending...</span>
-          <span v-else>📧 Resend Report</span>
+          <span v-else>Resend Report</span>
         </button>
         <button
           class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
           @click="downloadPDF"
         >
-          📥 Download PDF
+          Download PDF
         </button>
         <button
           class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white"
           @click="downloadMarkdown"
         >
-          📝 Download Markdown
+          Download Markdown
         </button>
         <button
           class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white"
           @click="copyReport"
         >
-          📋 Copy Text
+          Copy Text
         </button>
         <button
           class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white"
