@@ -199,7 +199,9 @@ export function useAzureSpeech(showNotification) {
             });
         } catch (err) {
             console.error("Azure STT error:", err);
-            showNotification?.("❌ Speech recognition failed", "error");
+            if (err.name == "NotFoundError" || err.name == "NotAllowedError") {
+                showNotification?.("❌ Microphone access denied", "error");
+            } else { showNotification?.("❌ Speech recognition failed", "error"); }
             isRecording.value = false;
             isRecognizing.value = false;
             avatarState.value = "idle";

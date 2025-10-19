@@ -398,20 +398,20 @@ async function connectAPI() {
     if (reply?.trim()) {
       isConnected.value = true;
       showNotification("✅ Connected and working!");
-      await speakReplySequentially(welcomePrompt.value);
     } else {
       showNotification("⚠️ Connected, but no valid reply.", "error");
     }
+    connectWebSocket();
+    if (!chatHistory.value.length && isConnected.value) {
+      chatHistory.value.push(newMessage("assistant", welcomePrompt.value));
+      scrollToBottom();
+    }
+    await speakReplySequentially(welcomePrompt.value);
   } catch (e) {
     console.error(e);
     showNotification("❌ Failed to connect.", "error");
   } finally {
     isConnecting.value = false;
-  }
-  connectWebSocket();
-  if (!chatHistory.value.length && isConnected.value) {
-    chatHistory.value.push(newMessage("assistant", welcomePrompt.value));
-    scrollToBottom();
   }
 }
 
