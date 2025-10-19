@@ -398,6 +398,7 @@ async function connectAPI() {
     if (reply?.trim()) {
       isConnected.value = true;
       showNotification("✅ Connected and working!");
+      await speakReplySequentially(welcomePrompt.value);
     } else {
       showNotification("⚠️ Connected, but no valid reply.", "error");
     }
