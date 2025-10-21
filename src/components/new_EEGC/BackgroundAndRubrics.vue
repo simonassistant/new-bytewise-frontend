@@ -65,13 +65,20 @@
       ></textarea>
     </div>
 
-    <!-- Submit Button -->
-    <div class="text-center">
+    <!-- Buttons -->
+    <div class="flex justify-center gap-4">
       <button
         @click="handleSubmit"
         class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 transition"
       >
         Submit
+      </button>
+
+      <button
+        @click="handleClearAll"
+        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-6 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition"
+      >
+        Clear All
       </button>
     </div>
   </div>
@@ -94,29 +101,37 @@ const props = defineProps({
     default: "",
   },
 });
-const localRubric = ref(props.rubric || "");
-const emit = defineEmits(["submit"]);
+const emit = defineEmits(["submit", "update:courseInfo", "update:studentContext"]);
 
+const localRubric = ref(props.rubric || "");
 const localCourseInfo = reactive({ ...props.courseInfo });
 const localStudentContext = reactive({ ...props.studentContext });
 
 watch(localCourseInfo, (val) => emit("update:courseInfo", { ...val }), { deep: true });
-
 watch(localStudentContext, (val) => emit("update:studentContext", { ...val }), { deep: true });
 
+/** Format display label */
 function formatLabel(key) {
   return key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
 }
 
+/** Submit the data */
 function handleSubmit() {
-  if (!localRubric.value || localRubric.value.trim() === "") {
+  if (!localRubric.value.trim()) {
     alert("Please provide the rubric before submitting.");
     return;
   }
   emit("submit", {
     courseInfo: { ...localCourseInfo },
     studentContext: { ...localStudentContext },
-    rubric: props.rubric,
+    rubric: localRubric.value,
   });
+}
+
+/** Clear all input fields */
+function handleClearAll() {
+  for (const key in localCourseInfo) localCourseInfo[key] = "";
+  for (const key in localStudentContext) localStudentContext[key] = "";
+  localRubric.value = "";
 }
 </script>
