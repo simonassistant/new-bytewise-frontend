@@ -16,11 +16,8 @@
 
     <!-- Content -->
     <div v-if="isOpen" class="p-5 space-y-6 flex-1 overflow-y-auto">
-
       <!-- API Config -->
-      <div
-        class="bg-yellow-50 border border-yellow-200 rounded-lg p-4"
-      >
+      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <h3 class="font-semibold text-yellow-800 mb-3">🔑 API Configuration</h3>
         <input
           type="password"
@@ -84,7 +81,7 @@
       <!-- Prompts -->
       <div>
         <h3 class="font-semibold mb-2">⚙️ System Prompt</h3>
-        <div class="bg-gray-100 p-3 rounded-lg text-sm shadow-inner">
+        <div class="bg-gray-100 p-3 rounded-lg text-sm shadow-inner whitespace-pre-line">
           {{ systemPrompt }}
         </div>
       </div>
