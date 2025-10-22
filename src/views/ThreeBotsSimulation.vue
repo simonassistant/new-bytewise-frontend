@@ -558,7 +558,7 @@ async function startSimulation() {
       });
     }
 
-    const messages = [{ role: "system", content: systemPrompt }, ...convoForModel];
+    const messages = [{ role: "system", content: systemPrompt }, ...convoForModel.slice(0, -1)];
     console.log(messages);
     const reply = await sendChat(messages);
 
