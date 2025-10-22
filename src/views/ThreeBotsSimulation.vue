@@ -557,6 +557,7 @@ async function startSimulation() {
     }
 
     const messages = [{ role: "system", content: systemPrompt }, ...convoForModel];
+    console.log(messages);
     const reply = await sendChat(messages);
 
     conversation.value[conversation.value.length - 1].content = reply.trim();
