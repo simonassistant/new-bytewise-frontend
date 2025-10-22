@@ -310,7 +310,6 @@ async function connectAPI(auto = false) {
       isConnected.value ? "✅ Connected!" : "⚠️ No valid reply",
       isConnected.value ? "success" : "error"
     );
-    if (isConnected.value && currentMode.value === "briefing") switchMode("training");
   } catch {
     showNotification("❌ Connection failed", "error");
   } finally {
