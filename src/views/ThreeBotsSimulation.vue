@@ -28,7 +28,7 @@
         </div>
 
         <div>
-          <label class="block font-semibold mb-1 text-gray-700">First Conversation Content</label>
+          <label class="block font-semibold mb-1 text-gray-700">Greeting Content</label>
           <textarea
             v-model="firstContent"
             rows="10"
@@ -609,7 +609,7 @@ function downloadMarkdown() {
   mdContent += `## Prompts\n`;
   mdContent += `**Teacher Prompt:**\n\n${teacherPrompt.value}\n\n`;
   mdContent += `**Student Prompt:**\n\n${studentPrompt.value}\n\n`;
-  mdContent += `**First Conversation Content:**\n\n${firstContent.value}\n\n`;
+  mdContent += `**Greeting Content:**\n\n${firstContent.value}\n\n`;
   mdContent += `**Analysis Prompt:**\n\n${analysisPrompt.value}\n\n`;
 
   mdContent += `## Chat Rounds: ${chatRounds.value}\n\n`;
