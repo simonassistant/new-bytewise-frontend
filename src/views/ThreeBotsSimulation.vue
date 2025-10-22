@@ -1,7 +1,9 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4">
     <div class="w-full bg-white rounded-xl shadow p-6 space-y-8">
-      <h1 class="text-2xl font-bold text-center text-gray-800">Teacher–Student Chat Simulation</h1>
+      <h1 class="text-2xl font-bold text-center text-gray-800">
+        Teacher–Student Chat Simulation 1.00
+      </h1>
 
       <!-- Prompt Inputs -->
       <div class="space-y-4">
@@ -562,6 +564,9 @@ async function startSimulation() {
 
     conversation.value[conversation.value.length - 1].content = reply.trim();
     await scrollToBottom();
+    if (reply.trim() == "done") {
+      break;
+    }
   }
 
   loading.value = false;
