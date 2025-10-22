@@ -1,9 +1,7 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4">
     <div class="w-full bg-white rounded-xl shadow p-6 space-y-8">
-      <h1 class="text-2xl font-bold text-center text-gray-800">
-        Teacher–Student Chat Simulation
-      </h1>
+      <h1 class="text-2xl font-bold text-center text-gray-800">Teacher–Student Chat Simulation</h1>
 
       <!-- Prompt Inputs -->
       <div class="space-y-4">
@@ -558,7 +556,7 @@ async function startSimulation() {
       });
     }
 
-    const messages = [{ role: "system", content: systemPrompt }, ...convoForModel.slice(-8)];
+    const messages = [{ role: "system", content: systemPrompt }, ...convoForModel];
     const reply = await sendChat(messages);
 
     conversation.value[conversation.value.length - 1].content = reply.trim();
