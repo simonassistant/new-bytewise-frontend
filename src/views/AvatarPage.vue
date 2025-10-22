@@ -186,7 +186,7 @@ import { ref, computed, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useChatbotStore } from "../components/text_chatbot/chatbotStore";
 import { io } from "socket.io-client";
-import { BASE_URL } from "../components/base_url";
+import { BASE_URL } from "@/components/base_url";
 import AvatarComponent from "../components/avatar/AvatarComponent.vue";
 import LeftSidebar from "../components/avatar/LeftSidebar.vue";
 import ReportModal from "../components/avatar/AvatarReportModal.vue";

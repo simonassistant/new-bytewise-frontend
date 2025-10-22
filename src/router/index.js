@@ -5,6 +5,7 @@ import Chat from '../views/ChatPage.vue'
 import Avatar from '../views/AvatarPage.vue'
 import WritingBot from '../views/WritingBot.vue'
 import EEGC from '../views/NewEEGC.vue'
+import ThreeBotsSimulation from '../views/ThreeBotsSimulation.vue'
 import NotFound from '../views/NotFound.vue'
 const routes = [
   {
@@ -33,6 +34,11 @@ const routes = [
     path: '/old_EEGC',
     name: 'old_EEGC',
     component: WritingBot
+  },
+  {
+    path: '/three-bots-simulation',
+    name: 'ThreeBotsSimulation',
+    component: ThreeBotsSimulation
   },
   {
     path: '/:pathMatch(.*)*',
