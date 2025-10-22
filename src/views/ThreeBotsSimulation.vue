@@ -1,7 +1,9 @@
 <template>
   <div class="min-h-screen bg-gray-50 flex flex-col items-center py-10 px-4">
     <div class="w-full bg-white rounded-xl shadow p-6 space-y-8">
-      <h1 class="text-2xl font-bold text-center text-gray-800">Teacher–Student Chat Simulation</h1>
+      <h1 class="text-2xl font-bold text-center text-gray-800">
+        Teacher–Student Chat Simulation
+      </h1>
 
       <!-- Prompt Inputs -->
       <div class="space-y-4">
@@ -86,6 +88,14 @@
           class="bg-red-500 hover:bg-red-600 text-white font-medium px-4 py-2 rounded-lg"
         >
           Clear All
+        </button>
+
+        <!-- ✅ Download Markdown Button -->
+        <button
+          @click="downloadMarkdown"
+          class="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg"
+        >
+          Download Markdown
         </button>
       </div>
 
@@ -513,18 +523,15 @@ async function sendChat(chat_history) {
   }
 }
 
-// ✅ Main Simulation Logic (with validation for all fields)
+// ✅ Main Simulation Logic
 async function startSimulation() {
-  // Validation: ensure all required inputs are filled
   if (
     !teacherPrompt.value.trim() ||
     !studentPrompt.value.trim() ||
     !firstContent.value.trim() ||
     !analysisPrompt.value.trim()
   ) {
-    alert(
-      "Please fill in all four fields: Teacher Prompt, Student Prompt, First Conversation Content, and Analysis Prompt before starting the simulation."
-    );
+    alert("Please fill in all four fields before starting the simulation.");
     return;
   }
 
@@ -562,7 +569,7 @@ async function startSimulation() {
   await analyzePrompts();
 }
 
-// Analysis Logic
+// Analysis
 async function analyzePrompts() {
   if (!conversation.value.length) return;
   analysisLoading.value = true;
@@ -593,5 +600,36 @@ async function analyzePrompts() {
   analysisResult.value = reply.trim();
   analysisLoading.value = false;
   await scrollToBottom();
+}
+
+// ✅ Download Markdown Function
+function downloadMarkdown() {
+  let mdContent = `# Teacher–Student Chat Simulation Export\n\n`;
+
+  mdContent += `## Prompts\n`;
+  mdContent += `**Teacher Prompt:**\n\n${teacherPrompt.value}\n\n`;
+  mdContent += `**Student Prompt:**\n\n${studentPrompt.value}\n\n`;
+  mdContent += `**First Conversation Content:**\n\n${firstContent.value}\n\n`;
+  mdContent += `**Analysis Prompt:**\n\n${analysisPrompt.value}\n\n`;
+
+  mdContent += `## Chat Rounds: ${chatRounds.value}\n\n`;
+  mdContent += `## Conversation\n`;
+
+  for (const msg of conversation.value) {
+    const speaker = msg.role === "assistant" ? "Teacher" : "Student";
+    mdContent += `### Round ${msg.round} (${speaker})\n${msg.content}\n\n`;
+  }
+
+  if (analysisResult.value) {
+    mdContent += `## Analysis Result\n\n${analysisResult.value}\n`;
+  }
+
+  const blob = new Blob([mdContent], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "Teacher-Student-Chat-Export.md";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 </script>
