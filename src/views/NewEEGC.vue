@@ -80,7 +80,10 @@
 
     <!-- Chat Interface -->
     <ChatInterface
-      v-if="currentMode == 'training' || (currentMode == 'assessment' && hasSubmittedBackground)"
+      v-if="
+        (currentMode == 'training' && hasSubmittedTrainingBackground) ||
+        (currentMode == 'assessment' && hasSubmittedAssessmentBackground)
+      "
       v-model:userMessage="userMessage"
       v-model:originalDraft="originalDraft"
       v-model:finalDraft="finalDraft"
@@ -99,10 +102,17 @@
       @confirmFinalDraft="confirmFinalDraft"
     />
     <BackgroundAndRubrics
-      v-if="!hasSubmittedBackground && currentMode == 'assessment'"
+      v-if="!hasSubmittedTrainingBackground && currentMode == 'training'"
       v-model:rubric="rubric"
       v-model:courseInfo="courseInfo"
       v-model:studentContext="studentContext"
+      @submit="handleBackgroundSubmit"
+    />
+    <BackgroundAndRubrics
+      v-if="!hasSubmittedAssessmentBackground && currentMode == 'assessment'"
+      v-model:rubric="rubricAssessment"
+      v-model:courseInfo="courseInfoAssessment"
+      v-model:studentContext="studentContextAssessment"
       @submit="handleBackgroundSubmit"
     />
     <!-- Report Modal -->
@@ -175,7 +185,8 @@ const isConnecting = ref(false);
 const model = ref("gpt-4.1");
 const isOriginalDraftConfirmed = ref(false);
 const bulletPoints = ref("No bullet points extracted yet.");
-const hasSubmittedBackground = ref(false);
+const hasSubmittedTrainingBackground = ref(false);
+const hasSubmittedAssessmentBackground = ref(false);
 
 const rubric = ref("");
 const courseInfo = {
@@ -189,6 +200,19 @@ const studentContext = {
   language: "English as additional language",
   goals: "Improve academic writing skills",
   challenges: "Structure, vocabulary, critical analysis",
+};
+const courseInfoAssessment = {
+  course: "",
+  level: "",
+  focus: "",
+  assessment: "",
+};
+const rubricAssessment = ref("");
+const studentContextAssessment = {
+  academicLevel: "",
+  language: "",
+  goals: "",
+  challenges: "",
 };
 
 const modeColors = {
@@ -225,6 +249,9 @@ const { sendMessage, talkToChatbot } = useChatFunctions({
   rubric,
   studentContext,
   courseInfo,
+  rubricAssessment,
+  studentContextAssessment,
+  courseInfoAssessment,
 });
 
 /* ------------ Mode Switching ------------ */
@@ -292,7 +319,13 @@ function handleBackgroundSubmit({
   courseInfo.value = newCourseInfo;
   studentContext.value = newStudentContext;
   rubric.value = newRubric;
-  hasSubmittedBackground.value = true;
+  if (currentMode.value === "training") {
+    hasSubmittedTrainingBackground.value = true;
+    alert(
+      "Successfully submitted!\nAll background information is pre-filled in training mode. You will need to manually fill them in assessment mode."
+    );
+  }
+  if (currentMode.value === "assessment") hasSubmittedAssessmentBackground.value = true;
 }
 /* ------------ API and Chat ------------ */
 async function connectAPI(auto = false) {

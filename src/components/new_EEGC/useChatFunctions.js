@@ -18,8 +18,12 @@ export function useChatFunctions({
     rubric,
     studentContext,
     courseInfo,
+    rubricAssessment,
+    studentContextAssessment,
+    courseInfoAssessment,
 }) {
     async function talkToChatbot(chat_history) {
+        console.log(model.value        )
         const res = await fetch(`${BASE_URL}/chatbot/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -61,9 +65,9 @@ export function useChatFunctions({
                         content:
                             Assessment_Mode_Prompt +
                             "These are the student information details:\n" +
-                            `Course Info: ${courseInfo.value || "(none)"}\n` +
-                            `Student Context: ${studentContext.value || "(none)"}\n` +
-                            `Rubric: ${rubric.value || "(none)"}\n\n` +
+                            `Course Info: ${courseInfoAssessment.value || "(none)"}\n` +
+                            `Student Context: ${studentContextAssessment.value || "(none)"}\n` +
+                            `Rubric: ${rubricAssessment.value || "(none)"}\n\n` +
                             "Original Draft:\n---\n" +
                             `${originalDraft.value || "(empty)"}\n---\n\n` +
                             "Current Revised Version:\n---\n" +
@@ -78,6 +82,10 @@ export function useChatFunctions({
                         role: "system",
                         content:
                             Trainging_Mode_Prompt +
+                            "These are the student information details:\n" +
+                            `Course Info: ${courseInfo.value || "(none)"}\n` +
+                            `Student Context: ${studentContext.value || "(none)"}\n` +
+                            `Rubric: ${rubric.value || "(none)"}\n\n` +
                             "Original Draft:\n---\n" +
                             `${originalDraft.value || "(empty)"}\n---\n\n` +
                             "Final Draft:\n---\n" +

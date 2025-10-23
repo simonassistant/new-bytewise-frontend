@@ -114,9 +114,16 @@ watch(localStudentContext, (val) => emit("update:studentContext", { ...val }), {
 function formatLabel(key) {
   return key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
 }
+function hasEmptyFields(obj) {
+  return Object.values(obj).some((val) => !val || !val.trim());
+}
 
 /** Submit the data */
 function handleSubmit() {
+  if (hasEmptyFields(localCourseInfo)||hasEmptyFields(localStudentContext)) {
+    alert("Please fill in all Course Information and Student Context fields before submitting.");
+    return;
+  }
   if (!localRubric.value.trim()) {
     alert("Please provide the rubric before submitting.");
     return;
