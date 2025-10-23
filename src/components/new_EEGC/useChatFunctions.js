@@ -23,7 +23,6 @@ export function useChatFunctions({
     courseInfoAssessment,
 }) {
     async function talkToChatbot(chat_history) {
-        console.log(model.value        )
         const res = await fetch(`${BASE_URL}/chatbot/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

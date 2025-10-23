@@ -4,7 +4,7 @@
 
     <!-- Course Information -->
     <h3 class="text-lg font-semibold mb-2 text-gray-800">📘 Course Information</h3>
-    <div class="overflow-x-auto mb-6">
+    <div class="overflow-x-auto mb-4">
       <table class="w-full text-sm border border-gray-300 rounded-lg">
         <tbody>
           <tr
@@ -27,10 +27,25 @@
         </tbody>
       </table>
     </div>
+    <div class="flex justify-center gap-3 mb-8">
+      <button
+        @click="handleSubmitCourseInfo"
+        :disabled="isCourseInforSubmitted"
+        class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-200 text-white font-medium px-4 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition"
+      >
+        Submit Course Info
+      </button>
+      <button
+        @click="copyCourseInfoMarkdown"
+        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-4 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition"
+      >
+        Copy Markdown
+      </button>
+    </div>
 
     <!-- Student Context -->
     <h3 class="text-lg font-semibold mb-2 text-gray-800">🎓 Student Context</h3>
-    <div class="overflow-x-auto mb-6">
+    <div class="overflow-x-auto mb-4">
       <table class="w-full text-sm border border-gray-300 rounded-lg">
         <tbody>
           <tr
@@ -53,9 +68,24 @@
         </tbody>
       </table>
     </div>
+    <div class="flex justify-center gap-3 mb-8">
+      <button
+        @click="handleSubmitStudentContext"
+        :disabled="isStudentContextSubmitted"
+        class="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:text-gray-200 text-white font-medium px-4 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 transition"
+      >
+        Submit Student Context
+      </button>
+      <button
+        @click="copyStudentContextMarkdown"
+        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-4 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition"
+      >
+        Copy Markdown
+      </button>
+    </div>
 
     <!-- Rubrics Input -->
-    <div class="bg-white border border-gray-300 rounded-lg p-4 mb-6">
+    <div class="bg-white border border-gray-300 rounded-lg p-4 mb-4">
       <h3 class="font-semibold text-gray-900 mb-2">📊 Rubrics Input</h3>
       <textarea
         v-model="localRubric"
@@ -64,16 +94,23 @@
         class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring focus:ring-indigo-300"
       ></textarea>
     </div>
-
-    <!-- Buttons -->
-    <div class="flex justify-center gap-4">
+    <div class="flex justify-center gap-3 mb-8">
       <button
-        @click="handleSubmit"
-        class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 transition"
+        @click="handleSubmitRubric"
+        class="bg-purple-600 hover:bg-purple-700 text-white font-medium px-4 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 transition"
       >
-        Submit
+        Submit Rubric
       </button>
+      <button
+        @click="copyRubricMarkdown"
+        class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-4 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition"
+      >
+        Copy Markdown
+      </button>
+    </div>
 
+    <!-- Global Clear Button -->
+    <div class="flex justify-center gap-4">
       <button
         @click="handleClearAll"
         class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-6 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition"
@@ -85,32 +122,33 @@
 </template>
 
 <script setup>
-import { reactive, watch, ref } from "vue";
+import { reactive, ref, watch } from "vue";
+const isCourseInforSubmitted = ref(false);
+const isStudentContextSubmitted = ref(false);
 
 const props = defineProps({
-  courseInfo: {
-    type: Object,
-    required: true,
-  },
-  studentContext: {
-    type: Object,
-    required: true,
-  },
-  rubric: {
-    type: String,
-    default: "",
-  },
+  courseInfo: { type: Object, required: true },
+  studentContext: { type: Object, required: true },
+  rubric: { type: String, default: "" },
 });
-const emit = defineEmits(["submit", "update:courseInfo", "update:studentContext"]);
 
-const localRubric = ref(props.rubric || "");
+const emit = defineEmits([
+  "submitCourseInfo",
+  "submitStudentContext",
+  "submitRubric",
+  "update:courseInfo",
+  "update:studentContext",
+]);
+
 const localCourseInfo = reactive({ ...props.courseInfo });
 const localStudentContext = reactive({ ...props.studentContext });
+const localRubric = ref(props.rubric || "");
 
+/** Watch for reactive updates */
 watch(localCourseInfo, (val) => emit("update:courseInfo", { ...val }), { deep: true });
 watch(localStudentContext, (val) => emit("update:studentContext", { ...val }), { deep: true });
 
-/** Format display label */
+/** Helpers */
 function formatLabel(key) {
   return key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
 }
@@ -118,24 +156,60 @@ function hasEmptyFields(obj) {
   return Object.values(obj).some((val) => !val || !val.trim());
 }
 
-/** Submit the data */
-function handleSubmit() {
-  if (hasEmptyFields(localCourseInfo)||hasEmptyFields(localStudentContext)) {
-    alert("Please fill in all Course Information and Student Context fields before submitting.");
+/** Submit handlers */
+function handleSubmitCourseInfo() {
+  if (hasEmptyFields(localCourseInfo)) {
+    alert("Please fill in all Course Information fields before submitting.");
     return;
   }
-  if (!localRubric.value.trim()) {
-    alert("Please provide the rubric before submitting.");
-    return;
-  }
-  emit("submit", {
-    courseInfo: { ...localCourseInfo },
-    studentContext: { ...localStudentContext },
-    rubric: localRubric.value,
-  });
+  isCourseInforSubmitted.value = true;
+  emit("submitCourseInfo", { ...localCourseInfo });
 }
 
-/** Clear all input fields */
+function handleSubmitStudentContext() {
+  if (hasEmptyFields(localStudentContext)) {
+    alert("Please fill in all Student Context fields before submitting.");
+    return;
+  }
+  isStudentContextSubmitted.value = true;
+  emit("submitStudentContext", { ...localStudentContext });
+}
+
+function handleSubmitRubric() {
+  if (!localRubric.value.trim()) {
+    alert("Please provide a rubric before submitting.");
+    return;
+  }
+  if (!isCourseInforSubmitted.value || !isStudentContextSubmitted.value) {
+    alert("Please submit Course Information and Student Context before submitting the rubric.");
+    return;
+  }
+  emit("submitRubric", localRubric.value);
+}
+
+/** Copy Helpers */
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    alert("Copied to clipboard as Markdown!");
+  });
+}
+function copyCourseInfoMarkdown() {
+  const md = Object.entries(localCourseInfo)
+    .map(([k, v]) => `- **${formatLabel(k)}:** ${v}`)
+    .join("\n");
+  copyToClipboard(`### 📘 Course Information\n${md}`);
+}
+function copyStudentContextMarkdown() {
+  const md = Object.entries(localStudentContext)
+    .map(([k, v]) => `- **${formatLabel(k)}:** ${v}`)
+    .join("\n");
+  copyToClipboard(`### 🎓 Student Context\n${md}`);
+}
+function copyRubricMarkdown() {
+  copyToClipboard(`### 📊 Rubric\n\n${localRubric.value}`);
+}
+
+/** Clear all */
 function handleClearAll() {
   for (const key in localCourseInfo) localCourseInfo[key] = "";
   for (const key in localStudentContext) localStudentContext[key] = "";

@@ -106,14 +106,18 @@
       v-model:rubric="rubric"
       v-model:courseInfo="courseInfo"
       v-model:studentContext="studentContext"
-      @submit="handleBackgroundSubmit"
+      @submitCourseInfo="handleSubmitCourseInfo"
+      @submitStudentContext="handleSubmitStudentContext"
+      @submitRubric="handleSubmitRubrics"
     />
     <BackgroundAndRubrics
       v-if="!hasSubmittedAssessmentBackground && currentMode == 'assessment'"
       v-model:rubric="rubricAssessment"
       v-model:courseInfo="courseInfoAssessment"
       v-model:studentContext="studentContextAssessment"
-      @submit="handleBackgroundSubmit"
+      @submitCourseInfo="handleSubmitCourseInfo"
+      @submitStudentContext="handleSubmitStudentContext"
+      @submitRubric="handleSubmitRubrics"
     />
     <!-- Report Modal -->
     <ReportModal
@@ -140,6 +144,7 @@ import CourseHeader from "@/components/new_EEGC/CourseHeader.vue";
 import ModeSelector from "@/components/new_EEGC/ModeSelector.vue";
 import BackgroundAndRubrics from "@/components/new_EEGC/BackgroundAndRubrics.vue";
 import { useChatFunctions } from "@/components/new_EEGC/useChatFunctions";
+import Swal from "sweetalert2";
 
 import {
   AssessBot_Prompt,
@@ -188,7 +193,22 @@ const bulletPoints = ref("No bullet points extracted yet.");
 const hasSubmittedTrainingBackground = ref(false);
 const hasSubmittedAssessmentBackground = ref(false);
 
-const rubric = ref("");
+const rubric = ref(`# Essay Assessment Rubric
+
+## Content and Ideas (1-5)
+Clear viewpoint, relevant ideas, addresses the question directly
+
+## Organisation & Logic (1-5)
+Well-structured, clear paragraphs, logical flow
+
+## Vocabulary (1-5)
+Varied and precise word choice, appropriate register
+
+## Grammar & Structure (1-5)
+Accurate grammar, varied sentence structures
+
+---
+*Use this rubric to assess essay quality across four key dimensions. Each criterion is scored 1-5, with 5 being excellent.*`);
 const courseInfo = {
   course: "LANG 0036 - English for Academic Purposes",
   level: "Intermediate to Advanced",
@@ -311,22 +331,61 @@ const showNotification = (msg, type = "success") => {
   notification.value = { message: msg, type, visible: true };
   setTimeout(() => (notification.value.visible = false), 3000);
 };
-function handleBackgroundSubmit({
-  courseInfo: newCourseInfo,
-  studentContext: newStudentContext,
-  rubric: newRubric,
-}) {
-  courseInfo.value = newCourseInfo;
-  studentContext.value = newStudentContext;
-  rubric.value = newRubric;
-  if (currentMode.value === "training") {
-    hasSubmittedTrainingBackground.value = true;
-    alert(
-      "Successfully submitted!\nAll background information is pre-filled in training mode. You will need to manually fill them in assessment mode."
-    );
+function handleSubmitCourseInfo(newCourseInfo) {
+  if (currentMode.value == "assessment") {
+    courseInfoAssessment.value = newCourseInfo;
+    Swal.fire({
+      title: "Student Context Submitted!",
+      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
+      icon: "success",
+    });
+  } else {
+    courseInfo.value = newCourseInfo;
+    Swal.fire({
+      title: "Course Information Submitted!",
+      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
+      icon: "success",
+    });
   }
-  if (currentMode.value === "assessment") hasSubmittedAssessmentBackground.value = true;
 }
+
+function handleSubmitStudentContext(newStudentContext) {
+  if (currentMode.value == "assessment") {
+    studentContextAssessment.value = newStudentContext;
+    Swal.fire({
+      title: "Student Context Submitted!",
+      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
+      icon: "success",
+    });
+  } else {
+    studentContext.value = newStudentContext;
+    Swal.fire({
+      title: "Student Context Submitted!",
+      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
+      icon: "success",
+    });
+  }
+}
+function handleSubmitRubrics(newRubric) {
+  if (currentMode.value == "assessment") {
+    rubricAssessment.value = newRubric;
+    hasSubmittedAssessmentBackground.value = true;
+    Swal.fire({
+      title: "Rubrics Submitted!",
+      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
+      icon: "success",
+    });
+  } else {
+    rubric.value = newRubric;
+    hasSubmittedTrainingBackground.value = true;
+    Swal.fire({
+      title: "Rubrics Submitted!",
+      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
+      icon: "success",
+    });
+  }
+}
+
 /* ------------ API and Chat ------------ */
 async function connectAPI(auto = false) {
   if (!apiKey.value && !auto) return;
