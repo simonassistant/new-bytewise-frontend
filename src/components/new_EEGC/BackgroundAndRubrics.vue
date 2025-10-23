@@ -125,6 +125,7 @@
 import { reactive, ref, watch } from "vue";
 const isCourseInforSubmitted = ref(false);
 const isStudentContextSubmitted = ref(false);
+import Swal from "sweetalert2";
 
 const props = defineProps({
   courseInfo: { type: Object, required: true },
@@ -159,7 +160,10 @@ function hasEmptyFields(obj) {
 /** Submit handlers */
 function handleSubmitCourseInfo() {
   if (hasEmptyFields(localCourseInfo)) {
-    alert("Please fill in all Course Information fields before submitting.");
+    Swal.fire({
+      text: "Please fill in all Course Information fields before submitting.",
+      icon: "error",
+    });
     return;
   }
   isCourseInforSubmitted.value = true;
@@ -168,7 +172,10 @@ function handleSubmitCourseInfo() {
 
 function handleSubmitStudentContext() {
   if (hasEmptyFields(localStudentContext)) {
-    alert("Please fill in all Student Context fields before submitting.");
+    Swal.fire({
+      text: "Please fill in all Student Context fields before submitting.",
+      icon: "error",
+    });
     return;
   }
   isStudentContextSubmitted.value = true;
@@ -176,12 +183,18 @@ function handleSubmitStudentContext() {
 }
 
 function handleSubmitRubric() {
-  if (!localRubric.value.trim()) {
-    alert("Please provide a rubric before submitting.");
+  if (!isCourseInforSubmitted.value || !isStudentContextSubmitted.value) {
+    Swal.fire({
+      text: "Please submit Course Information and Student Context before submitting the rubric.",
+      icon: "error",
+    });
     return;
   }
-  if (!isCourseInforSubmitted.value || !isStudentContextSubmitted.value) {
-    alert("Please submit Course Information and Student Context before submitting the rubric.");
+  if (!localRubric.value.trim()) {
+    Swal.fire({
+      text: "Please provide a rubric before submitting.",
+      icon: "error",
+    });
     return;
   }
   emit("submitRubric", localRubric.value);
