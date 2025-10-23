@@ -372,7 +372,7 @@ function handleSubmitRubrics(newRubric) {
     hasSubmittedAssessmentBackground.value = true;
     Swal.fire({
       title: "Rubrics Submitted!",
-      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
+      text: "The information is sent to AI tutor.",
       icon: "success",
     });
   } else {
@@ -380,7 +380,7 @@ function handleSubmitRubrics(newRubric) {
     hasSubmittedTrainingBackground.value = true;
     Swal.fire({
       title: "Rubrics Submitted!",
-      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
+      text: "The information is sent to AI tutor.",
       icon: "success",
     });
   }
