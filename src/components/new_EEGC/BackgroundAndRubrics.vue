@@ -203,7 +203,10 @@ function handleSubmitRubric() {
 /** Copy Helpers */
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => {
-    alert("Copied to clipboard as Markdown!");
+    Swal.fire({
+      text: "Copied to clipboard as Markdown!",
+      icon: "success",
+    });
   });
 }
 function copyCourseInfoMarkdown() {
