@@ -147,6 +147,7 @@ import { useChatFunctions } from "@/components/new_EEGC/useChatFunctions";
 import Swal from "sweetalert2";
 
 import {
+  Sample_Essay,
   AssessBot_Prompt,
   Training_Greetings,
   Assessment_Greetings,
@@ -302,7 +303,9 @@ function switchMode(mode) {
 
     // Load saved drafts for this mode
     originalDraft.value =
-      mode === "training" ? trainingOriginalDraft.value || "" : assessmentOriginalDraft.value || "";
+      mode === "training"
+        ? trainingOriginalDraft.value || Sample_Essay
+        : assessmentOriginalDraft.value || "";
     finalDraft.value = mode === "training" ? trainingFinalDraft.value : assessmentFinalDraft.value;
   } else {
     activeChatHistory.value = [];
