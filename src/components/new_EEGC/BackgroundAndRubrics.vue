@@ -48,7 +48,7 @@
     <p v-if="isCourseInforSubmitted && currentMode == 'training'">
       The Course Information has been submitted. Please note that this is training mode, so the
       information has been pre-filled for your convenience. You will be required to enter it
-      manually in assessment mode.
+      manually in assessment mode. Remember to copy the markdown, and use it in assessment mode.
     </p>
     <!-- Student Background -->
     <h3 class="text-lg font-semibold mb-2 text-gray-800">🎓 Student Background</h3>
@@ -96,7 +96,7 @@
     <p v-if="isStudentContextSubmitted && currentMode == 'training'">
       The Student Background has been submitted. Please note that this is training mode, so the
       information has been pre-filled for your convenience. You will be required to enter it
-      manually in assessment mode.
+      manually in assessment mode. Remember to copy the markdown, and use it in assessment mode.
     </p>
     <!-- Rubrics Input -->
     <div class="bg-white border border-gray-300 rounded-lg p-4 mb-4">
