@@ -230,7 +230,7 @@ Provide your assessment in the following structured format:
 
 Remember: Your assessment serves both summative (grading) and formative (learning) purposes. Provide thorough, evidence-based evaluation that helps students understand their performance and guides their future development in AI-assisted writing and collaboration skills.`
 export const Training_Greetings =
-  `Hi please share your practice essay for revision.`
+  `Hi, let's modify your thesis statement.`
 
 export const Assessment_Greetings = `Hello! I'm ready to help you revise your essay. Please paste your original essay in the "Your Original Essay" box and click "Confirm Your Essay" to begin.
 

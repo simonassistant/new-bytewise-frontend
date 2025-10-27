@@ -106,6 +106,7 @@
       v-model:rubric="rubric"
       v-model:courseInfo="courseInfo"
       v-model:studentContext="studentContext"
+      v-model:currentMode="currentMode"
       @submitCourseInfo="handleSubmitCourseInfo"
       @submitStudentContext="handleSubmitStudentContext"
       @submitRubric="handleSubmitRubrics"
@@ -115,6 +116,7 @@
       v-model:rubric="rubricAssessment"
       v-model:courseInfo="courseInfoAssessment"
       v-model:studentContext="studentContextAssessment"
+      v-model:currentMode="currentMode"
       @submitCourseInfo="handleSubmitCourseInfo"
       @submitStudentContext="handleSubmitStudentContext"
       @submitRubric="handleSubmitRubrics"
@@ -194,47 +196,60 @@ const bulletPoints = ref("No bullet points extracted yet.");
 const hasSubmittedTrainingBackground = ref(false);
 const hasSubmittedAssessmentBackground = ref(false);
 
-const rubric = ref(`# Essay Assessment Rubric
+const rubric = ref(`## Assessment Task: Writing (20%)
 
-## Content and Ideas (1-5)
-Clear viewpoint, relevant ideas, addresses the question directly
+### Rubrics
 
-## Organisation & Logic (1-5)
-Well-structured, clear paragraphs, logical flow
+#### Part 1: Point-of-view Essay (10%)
 
-## Vocabulary (1-5)
-Varied and precise word choice, appropriate register
 
-## Grammar & Structure (1-5)
-Accurate grammar, varied sentence structures
+
+| Criteria                                 |                                                   1 (Limited)                                                    |                                           2 (Basic)                                           |                                              3 (Developing)                                               |                                           4 (Proficient)                                           |                                                      5 (Excellent)                                                      |
+| ---------------------------------------- | :--------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------: |
+| **Content and Ideas**                    | Ideas are irrelevant or minimally related to the topic Lacks awareness of the issue concerned No clear viewpoint | Ideas are somewhat related but vagueMinimal awareness of the issue concernedViewpoint unclear | Ideas are relevant but basic Some awareness of the issue concerned Viewpoint present but weakly developed | Ideas are relevant and solid Good awareness of the issue concerned Clear viewpoint with some depth | Ideas are insightful and highly relevant; Strong awareness of the issue concerned; Well-developed, compelling viewpoint |
+| **Organisation and Logical Progression** |                    No clear structure Ideas are disjointed with no development or progression                    |      Basic structure with unclear paragraphing Ideas are listed with little development       |         Clear structure with some paragraphing Ideas are developed but lack depth or logical flow         |   Well-organized with clear paragraphs Ideas are developed logically with good flow and support    |     Highly organized with effective paragraphing; Ideas are thoroughly developed with seamless, logical progression     |
+| **Vocabulary**                           |                    Vocabulary is limited, repetitive, or inaccurateLacks topic-specific terms                    |           Basic vocabulary with some repetitionMinimal use of topic-specific terms            |    Adequate vocabulary with some varietyIncludes some topic-specific terms but with occasional errors     |          Varied and precise vocabulary Effective use of topic-specific terms Minor errors          |          Rich, precise vocabulary; Masterful use of topic-specific terms; Almost error-free and sophisticated           |
+| **Grammar and Sentence Structure**       |                  Frequent grammatical and spelling errorsSentences are incomplete or confusing                   |         Several grammatical and spelling errorsSentences are simple and often flawed          |             Some grammatical and spelling errorsSentences are mostly correct but lack variety             |           Minor grammatical and spelling errorsSentences are varied and mostly accurate            |          Virtually error-free grammar and spelling; Sentences are complex, varied, and accurately constructed           |
 
 ---
-*Use this rubric to assess essay quality across four key dimensions. Each criterion is scored 1-5, with 5 being excellent.*`);
-const courseInfo = {
+## Task 2: AI-Assisted Review of Student Draft (10%)
+
+In this task, students will independently engage in a conversation with a chatbot to revise their own draft essay, without any prompts provided. The focus is on learning how to critically assess and refine their work through interaction with the chatbot, improving the essay's overall quality based on the feedback received.
+
+### Rubric for AI-Assisted Review
+
+|Criteria|1 (Limited)|2 (Basic)|3 (Developing)|4 (Proficient)|5 (Excellent)|
+|---|---|---|---|---|---|
+|A. In-Depth Conversation with AI|No exchanges or chat history provided; no conversation beyond initial input; no questions asked|Sparse exchanges with incomplete or no chat history; basic conversation with one or two simple questions; lacks depth|Adequate exchanges shown in chat history; moderate conversation with some relevant questions; shows some depth|Robust exchanges with comprehensive chat history; in-depth conversation with detailed, relevant questions on all levels|Extensive exchanges with thorough, well-documented chat history; highly in-depth conversation with insightful, multi-level questions|
+|B. Critical Review of AI Suggestions|All AI suggestions accepted without evaluation; no critical thought|Most AI suggestions accepted with little critical analysis|Some AI suggestions evaluated; partial critical review with justification|Most AI suggestions critically assessed; clear justification for choices|All AI suggestions thoroughly evaluated; strong, evidence-based justification|
+|C. Refining Process|No revisions made|Minimal revisions with no iterative process|Some revisions with limited iteration based on AI feedback|Clear iterative process with multiple revisions based on AI input|Extensive refinement with critical review of AI feedback at each step|
+
+`);
+const courseInfo = ref({
   course: "LANG 0036 - English for Academic Purposes",
   level: "Intermediate to Advanced",
   focus: "Academic writing and critical thinking",
   assessment: "Essay writing with rubric-based evaluation",
-};
-const studentContext = {
+});
+const studentContext = ref({
   academicLevel: "University student",
   language: "English as additional language",
   goals: "Improve academic writing skills",
   challenges: "Structure, vocabulary, critical analysis",
-};
-const courseInfoAssessment = {
+});
+const courseInfoAssessment = ref({
   course: "",
   level: "",
   focus: "",
   assessment: "",
-};
+});
 const rubricAssessment = ref("");
-const studentContextAssessment = {
+const studentContextAssessment = ref({
   academicLevel: "",
   language: "",
   goals: "",
   challenges: "",
-};
+});
 
 const modeColors = {
   training: "bg-green-100 text-green-800",
@@ -337,36 +352,16 @@ const showNotification = (msg, type = "success") => {
 function handleSubmitCourseInfo(newCourseInfo) {
   if (currentMode.value == "assessment") {
     courseInfoAssessment.value = newCourseInfo;
-    Swal.fire({
-      title: "Student Context Submitted!",
-      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
-      icon: "success",
-    });
   } else {
     courseInfo.value = newCourseInfo;
-    Swal.fire({
-      title: "Course Information Submitted!",
-      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
-      icon: "success",
-    });
   }
 }
 
 function handleSubmitStudentContext(newStudentContext) {
   if (currentMode.value == "assessment") {
     studentContextAssessment.value = newStudentContext;
-    Swal.fire({
-      title: "Student Context Submitted!",
-      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
-      icon: "success",
-    });
   } else {
     studentContext.value = newStudentContext;
-    Swal.fire({
-      title: "Student Context Submitted!",
-      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
-      icon: "success",
-    });
   }
 }
 function handleSubmitRubrics(newRubric) {
@@ -383,7 +378,9 @@ function handleSubmitRubrics(newRubric) {
     hasSubmittedTrainingBackground.value = true;
     Swal.fire({
       title: "Rubrics Submitted!",
-      text: "The information is sent to AI tutor.",
+      text: `The Rubrics have been submitted. Please note that this is training mode, so the
+      information has been pre-filled for your convenience. You will be required to enter it
+      manually in assessment mode.`,
       icon: "success",
     });
   }
