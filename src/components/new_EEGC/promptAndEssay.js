@@ -272,4 +272,4 @@ Remember: This is assessment mode, so you'll need to take the lead in our conver
 
 I'll track the latest version of your essay automatically as we discuss improvements. Let's begin!`
 
-export const BulletPoints_Generation_Prompt = "Extract clear and concise 2 bullet points summarizing the latest four conversations, and return the result in Markdown. Each bulle point should be one short sentence.\n\n"
+export const BulletPoints_Generation_Prompt = "Extract clear and concise 2 bullet points summarizing the latest four conversations, and return the result in Markdown. The bullet points should be revelant to essay improvement. Each bulle point should be one short sentence.\n\n"

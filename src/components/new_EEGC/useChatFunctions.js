@@ -125,11 +125,6 @@ export function useChatFunctions({
                 role: "system",
                 content:
                     BulletPoints_Generation_Prompt +
-                    "Original Draft:\n---\n" +
-                    `${originalDraft.value || "(empty)"}\n---\n\n` +
-                    "Final Draft:\n---\n" +
-                    `${finalDraft.value || "(empty)"}\n---\n\n` +
-                    "Recent Chat History (latest four messages):\n" +
                     refinedChatHistory
                         .map((msg) => `${msg.role === "user" ? "User" : "AI"}: ${msg.content}`)
                         .join("\n")
