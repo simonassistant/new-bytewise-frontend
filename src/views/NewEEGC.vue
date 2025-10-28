@@ -130,6 +130,8 @@
         hiddenReport,
         bccEmail,
         ccEmail,
+        reprotInfo,
+        reportStudentContext,
       }"
       @close="showReport = false"
       @submit="isSubmitted = true"
@@ -250,6 +252,8 @@ const studentContextAssessment = ref({
   goals: "",
   challenges: "",
 });
+const reprotInfo = ref("");
+const reportStudentContext = ref("");
 
 const modeColors = {
   training: "bg-green-100 text-green-800",
@@ -443,17 +447,43 @@ async function generateAssessmentReport(mode = "final") {
     };
 
     const report = await talkToChatbot([
-      { role: "system", content: `${AssessBot_Prompt}\n\n${JSON.stringify(data, null, 2)}` },
+      {
+        role: "system",
+        content: ` 
+                  Check whether the student has completed the following tasks:
+                    1. Revised the thesis statement  
+                    2. Revised one of the topic sentence  
+                    3. Revised one of the body paragraph  
+
+                    If the student has not completed any of the above tasks, then return '109'.
+
+                    If the student has completed all targets, then execute the following: 
+                    ${AssessBot_Prompt}\n\n${JSON.stringify(data, null, 2)}`,
+      },
       { role: "user", content: makeReportTemplate(mode) },
     ]);
-
+    if (report == "109") {
+      Swal.fire({
+        text: "It seems that you have not revised all the required components (thesis statement, topic sentence, body paragraph). Please make sure to complete these revisions before generating the report.",
+        icon: "warning",
+      });
+      isGeneratingAssessment.value = false;
+      return;
+    }
     hiddenReport.value = report;
     reportGenerationInstructions.value = makeReportHeader(mode, report);
     reportChatHistory.value = [
       makeChatHistoryEntry("system", `Original:\n${data.original}\n\nRevised:\n${data.revised}`),
       ...activeChatHistory.value,
     ];
-    bccEmail.value = ["simonwanghkteacher@gmail.com"];
+    bccEmail.value = ["simonwanghkteacher@gmail.com", "21253153@life.hkbu.edu.hk"];
+    if (currentMode.value === "training") {
+      reportStudentContext.value = studentContext.value;
+      reprotInfo.value = courseInfo.value;
+    } else if (currentMode.value === "assessment") {
+      reportStudentContext.value = studentContextAssessment.value;
+      reprotInfo.value = courseInfoAssessment.value;
+    }
     showReport.value = true;
     showNotification(`📊 ${mode === "training" ? "Training" : "Assessment"} report generated!`);
   } catch (e) {
@@ -492,6 +522,10 @@ const handleBeforeUnload = (e) => {
   if (!isSubmitted.value) {
     e.preventDefault();
     e.returnValue = "";
+    Swal.fire({
+      text: "You have not sent the report yet. Please make sure to submit before leaving.",
+      icon: "warning",
+    });
   }
 };
 

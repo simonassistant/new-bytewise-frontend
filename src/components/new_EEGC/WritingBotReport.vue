@@ -55,6 +55,33 @@
               required
             />
           </div>
+          <div>
+            <label for="sectionNumber" class="block text-sm font-medium text-gray-700 mb-1">
+              Section Number:
+            </label>
+            <input
+              id="sectionNumber"
+              v-model="section_number"
+              type="text"
+              placeholder="Enter your section number"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div>
+            <label for="studentNumber" class="block text-sm font-medium text-gray-700 mb-1">
+              Student Number:
+            </label>
+            <input
+              id="studentNumber"
+              v-model="student_number"
+              type="text"
+              placeholder="Enter your student number"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
         </div>
       </div>
       <!-- Footer -->
@@ -128,10 +155,18 @@ const props = defineProps({
   ccEmail: {
     type: Array,
   },
+  reportStudentContext: {
+    type: String,
+  },
+  reprotInfo: {
+    type: String,
+  },
 });
 
 // timestamp
 const timestamp = ref("");
+const student_number = ref("");
+const section_number = ref("");
 const contributionAnalysis = ref("[Analyzing contribution...]");
 const generatingAnalysis = ref(true);
 // update timestamp whenever modal is opened
@@ -365,10 +400,13 @@ function sendReportByEmail() {
       student_email: student_email.value,
       bccEmail: props.bccEmail,
       ccEmail: props.ccEmail,
-      report_md: createMarkdownReport(history),
       report_history: history,
       hiddenReport: props.hiddenReport,
+      report_info: props.reprotInfo,
+      student_context: props.reportStudentContext,
       contributionAnalysis: contributionAnalysis.value,
+      student_number: student_number.value,
+      section_number: section_number.value,
     }),
   })
     .then((response) => {
