@@ -134,7 +134,12 @@
         reportStudentContext,
       }"
       @close="showReport = false"
-      @submit="isSubmitted = true"
+      @submit="
+        {
+          isSubmitted = true;
+          showReport = false;
+        }
+      "
     />
   </div>
 </template>
