@@ -40,6 +40,22 @@
                   HKBU Generative AI Platform </a
                 >.
               </p>
+              <button
+                @click="showVideoTutorial = !showVideoTutorial"
+                class="mt-3 text-xs text-indigo-600 hover:text-indigo-800 underline"
+              >
+                {{ showVideoTutorial ? "▼ Hide" : "▶ Show" }} Tutorial Slides
+              </button>
+              <div v-if="showVideoTutorial" class="mt-3">
+                <iframe
+                  src="https://scribehow.com/embed/Generate_an_API_Key_for_AI_Tutor__GPd3vfdkR6mghvEFGAHeog"
+                  width="100%"
+                  height="800"
+                  allow="fullscreen"
+                  style="aspect-ratio: 1 / 1; border: 0; min-height: 480px"
+                  title="API Key Setup Tutorial"
+                />
+              </div>
             </div>
           </div>
 
@@ -202,7 +218,7 @@ const isOriginalDraftConfirmed = ref(false);
 const bulletPoints = ref("No bullet points extracted yet.");
 const hasSubmittedTrainingBackground = ref(false);
 const hasSubmittedAssessmentBackground = ref(false);
-
+const showVideoTutorial = ref(false);
 const rubric = ref(`## Assessment Task: Writing (20%)
 
 ### Rubrics
