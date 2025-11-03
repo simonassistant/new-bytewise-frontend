@@ -1,31 +1,59 @@
 <template>
-  <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-      <!-- Mode Buttons -->
-      <div class="flex gap-4">
-        <button
-          v-for="mode in modes"
-          :key="mode"
-          @click="$emit('switch-mode', mode)"
-          :class="[
-            currentMode === mode ? activeBtn : inactiveBtn,
-            isThinking ? 'cursor-not-allowed opacity-50' : '',
-          ]"
-          :disabled="isThinking"
-        >
-          {{ mode.charAt(0).toUpperCase() + mode.slice(1) }} Mode
-        </button>
-      </div>
+  <div>
+    <!-- Toggle Button (when sidebar is closed) -->
+    <button
+      v-if="!isOpen"
+      @click="toggleSidebar(true)"
+      class="fixed top-4 left-4 z-30 bg-indigo-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-indigo-700 transition"
+    >
+      ☰ Menu
+    </button>
 
-      <!-- Mode Label -->
-      <div class="px-4 py-2 rounded-full text-sm font-medium" :class="modeColors[currentMode]">
-        {{ modeLabels[currentMode] }}
+    <!-- Sidebar -->
+    <aside
+      class="fixed top-0 left-0 h-full w-64 bg-gray-50 shadow-lg z-40 p-4 flex flex-col justify-between transform transition-transform duration-300"
+      :class="isOpen ? 'translate-x-0' : '-translate-x-full'"
+    >
+      <div>
+        <!-- Close Button -->
+        <button
+          @click="toggleSidebar(false)"
+          class="text-gray-600 hover:text-gray-900 font-bold text-lg mb-6"
+        >
+          ✕ Close
+        </button>
+
+        <!-- Mode Buttons -->
+        <div class="flex flex-col gap-4">
+          <button
+            v-for="mode in modes"
+            :key="mode"
+            @click="selectMode(mode)"
+            :class="[
+              currentMode === mode ? activeBtn : inactiveBtn,
+              isThinking ? 'cursor-not-allowed opacity-50' : '',
+            ]"
+            :disabled="isThinking"
+          >
+            {{ mode.charAt(0).toUpperCase() + mode.slice(1) }} Mode
+          </button>
+        </div>
+
+        <!-- Mode Label -->
+        <div
+          class="mt-10 px-4 py-2 rounded-full text-sm font-medium text-center"
+          :class="modeColors[currentMode]"
+        >
+          {{ modeLabels[currentMode] }}
+        </div>
       </div>
-    </div>
+    </aside>
   </div>
 </template>
 
 <script setup>
+import { ref, watch } from "vue";
+
 // eslint-disable-next-line no-unused-vars
 const props = defineProps({
   currentMode: { type: String, required: true },
@@ -34,10 +62,25 @@ const props = defineProps({
   modeColors: { type: Object, required: true },
 });
 
-defineEmits(["switch-mode"]);
+const emit = defineEmits(["switch-mode", "toggle-open"]);
 
 const modes = ["briefing", "training", "assessment"];
+const isOpen = ref(true); // default to open or false if you prefer
 
-const activeBtn = "px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold";
-const inactiveBtn = "px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold";
+// Communicate open state to parent whenever it changes
+watch(isOpen, (val) => emit("toggle-open", val));
+
+const activeBtn =
+  "px-4 py-3 bg-indigo-600 text-white rounded-lg font-semibold transition hover:bg-indigo-700";
+const inactiveBtn =
+  "px-4 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold transition hover:bg-gray-400";
+
+const toggleSidebar = (state) => {
+  isOpen.value = state;
+};
+
+// Define click handler for modes
+const selectMode = (mode) => {
+  emit("switch-mode", mode);
+};
 </script>

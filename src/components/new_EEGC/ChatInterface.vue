@@ -72,7 +72,7 @@
 
             <textarea
               v-model="localOriginalDraft"
-              rows="5"
+              rows="7"
               :placeholder="
                 currentMode === 'assessment'
                   ? 'Paste your original essay here...'
@@ -121,7 +121,7 @@
             <div class="relative w-full">
               <textarea
                 v-model="localFinalDraft"
-                rows="5"
+                rows="7"
                 :placeholder="
                   currentMode === 'assessment'
                     ? 'This will be updated automatically as you revise through chat...'
