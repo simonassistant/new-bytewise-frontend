@@ -52,7 +52,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 
 // eslint-disable-next-line no-unused-vars
 const props = defineProps({
@@ -65,10 +65,15 @@ const props = defineProps({
 const emit = defineEmits(["switch-mode", "toggle-open"]);
 
 const modes = ["briefing", "training", "assessment"];
-const isOpen = ref(true); // default to open or false if you prefer
+const isOpen = ref(true); // default to open
 
 // Communicate open state to parent whenever it changes
 watch(isOpen, (val) => emit("toggle-open", val));
+
+// Emit initial state on mount
+onMounted(() => {
+  emit("toggle-open", isOpen.value);
+});
 
 const activeBtn =
   "px-4 py-3 bg-indigo-600 text-white rounded-lg font-semibold transition hover:bg-indigo-700";

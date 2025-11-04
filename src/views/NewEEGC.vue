@@ -8,7 +8,6 @@
       :isThinking="isThinking"
       :modeLabels="modeLabels"
       :modeColors="modeColors"
-      :is-open="isModeSelectorOpen"
       @switch-mode="switchMode"
       @toggle-open="isModeSelectorOpen = $event"
     />
@@ -99,6 +98,58 @@
         <BriefMode />
       </template>
 
+      <!-- Submitted Course Info Display (Training Mode) -->
+      <div
+        v-if="currentMode == 'training' && hasSubmittedCourseInfo"
+        class="mb-6 p-4 bg-gray-50 rounded-lg"
+      >
+        <h3 class="text-lg font-semibold mb-3 text-gray-800">📘 Course Information</h3>
+        
+        <!-- Info Alert about AI Sharing -->
+        <div class="mb-4 p-3 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg">
+          <p class="text-sm text-blue-900">
+            <strong>ℹ️ Important:</strong> This course information has been shared with the AI tutor so it can provide contextually relevant feedback and guidance based on your course requirements.
+          </p>
+        </div>
+
+        <!-- Read-only structured view -->
+        <div class="bg-white border border-gray-300 rounded-lg p-4 mb-4">
+          <h4 class="text-md font-semibold text-gray-700 mb-3">📋 Course Information (Read-only)</h4>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm border border-gray-200 rounded-lg">
+              <tbody>
+                <tr
+                  v-for="(value, key) in courseInfo"
+                  :key="key"
+                  class="even:bg-gray-50 border-b border-gray-200"
+                >
+                  <th class="text-left px-4 py-2 w-1/3 font-semibold text-gray-700 bg-gray-100">
+                    {{ formatLabel(key) }}
+                  </th>
+                  <td class="px-4 py-2 text-gray-900">
+                    {{ value || "—" }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Markdown Code Block -->
+        <div class="bg-gray-900 rounded-lg p-4">
+          <div class="flex justify-between items-center mb-2">
+            <h4 class="text-md font-semibold text-gray-200">📝 Markdown Code (Copy this)</h4>
+            <button
+              @click="copyCourseInfoMarkdown"
+              class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+            >
+              📋 Copy
+            </button>
+          </div>
+          <pre class="text-xs text-green-400 overflow-x-auto whitespace-pre-wrap"><code>{{ getCourseInfoMarkdown() }}</code></pre>
+        </div>
+      </div>
+
       <!-- Chat Interface -->
       <ChatInterface
         v-if="
@@ -127,7 +178,6 @@
         v-model:rubric="rubric"
         v-model:courseInfo="courseInfo"
         v-model:studentContext="studentContext"
-        v-model:currentMode="currentMode"
         @submitCourseInfo="handleSubmitCourseInfo"
         @submitStudentContext="handleSubmitStudentContext"
         @submitRubric="handleSubmitRubrics"
@@ -137,7 +187,6 @@
         v-model:rubric="rubricAssessment"
         v-model:courseInfo="courseInfoAssessment"
         v-model:studentContext="studentContextAssessment"
-        v-model:currentMode="currentMode"
         @submitCourseInfo="handleSubmitCourseInfo"
         @submitStudentContext="handleSubmitStudentContext"
         @submitRubric="handleSubmitRubrics"
@@ -225,6 +274,8 @@ const isOriginalDraftConfirmed = ref(false);
 const bulletPoints = ref("No bullet points extracted yet.");
 const hasSubmittedTrainingBackground = ref(false);
 const hasSubmittedAssessmentBackground = ref(false);
+const hasSubmittedCourseInfo = ref(false);
+const hasSubmittedStudentContext = ref(false);
 const showVideoTutorial = ref(false);
 const rubric = ref(`## Assessment Task: Writing (20%)
 
@@ -377,23 +428,65 @@ const makeChatHistoryEntry = (role, content) => ({
   timestamp: new Date(),
 });
 
+const formatLabel = (key) => {
+  return key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase());
+};
+
+const getCourseInfoMarkdown = () => {
+  const md = Object.entries(courseInfo.value)
+    .map(([k, v]) => `- **${formatLabel(k)}:** ${v || "—"}`)
+    .join("\n");
+  return `### 📘 Course Information\n${md}`;
+};
+
+const copyCourseInfoMarkdown = () => {
+  navigator.clipboard.writeText(getCourseInfoMarkdown()).then(() => {
+    Swal.fire({
+      text: "Course information copied to clipboard as Markdown!",
+      icon: "success",
+    });
+  });
+};
+
 const showNotification = (msg, type = "success") => {
   notification.value = { message: msg, type, visible: true };
   setTimeout(() => (notification.value.visible = false), 3000);
 };
 function handleSubmitCourseInfo(newCourseInfo) {
   if (currentMode.value == "assessment") {
-    courseInfoAssessment.value = newCourseInfo;
+    Object.assign(courseInfoAssessment.value, newCourseInfo);
+    Swal.fire({
+      title: "Course Information Submitted!",
+      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
+      icon: "success",
+    });
   } else {
-    courseInfo.value = newCourseInfo;
+    Object.assign(courseInfo.value, newCourseInfo);
+    hasSubmittedCourseInfo.value = true;
+    Swal.fire({
+      title: "Course Information Submitted!",
+      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
+      icon: "success",
+    });
   }
 }
 
 function handleSubmitStudentContext(newStudentContext) {
   if (currentMode.value == "assessment") {
-    studentContextAssessment.value = newStudentContext;
+    Object.assign(studentContextAssessment.value, newStudentContext);
+    Swal.fire({
+      title: "Student Context Submitted!",
+      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
+      icon: "success",
+    });
   } else {
-    studentContext.value = newStudentContext;
+    Object.assign(studentContext.value, newStudentContext);
+    hasSubmittedStudentContext.value = true;
+    Swal.fire({
+      title: "Student Context Submitted!",
+      text: "The information is sent to AI tutor. You may download a markdown copy for your records.",
+      icon: "success",
+    });
   }
 }
 function handleSubmitRubrics(newRubric) {
