@@ -373,7 +373,7 @@ function handleSubmitRubrics(newRubric) {
     navigator.clipboard.writeText(rubric.value);
     Swal.fire({
       title: "Rubrics Submitted!",
-      text: `The Rubrics have been submitted. Please note that this is training mode, so the
+      text: `The informationhave been submitted. Please note that this is training mode, so the
       information has been pre-filled for your convenience. You will be required to enter it
       manually in assessment mode. The rubrics have also been copied to your clipboard for easy pasting later.`,
       icon: "success",
