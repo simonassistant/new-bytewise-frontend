@@ -155,9 +155,6 @@ const props = defineProps({
   ccEmail: {
     type: Array,
   },
-  reportStudentContext: {
-    type: String,
-  },
   reprotInfo: {
     type: String,
   },
@@ -403,7 +400,6 @@ function sendReportByEmail() {
       report_history: history,
       hiddenReport: props.hiddenReport,
       report_info: props.reprotInfo,
-      student_context: props.reportStudentContext,
       contributionAnalysis: contributionAnalysis.value,
       student_number: student_number.value,
       section_number: section_number.value,

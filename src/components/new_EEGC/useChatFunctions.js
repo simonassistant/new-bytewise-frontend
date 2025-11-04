@@ -15,11 +15,7 @@ export function useChatFunctions({
     isThinking,
     isOriginalDraftConfirmed,
     isUpdatingDraft,
-    rubric,
-    studentContext,
     courseInfo,
-    rubricAssessment,
-    studentContextAssessment,
     courseInfoAssessment,
 }) {
     async function talkToChatbot(chat_history) {
@@ -65,8 +61,6 @@ export function useChatFunctions({
                             Assessment_Mode_Prompt +
                             "These are the student information details:\n" +
                             `Course Info: ${courseInfoAssessment.value || "(none)"}\n` +
-                            `Student Context: ${studentContextAssessment.value || "(none)"}\n` +
-                            `Rubric: ${rubricAssessment.value || "(none)"}\n\n` +
                             "Original Draft:\n---\n" +
                             `${originalDraft.value || "(empty)"}\n---\n\n` +
                             "Current Revised Version:\n---\n" +
@@ -83,8 +77,6 @@ export function useChatFunctions({
                             Trainging_Mode_Prompt +
                             "These are the student information details:\n" +
                             `Course Info: ${courseInfo.value || "(none)"}\n` +
-                            `Student Context: ${studentContext.value || "(none)"}\n` +
-                            `Rubric: ${rubric.value || "(none)"}\n\n` +
                             "Original Draft:\n---\n" +
                             `${originalDraft.value || "(empty)"}\n---\n\n` +
                             "Final Draft:\n---\n" +

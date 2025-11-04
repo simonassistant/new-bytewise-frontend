@@ -100,19 +100,21 @@
       </template>
       <BackgroundAndRubrics
         v-if="currentMode == 'training'"
-        v-model:rubric="rubric"
         v-model:courseInfo="courseInfo"
-        v-model:studentBackground="studentContext"
         v-model:currentMode="currentMode"
+        v-model:isShowArea="isTrainingBackgroundAreaVisible"
+        v-model:isSubmitted="hasSubmittedTrainingBackground"
         @submitAll="handleSubmitRubrics"
+        @toggleArea="isTrainingBackgroundAreaVisible = $event"
       />
       <BackgroundAndRubrics
         v-if="currentMode == 'assessment'"
-        v-model:rubric="rubricAssessment"
         v-model:courseInfo="courseInfoAssessment"
-        v-model:studentBackground="studentContextAssessment"
         v-model:currentMode="currentMode"
+        v-model:isShowArea="isAssessmentBackgroundAreaVisible"
+        v-model:isSubmitted="hasSubmittedAssessmentBackground"
         @submitAll="handleSubmitRubrics"
+        @toggleArea="isAssessmentBackgroundAreaVisible = $event"
       />
       <!-- Chat Interface -->
       <ChatInterface
@@ -148,7 +150,6 @@
           bccEmail,
           ccEmail,
           reprotInfo,
-          reportStudentContext,
         }"
         @close="showReport = false"
         @submit="
@@ -225,32 +226,36 @@ const hasSubmittedAssessmentBackground = ref(false);
 const showVideoTutorial = ref(false);
 const rubric = ref(Rubric);
 const isTrainingModeFinished = ref(false);
+const isTrainingBackgroundAreaVisible = ref(true);
+const isAssessmentBackgroundAreaVisible = ref(true);
 const courseInfo = ref(`Course Information:
 Course: LANG 0036 - English for Academic Purposes
 Level: Intermediate to Advanced
 Focus: Academic writing and critical thinking
-Assessment: Essay writing with rubric-based evaluation\n`);
-const studentContext = ref(`Student Context:
+Assessment: Essay writing with rubric-based evaluation\n
+Student Background:
 AcademicLevel: University student
 Language: English as additional language
 Goals: Improve academic writing skills
-Challenges: Structure, vocabulary, critical analysis\n`);
+Challenges: Structure, vocabulary, critical analysis\n
+Rubric:
+${Rubric}`);
 
 const courseInfoAssessment = ref(`
+  Course Information:
   Course: 
   Level: 
   Focus: 
-  Assessment: 
-`);
-const rubricAssessment = ref("");
-const studentContextAssessment = ref(`
+  Assessment: \n
+  Student Background:
   AcademicLevel: 
   Language: 
   Goals: 
-  Challenges: 
+  Challenges: \n
+  Rubric:
 `);
+
 const reprotInfo = ref("");
-const reportStudentContext = ref("");
 
 const modeColors = {
   training: "bg-green-100 text-green-800",
@@ -283,11 +288,7 @@ const { sendMessage, talkToChatbot } = useChatFunctions({
   isThinking,
   isOriginalDraftConfirmed,
   isUpdatingDraft,
-  rubric,
-  studentContext,
   courseInfo,
-  rubricAssessment,
-  studentContextAssessment,
   courseInfoAssessment,
 });
 
@@ -358,18 +359,18 @@ const showNotification = (msg, type = "success") => {
   setTimeout(() => (notification.value.visible = false), 3000);
 };
 
-function handleSubmitRubrics(newRubric) {
+function handleSubmitRubrics(newBackground) {
   if (currentMode.value == "assessment") {
-    rubricAssessment.value = newRubric;
     hasSubmittedAssessmentBackground.value = true;
+    courseInfoAssessment.value = newBackground;
     Swal.fire({
       title: "Rubrics Submitted!",
       text: "The information is sent to AI tutor.",
       icon: "success",
     });
   } else {
-    rubric.value = newRubric;
     hasSubmittedTrainingBackground.value = true;
+    courseInfo.value = newBackground;
     navigator.clipboard.writeText(rubric.value);
     Swal.fire({
       title: "Rubrics Submitted!",
@@ -469,10 +470,8 @@ async function generateAssessmentReport(mode = "final") {
     ];
     bccEmail.value = ["simonwanghkteacher@gmail.com", "21253153@life.hkbu.edu.hk"];
     if (currentMode.value === "training") {
-      reportStudentContext.value = studentContext.value;
       reprotInfo.value = courseInfo.value;
     } else if (currentMode.value === "assessment") {
-      reportStudentContext.value = studentContextAssessment.value;
       reprotInfo.value = courseInfoAssessment.value;
     }
     showReport.value = true;

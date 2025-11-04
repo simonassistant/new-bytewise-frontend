@@ -18,8 +18,9 @@
     <div v-if="isAreaVisible" class="bg-white border border-gray-300 rounded-lg p-4 mb-6 shadow-sm">
       <textarea
         v-model="combinedInput"
+        :disabled="props.isSubmitted"
         placeholder="Enter Course Information, Student Background, and Rubric here..."
-        rows="30"
+        rows="20"
         class="w-full border border-gray-300 rounded-md p-3 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
       ></textarea>
 
@@ -27,14 +28,15 @@
       <div class="flex justify-center gap-4">
         <button
           @click="handleSubmit"
-          :disabled="isSubmitted"
+          :disabled="props.isSubmitted"
           class="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 font-semibold px-6 py-2 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition"
         >
           Submit All
         </button>
         <button
           @click="handleClear"
-          class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium px-6 py-2 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition"
+          :disabled="props.isSubmitted"
+          class="bg-gray-200 hover:bg-gray-300 text-gray-800 disabled:opacity-50 font-medium px-6 py-2 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition"
         >
           Clear
         </button>
@@ -49,42 +51,27 @@ import Swal from "sweetalert2";
 
 const props = defineProps({
   courseInfo: { type: String, required: true },
-  studentBackground: { type: String, required: true },
+  isShowArea: { type: Boolean, default: true },
   rubric: { type: String, default: "" },
+  isSubmitted: { type: Boolean, default: false },
   currentMode: { type: String, default: "assessment" },
 });
 
-const emit = defineEmits(["submitAll"]);
+const emit = defineEmits(["submitAll", "toggleArea"]);
 
-const isSubmitted = ref(false);
 const combinedInput = ref("");
 const isAreaVisible = ref(true); // Toggle state
 
 // Generate combined plain text when mounted
 onMounted(() => {
-  const courseText = props.courseInfo;
-
-  const studentText = props.studentBackground;
-
-  const rubricText = props.rubric ? props.rubric.trim() : "";
-
-  combinedInput.value = [
-    "COURSE INFORMATION",
-    courseText,
-    "",
-    "STUDENT BACKGROUND",
-    studentText,
-    "",
-    "RUBRIC",
-    rubricText,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  combinedInput.value = props.courseInfo;
+  isAreaVisible.value = props.isShowArea;
 });
 
 // Toggle visibility of textarea area
 const toggleArea = () => {
   isAreaVisible.value = !isAreaVisible.value;
+  emit("toggleArea", isAreaVisible.value);
 };
 
 // Handle Submit
@@ -98,8 +85,8 @@ function handleSubmit() {
   }
 
   emit("submitAll", combinedInput.value);
-  isSubmitted.value = true;
   isAreaVisible.value = false; // Hide area after submission
+  emit("toggleArea", isAreaVisible.value);
 }
 
 // Handle Clear
