@@ -64,7 +64,8 @@ const props = defineProps({
 
 const emit = defineEmits(["switch-mode", "toggle-open"]);
 
-const modes = ["briefing", "training", "assessment"];
+// const modes = ["briefing", "training", "assessment"];
+const modes = ["briefing", "training"];//暂时关掉 assessment
 const isOpen = ref(true); // default to open or false if you prefer
 
 // Communicate open state to parent whenever it changes
