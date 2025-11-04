@@ -98,7 +98,22 @@
         </div>
         <BriefMode />
       </template>
-
+      <BackgroundAndRubrics
+        v-if="currentMode == 'training'"
+        v-model:rubric="rubric"
+        v-model:courseInfo="courseInfo"
+        v-model:studentBackground="studentContext"
+        v-model:currentMode="currentMode"
+        @submitAll="handleSubmitRubrics"
+      />
+      <BackgroundAndRubrics
+        v-if="currentMode == 'assessment'"
+        v-model:rubric="rubricAssessment"
+        v-model:courseInfo="courseInfoAssessment"
+        v-model:studentBackground="studentContextAssessment"
+        v-model:currentMode="currentMode"
+        @submitAll="handleSubmitRubrics"
+      />
       <!-- Chat Interface -->
       <ChatInterface
         v-if="
@@ -122,26 +137,7 @@
         @submitAssessment="submitAssessment"
         @confirmFinalDraft="confirmFinalDraft"
       />
-      <BackgroundAndRubrics
-        v-if="!hasSubmittedTrainingBackground && currentMode == 'training'"
-        v-model:rubric="rubric"
-        v-model:courseInfo="courseInfo"
-        v-model:studentContext="studentContext"
-        v-model:currentMode="currentMode"
-        @submitCourseInfo="handleSubmitCourseInfo"
-        @submitStudentContext="handleSubmitStudentContext"
-        @submitRubric="handleSubmitRubrics"
-      />
-      <BackgroundAndRubrics
-        v-if="!hasSubmittedAssessmentBackground && currentMode == 'assessment'"
-        v-model:rubric="rubricAssessment"
-        v-model:courseInfo="courseInfoAssessment"
-        v-model:studentContext="studentContextAssessment"
-        v-model:currentMode="currentMode"
-        @submitCourseInfo="handleSubmitCourseInfo"
-        @submitStudentContext="handleSubmitStudentContext"
-        @submitRubric="handleSubmitRubrics"
-      />
+
       <!-- Report Modal -->
       <ReportModal
         v-bind="{
@@ -182,6 +178,7 @@ import {
   AssessBot_Prompt,
   Training_Greetings,
   Assessment_Greetings,
+  Rubric,
 } from "@/components/new_EEGC/promptAndEssay.js";
 
 /* ------------ State ------------ */
@@ -226,60 +223,32 @@ const bulletPoints = ref("No bullet points extracted yet.");
 const hasSubmittedTrainingBackground = ref(false);
 const hasSubmittedAssessmentBackground = ref(false);
 const showVideoTutorial = ref(false);
-const rubric = ref(`## Assessment Task: Writing (20%)
+const rubric = ref(Rubric);
+const isTrainingModeFinished = ref(false);
+const courseInfo = ref(`Course Information:
+Course: LANG 0036 - English for Academic Purposes
+Level: Intermediate to Advanced
+Focus: Academic writing and critical thinking
+Assessment: Essay writing with rubric-based evaluation\n`);
+const studentContext = ref(`Student Context:
+AcademicLevel: University student
+Language: English as additional language
+Goals: Improve academic writing skills
+Challenges: Structure, vocabulary, critical analysis\n`);
 
-### Rubrics
-
-#### Part 1: Point-of-view Essay (10%)
-
-
-
-| Criteria                                 |                                                   1 (Limited)                                                    |                                           2 (Basic)                                           |                                              3 (Developing)                                               |                                           4 (Proficient)                                           |                                                      5 (Excellent)                                                      |
-| ---------------------------------------- | :--------------------------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------: | :-------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------------------: |
-| **Content and Ideas**                    | Ideas are irrelevant or minimally related to the topic Lacks awareness of the issue concerned No clear viewpoint | Ideas are somewhat related but vagueMinimal awareness of the issue concernedViewpoint unclear | Ideas are relevant but basic Some awareness of the issue concerned Viewpoint present but weakly developed | Ideas are relevant and solid Good awareness of the issue concerned Clear viewpoint with some depth | Ideas are insightful and highly relevant; Strong awareness of the issue concerned; Well-developed, compelling viewpoint |
-| **Organisation and Logical Progression** |                    No clear structure Ideas are disjointed with no development or progression                    |      Basic structure with unclear paragraphing Ideas are listed with little development       |         Clear structure with some paragraphing Ideas are developed but lack depth or logical flow         |   Well-organized with clear paragraphs Ideas are developed logically with good flow and support    |     Highly organized with effective paragraphing; Ideas are thoroughly developed with seamless, logical progression     |
-| **Vocabulary**                           |                    Vocabulary is limited, repetitive, or inaccurateLacks topic-specific terms                    |           Basic vocabulary with some repetitionMinimal use of topic-specific terms            |    Adequate vocabulary with some varietyIncludes some topic-specific terms but with occasional errors     |          Varied and precise vocabulary Effective use of topic-specific terms Minor errors          |          Rich, precise vocabulary; Masterful use of topic-specific terms; Almost error-free and sophisticated           |
-| **Grammar and Sentence Structure**       |                  Frequent grammatical and spelling errorsSentences are incomplete or confusing                   |         Several grammatical and spelling errorsSentences are simple and often flawed          |             Some grammatical and spelling errorsSentences are mostly correct but lack variety             |           Minor grammatical and spelling errorsSentences are varied and mostly accurate            |          Virtually error-free grammar and spelling; Sentences are complex, varied, and accurately constructed           |
-
----
-## Task 2: AI-Assisted Review of Student Draft (10%)
-
-In this task, students will independently engage in a conversation with a chatbot to revise their own draft essay, without any prompts provided. The focus is on learning how to critically assess and refine their work through interaction with the chatbot, improving the essay's overall quality based on the feedback received.
-
-### Rubric for AI-Assisted Review
-
-|Criteria|1 (Limited)|2 (Basic)|3 (Developing)|4 (Proficient)|5 (Excellent)|
-|---|---|---|---|---|---|
-|A. In-Depth Conversation with AI|No exchanges or chat history provided; no conversation beyond initial input; no questions asked|Sparse exchanges with incomplete or no chat history; basic conversation with one or two simple questions; lacks depth|Adequate exchanges shown in chat history; moderate conversation with some relevant questions; shows some depth|Robust exchanges with comprehensive chat history; in-depth conversation with detailed, relevant questions on all levels|Extensive exchanges with thorough, well-documented chat history; highly in-depth conversation with insightful, multi-level questions|
-|B. Critical Review of AI Suggestions|All AI suggestions accepted without evaluation; no critical thought|Most AI suggestions accepted with little critical analysis|Some AI suggestions evaluated; partial critical review with justification|Most AI suggestions critically assessed; clear justification for choices|All AI suggestions thoroughly evaluated; strong, evidence-based justification|
-|C. Refining Process|No revisions made|Minimal revisions with no iterative process|Some revisions with limited iteration based on AI feedback|Clear iterative process with multiple revisions based on AI input|Extensive refinement with critical review of AI feedback at each step|
-
+const courseInfoAssessment = ref(`
+  Course: 
+  Level: 
+  Focus: 
+  Assessment: 
 `);
-const courseInfo = ref({
-  course: "LANG 0036 - English for Academic Purposes",
-  level: "Intermediate to Advanced",
-  focus: "Academic writing and critical thinking",
-  assessment: "Essay writing with rubric-based evaluation",
-});
-const studentContext = ref({
-  academicLevel: "University student",
-  language: "English as additional language",
-  goals: "Improve academic writing skills",
-  challenges: "Structure, vocabulary, critical analysis",
-});
-const courseInfoAssessment = ref({
-  course: "",
-  level: "",
-  focus: "",
-  assessment: "",
-});
 const rubricAssessment = ref("");
-const studentContextAssessment = ref({
-  academicLevel: "",
-  language: "",
-  goals: "",
-  challenges: "",
-});
+const studentContextAssessment = ref(`
+  AcademicLevel: 
+  Language: 
+  Goals: 
+  Challenges: 
+`);
 const reprotInfo = ref("");
 const reportStudentContext = ref("");
 
@@ -325,7 +294,13 @@ const { sendMessage, talkToChatbot } = useChatFunctions({
 /* ------------ Mode Switching ------------ */
 function switchMode(mode) {
   // Save current drafts before switching
-  if (currentMode.value === "training") {
+  if (isTrainingModeFinished.value == false && mode == "assessment") {
+    Swal.fire({
+      text: "Please complete the training mode before switching to assessment mode.",
+      icon: "warning",
+    });
+    return;
+  } else if (currentMode.value === "training") {
     trainingOriginalDraft.value = originalDraft.value;
     trainingFinalDraft.value = finalDraft.value;
   } else if (currentMode.value === "assessment") {
@@ -336,7 +311,8 @@ function switchMode(mode) {
   // Switch mode
   currentMode.value = mode;
   stats.value = { exchanges: 0, questions: 0, revisions: 0 };
-  isOriginalDraftConfirmed.value = false;
+  if (mode == "training") isOriginalDraftConfirmed.value = true;
+  else isOriginalDraftConfirmed.value = false;
 
   const chatMap = {
     training: trainingChatHistory,
@@ -381,21 +357,7 @@ const showNotification = (msg, type = "success") => {
   notification.value = { message: msg, type, visible: true };
   setTimeout(() => (notification.value.visible = false), 3000);
 };
-function handleSubmitCourseInfo(newCourseInfo) {
-  if (currentMode.value == "assessment") {
-    courseInfoAssessment.value = newCourseInfo;
-  } else {
-    courseInfo.value = newCourseInfo;
-  }
-}
 
-function handleSubmitStudentContext(newStudentContext) {
-  if (currentMode.value == "assessment") {
-    studentContextAssessment.value = newStudentContext;
-  } else {
-    studentContext.value = newStudentContext;
-  }
-}
 function handleSubmitRubrics(newRubric) {
   if (currentMode.value == "assessment") {
     rubricAssessment.value = newRubric;
@@ -499,6 +461,7 @@ async function generateAssessmentReport(mode = "final") {
       return;
     }
     hiddenReport.value = report;
+    isTrainingModeFinished.value = true;
     reportGenerationInstructions.value = makeReportHeader(mode, report);
     reportChatHistory.value = [
       makeChatHistoryEntry("system", `Original:\n${data.original}\n\nRevised:\n${data.revised}`),

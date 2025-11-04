@@ -1,14 +1,10 @@
-export const Sample_Essay = `Climate change, it is very huge problem now. I think individual actions not so important like what government and big companies do. But still, I kinda disagree because people also can do stuff to help. I will explain my thoughts here.
+export const Sample_Essay = `Climate change is a very serious problem in the world today, and many people argue that the actions of individuals do not matter much compared to what governments and big companies can do. I partly agree with this idea because I believe citizens can still influence the government, which is very important, but at the same time, I also think that personal green lifestyle choices, while less impactful, still have a role to play.
 
-First, governments and companies, they got more power. They can do big things. Like, government make laws for no pollution. They can stop plastic bags or tell factories to not make so much smoke. Companies also can change their ways. They can use less energy or make stuff that don't hurt environment. This is good because it change many people life at once. So powerful, you know.
+The most important way individuals can help fight climate change is by influencing the government and politicians. When many citizens demand better environmental laws, governments are more likely to act. For example, if people protest or vote for leaders who care about the environment, it can push the government to ban pollution or invest in clean energy. In some countries, people have joined together and forced their leaders to make new rules about plastic or cutting carbon emissions. This shows that public opinion and pressure from normal people can have a big effect, even if individuals alone do not have much power. But sometimes, the government maybe just listen a little and not really make strong action, so is not always working well. Also, sometimes people want change but they don’t know how to tell the politicians, so nothing happen.
 
-But individual actions, they matter too, I guess. If many people do little things, it add up. Like, turn off lights at home save energy. Or buy things from green companies. Then companies think, oh, we must be green to sell more. But sometimes it hard to know if this really work. People don't always do it. Also, one person doing something. It not enough.
+On the other hand, individuals can also make small changes in their own lives, like recycling, using less water, or choosing to walk instead of drive. These actions are not as powerful as government policies, but they still matter. If many people try to live in a greener way, it can create a good example for others and send a message to companies that customers want eco-friendly products. For instance, if lots of people buy from green companies, businesses will try to be more sustainable to make more profit. But also, sometimes people don’t care and just want to do what is easy, so this is problem. Or maybe only a few people do green things but most people don’t change, so it not really enough to help the climate problem.
 
-Another thing. When people change their life, like stop using car and walk, government see this. Politicians want votes, so they make rules people like. So individual action can push government to do more. Maybe start big movement. But I not sure how many people need to do this for it to work. Just thinking.
-
-Some say individual action too small. One person cannot fix climate change. True, but if million people try, maybe it help. Every small thing count. Or not? I don't know sometimes.
-
-Anyway, I think both individual and government and companies must work. Individual action seem small but if many do it, it big. We need all to fix this problem. Climate change very bad, so everyone must try hard. That's my opinion.`
+In conclusion, while individual actions alone may not solve climate change, they are not completely useless. The most important thing is that citizens can influence governments to make strong decisions for the environment. At the same time, personal green habits can also help, even if they are less effective. In my opinion, everyone—governments, companies, and individuals—needs to work together to fight this problem.`
 
 export const Trainging_Mode_Prompt = `
 You are an experienced and encouraging English language teacher who specializes in helping students revise their essays. Your focus is to guide the student through a structured three-step revision process:
@@ -289,7 +285,8 @@ Provide your assessment in the following structured format:
 
 Remember: Your assessment serves both summative (grading) and formative (learning) purposes. Provide thorough, evidence-based evaluation that helps students understand their performance and guides their future development in AI-assisted writing and collaboration skills.`
 export const Training_Greetings =
-  `Hi, let's modify your thesis statement.`
+  `Welcome to the training mode of AI assistant. In this session, you are expected to revise the thesis statement to ensure it includes two main points that address the essay question.  
+Can you first locate the thesis statement in the draft?`
 
 export const Assessment_Greetings = `Hi there! 👋 I’m your English writing coach, here to help you strengthen your essay through clear, focused revision. Before we dive in, we’ll take a moment to set some goals together.
 
@@ -306,3 +303,57 @@ Step 3: Revise the rest of that paragraph for clarity and coherence.
 My role is to guide you with questions, feedback, and examples—but you’ll always lead the revisions yourself. 💪`
 
 export const BulletPoints_Generation_Prompt = "Extract clear and concise 2 bullet points summarizing the latest four conversations, and return the result in Markdown. The bullet points should be revelant to essay improvement. Each bulle point should be one short sentence.\n\n"
+export const Rubric=`
+Assessment Task: Writing (20%)
+Part 1: Point-of-view Essay (10%)
+
+Criteria: Content and Ideas
+1 (Limited): Ideas are irrelevant or minimally related to the topic. Lacks awareness of the issue concerned. No clear viewpoint.
+2 (Basic): Ideas are somewhat related but vague. Minimal awareness of the issue concerned. Viewpoint unclear.
+3 (Developing): Ideas are relevant but basic. Some awareness of the issue concerned. Viewpoint present but weakly developed.
+4 (Proficient): Ideas are relevant and solid. Good awareness of the issue concerned. Clear viewpoint with some depth.
+5 (Excellent): Ideas are insightful and highly relevant. Strong awareness of the issue concerned. Well-developed, compelling viewpoint.
+
+Criteria: Organisation and Logical Progression
+1 (Limited): No clear structure. Ideas are disjointed with no development or progression.
+2 (Basic): Basic structure with unclear paragraphing. Ideas are listed with little development.
+3 (Developing): Clear structure with some paragraphing. Ideas are developed but lack depth or logical flow.
+4 (Proficient): Well-organized with clear paragraphs. Ideas are developed logically with good flow and support.
+5 (Excellent): Highly organized with effective paragraphing. Ideas are thoroughly developed with seamless, logical progression.
+
+Criteria: Vocabulary
+1 (Limited): Vocabulary is limited, repetitive, or inaccurate. Lacks topic-specific terms.
+2 (Basic): Basic vocabulary with some repetition. Minimal use of topic-specific terms.
+3 (Developing): Adequate vocabulary with some variety. Includes some topic-specific terms but with occasional errors.
+4 (Proficient): Varied and precise vocabulary. Effective use of topic-specific terms. Minor errors.
+5 (Excellent): Rich, precise vocabulary. Masterful use of topic-specific terms. Almost error-free and sophisticated.
+
+Criteria: Grammar and Sentence Structure
+1 (Limited): Frequent grammatical and spelling errors. Sentences are incomplete or confusing.
+2 (Basic): Several grammatical and spelling errors. Sentences are simple and often flawed.
+3 (Developing): Some grammatical and spelling errors. Sentences are mostly correct but lack variety.
+4 (Proficient): Minor grammatical and spelling errors. Sentences are varied and mostly accurate.
+5 (Excellent): Virtually error-free grammar and spelling. Sentences are complex, varied, and accurately constructed.
+
+Part 2: AI-Assisted Review Skills (10%)
+A. In-Depth Conversation with AI
+1 (Limited): No exchanges or chat history; no questions asked.
+2 (Basic): Sparse conversation; one or two simple questions.
+3 (Developing): Adequate exchanges; some relevant questions.
+4 (Proficient): Robust interaction; detailed, relevant questions across levels.
+5 (Excellent): Extensive, well-documented chat history; insightful, multi-level questioning.
+
+B. Critical Review of AI Suggestions
+1 (Limited): All AI suggestions accepted blindly.
+2 (Basic): Most accepted; little analysis.
+3 (Developing): Some evaluated; partial justification.
+4 (Proficient): Most critically reviewed with clear justification.
+5 (Excellent): All evaluated thoroughly with strong, evidence-based reasoning.
+
+C. Refining Process
+1 (Limited): No revisions made.
+2 (Basic): Minimal revisions; no iteration.
+3 (Developing): Some revisions with limited iteration.
+4 (Proficient): Clear iterative process with multiple revisions.
+5 (Excellent): Extensive refinement with iterative improvements.
+`

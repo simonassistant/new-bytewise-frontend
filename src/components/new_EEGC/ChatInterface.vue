@@ -228,7 +228,7 @@ const activeBulletPoints = computed(() =>
 /* -----------------------------
    ✅ Mode-specific originality confirmation
 ------------------------------ */
-const isOriginalDraftConfirmedTraining = ref(false);
+const isOriginalDraftConfirmedTraining = ref(true);
 const isOriginalDraftConfirmedAssessment = ref(false);
 
 const activeIsOriginalDraftConfirmed = computed(() =>
