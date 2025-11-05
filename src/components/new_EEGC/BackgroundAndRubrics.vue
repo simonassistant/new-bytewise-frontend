@@ -3,7 +3,12 @@
     <h2 class="text-center text-2xl font-bold text-gray-900 mb-6">
       📝 Course, Student Background & Rubric
     </h2>
-
+    <p>
+      The first goal of this AI training module is to remind students to share contextual
+      information about their tasks with AI. The following background information is prepared for
+      you to submit to AI. The customised chatbot will then "keep this info in mind" and take it
+      into consideration when interacting with students.
+    </p>
     <!-- Toggle Button -->
     <div class="flex justify-center mb-4">
       <button
