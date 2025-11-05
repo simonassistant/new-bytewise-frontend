@@ -8,36 +8,6 @@
           &times;
         </button>
       </div>
-
-      <p><strong>Total Messages:</strong> {{ props.chatHistory.length }}</p>
-      <h3>📈 Your Contribution Analysis</h3>
-      <div
-        class="prose prose-sm max-w-none break-words [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:whitespace-pre-wrap [&_ol]:list-decimal [&_ol]:ml-6 [&_ul]:list-disc"
-        v-html="renderMarkdown(contributionAnalysis)"
-      />
-      <h3>📝 Complete Conversation</h3>
-      <div ref="chatMessages" class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
-        <div
-          v-for="(msg, i) in chatHistory"
-          :key="i"
-          class="flex"
-          :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
-        >
-          <div
-            class="max-w-lg md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl shadow text-base break-words"
-            :class="msgClasses(msg, i)"
-          >
-            <div class="font-semibold text-xs mb-1">
-              {{ msgSenderLabel(msg.role) }}
-            </div>
-
-            <div
-              class="prose prose-sm max-w-none break-words [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:whitespace-pre-wrap [&_ol]:list-decimal [&_ol]:ml-6 [&_ul]:list-disc"
-              v-html="renderMarkdown(msg.content)"
-            />
-          </div>
-        </div>
-      </div>
       <!-- User Input Section -->
       <div class="mb-6 p-4 bg-gray-50 rounded-lg border">
         <h3 class="text-md font-semibold mb-3 text-gray-700">📧 Email Settings</h3>
@@ -82,8 +52,23 @@
               required
             />
           </div>
+
+          <div>
+            <label for="studentNumber" class="block text-sm font-medium text-gray-700 mb-1">
+              Confirm Student Number:
+            </label>
+            <input
+              id="studentNumber"
+              v-model="confirm_student_number"
+              type="text"
+              placeholder="Enter your student number"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
         </div>
       </div>
+
       <!-- Footer -->
       <div class="mt-6 flex flex-wrap justify-end gap-1" v-if="!generatingAnalysis">
         <button
@@ -122,6 +107,36 @@
       <div v-else class="mt-6 text-center text-gray-500">
         ⏳ Generating analysis, please wait...
       </div>
+      <p><strong>Total Messages:</strong> {{ props.chatHistory.length }}</p>
+      <h3>📈 Your Contribution Analysis</h3>
+      <div
+        class="prose prose-sm max-w-none break-words [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:whitespace-pre-wrap [&_ol]:list-decimal [&_ol]:ml-6 [&_ul]:list-disc"
+        v-html="renderMarkdown(contributionAnalysis)"
+      />
+      <h3>📝 Complete Conversation</h3>
+      <div ref="chatMessages" class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
+        <div
+          v-for="(msg, i) in chatHistory"
+          :key="i"
+          class="flex"
+          :class="msg.role === 'user' ? 'justify-end' : 'justify-start'"
+        >
+          <div
+            class="max-w-lg md:max-w-md lg:max-w-lg px-4 py-3 rounded-2xl shadow text-base break-words"
+            :class="msgClasses(msg, i)"
+          >
+            <div class="font-semibold text-xs mb-1">
+              {{ msgSenderLabel(msg.role) }}
+            </div>
+
+            <div
+              class="prose prose-sm max-w-none break-words [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:whitespace-pre-wrap [&_ol]:list-decimal [&_ol]:ml-6 [&_ul]:list-disc"
+              v-html="renderMarkdown(msg.content)"
+            />
+          </div>
+        </div>
+      </div>
+
       <div class="text-sm text-gray-500 mt-4">Generated: {{ timestamp }}</div>
     </div>
   </div>
@@ -163,6 +178,7 @@ const props = defineProps({
 // timestamp
 const timestamp = ref("");
 const student_number = ref("");
+const confirm_student_number = ref("");
 const section_number = ref("");
 const contributionAnalysis = ref("[Analyzing contribution...]");
 const generatingAnalysis = ref(true);
@@ -370,7 +386,7 @@ async function copyReport() {
   }
 }
 
-const student_email = ref("");
+const student_email = ref("@life.hkbu.edu.hk");
 const emailSending = ref(false);
 const emailSent = ref(false);
 import { BASE_URL } from "@/components/base_url";
@@ -381,7 +397,10 @@ function sendReportByEmail() {
     alert("No conversation to export");
     return;
   }
-
+  if (student_number.value !== confirm_student_number.value) {
+    alert("Student number does not match!");
+    return;
+  }
   // Validate student email address
   if (!isValidEmail(student_email.value)) {
     alert("Please enter a valid email address");
