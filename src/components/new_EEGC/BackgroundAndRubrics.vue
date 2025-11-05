@@ -3,12 +3,7 @@
     <h2 class="text-center text-2xl font-bold text-gray-900 mb-6">
       📝 Course, Student Background & Rubric
     </h2>
-    <p>
-      The first goal of this AI training module is to remind students to share contextual
-      information about their tasks with AI. The following background information is prepared for
-      you to submit to AI. The customised chatbot will then "keep this info in mind" and take it
-      into consideration when interacting with students.
-    </p>
+
     <!-- Toggle Button -->
     <div class="flex justify-center mb-4">
       <button
@@ -21,13 +16,20 @@
 
     <!-- Unified Plain Text Input (toggle visibility) -->
     <div v-if="isAreaVisible" class="bg-white border border-gray-300 rounded-lg p-4 mb-6 shadow-sm">
+      <div class="bg-gray-100 border border-gray-300 text-gray-800 rounded-md p-4 mb-4">
+        The first goal of this AI training module is to remind students to share contextual
+        information about their tasks with AI. The following background information is prepared for
+        you to submit to AI. The customised chatbot will then "keep this info in mind" and take it
+        into consideration when interacting with students.
+      </div>
+
       <textarea
         v-model="combinedInput"
         :disabled="props.isSubmitted"
         placeholder="Enter Course Information, Student Background, and Rubric here..."
         rows="20"
         class="w-full border border-gray-300 rounded-md p-3 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-      ></textarea>
+      />
 
       <!-- Action Buttons -->
       <div class="flex justify-center gap-4">
