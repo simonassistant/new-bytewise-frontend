@@ -454,7 +454,7 @@ async function generateAssessmentReport(mode = "final") {
       },
       { role: "user", content: makeReportTemplate(mode) },
     ]);
-    if (report.includes("not finished")) {
+    if (report.includes("not finish")) {
       Swal.fire({
         text: "It seems that you have not revised all the required components (thesis statement, topic sentence, body paragraph). Please make sure to complete these revisions before generating the report.",
         icon: "warning",
