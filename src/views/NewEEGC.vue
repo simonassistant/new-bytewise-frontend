@@ -300,7 +300,7 @@ function switchMode(mode) {
     trainingFinalDraft.value = finalDraft.value;
   } else if (currentMode.value === "assessment") {
     Swal.fire({
-      text: "The assessment mode is not yet open. It will open from 14 November to 01 December.",
+      text: "The assessment mode is not yet open. It will open from 14 November to 01 December. Please contact ZHANG_KT@hkbu.edu.hk for enquiries.",
       icon: "warning",
     });
     return;
