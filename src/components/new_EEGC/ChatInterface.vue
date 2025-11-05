@@ -227,9 +227,9 @@ watch(
 );
 
 // compute active bullet points based on mode
-const activeBulletPoints = computed(() =>
-  props.currentMode === "training" ? trainingBulletPoints.value : assessmentBulletPoints.value
-);
+// const activeBulletPoints = computed(() =>
+//   props.currentMode === "training" ? trainingBulletPoints.value : assessmentBulletPoints.value
+// );
 
 /* -----------------------------
    ✅ Mode-specific originality confirmation
@@ -277,7 +277,7 @@ bindSync(localFinalDraft, "finalDraft");
 const markdown = new MarkdownIt({ linkify: true, typographer: true });
 const renderMarkdown = (text = "") => markdown.render(text);
 
-const msgSenderLabel = (role) => (role === "user" ? "You" : "AI Assistant");
+const msgSenderLabel = (role) => (role === "user" ? "You" : "AI Tutor");
 const msgClasses = (msg) =>
   msg.role === "user"
     ? "bg-indigo-600 text-white rounded-br-none"
