@@ -125,11 +125,10 @@
               {{ currentMode === "assessment" ? "Revised Version" : "Final Draft" }}
             </h2>
             <div class="bg-gray-100 border border-gray-300 text-gray-800 rounded-md p-4 mb-4">
-              Please revise the texts
-              in the box below and complete the steps in the checklist above. When finished, please
-              click the blue button to confirm the final draft and generate report. You will be
-              asked to enter your name and student ID to receive the chat history and report via
-              email.
+              Please revise the texts in the box below and complete the steps in the checklist
+              above. When finished, please click the blue button to confirm the final draft and
+              generate report. You will be asked to enter your name and student ID to receive the
+              chat history and report via email.
             </div>
             <div class="relative w-full">
               <textarea
@@ -186,7 +185,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from "vue";
+import { ref, computed, watch, nextTick, onMounted } from "vue";
 import MarkdownIt from "markdown-it";
 
 const props = defineProps({
@@ -219,7 +218,11 @@ const emits = defineEmits([
 ------------------------------ */
 const trainingBulletPoints = ref("No bullet points extracted yet.");
 const assessmentBulletPoints = ref("No bullet points extracted yet.");
-
+onMounted(() => {
+  if (props.currentMode == "training") {
+    localFinalDraft.value = props.originalDraft;
+  }
+});
 // track which was last updated
 watch(
   () => props.bulletPoints,
