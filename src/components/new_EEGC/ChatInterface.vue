@@ -160,8 +160,8 @@
               <span v-else>
                 {{
                   currentMode === "assessment"
-                    ? "Submit Assessment"
-                    : " Confirm Final Draft & Generate Report"
+                    ? "✅ Submit Assessment"
+                    : "✅ Confirm Final Draft & Generate Report"
                 }}
               </span>
             </button>
