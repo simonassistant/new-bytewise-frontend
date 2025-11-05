@@ -458,9 +458,17 @@ async function generateAssessmentReport(mode = "final") {
       Swal.fire({
         text: "It seems that you have not revised all the required components (thesis statement, topic sentence, body paragraph). Please make sure to complete these revisions before generating the report.",
         icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        reverseButtons: true, // Optional: makes "No" appear first for clarity
+      }).then((result) => {
+        if (!result.isConfirmed) {
+          // If the user clicked "No", do nothing (just return)
+          return;
+        }
       });
       isGeneratingAssessment.value = false;
-      return;
     }
     hiddenReport.value = report;
     isTrainingModeFinished.value = true;
