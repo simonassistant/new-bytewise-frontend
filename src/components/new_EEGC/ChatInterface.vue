@@ -65,6 +65,11 @@
         <!-- Right: Draft area -->
         <div class="flex-1 space-y-4 overflow-y-auto h-full">
           <!-- Original Draft -->
+          <div class="bg-gray-100 border border-gray-300 text-gray-800 rounded-md p-4 mb-4">
+            Topic: Some people believe that individual actions are insignificant in the fight
+            against climate change compared to the efforts of governments and large corporations. To
+            what extent do you agree or disagree with this statement?
+          </div>
           <div class="bg-white p-4 rounded-lg shadow">
             <h2 class="text-lg font-bold mb-2">
               {{ currentMode === "assessment" ? "Your Original Essay" : "Original Draft" }}
@@ -101,10 +106,7 @@
           <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
             <h3 class="text-md font-semibold mb-2 text-gray-700">Key Bullet Points</h3>
 
-            <div
-              v-if="isUpdatingDraft "
-              class="p-3 text-gray-500 text-sm italic"
-            >
+            <div v-if="isUpdatingDraft" class="p-3 text-gray-500 text-sm italic">
               Updating bullet points...
             </div>
             <div
