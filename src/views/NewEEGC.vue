@@ -295,17 +295,19 @@ const { sendMessage, talkToChatbot } = useChatFunctions({
 /* ------------ Mode Switching ------------ */
 function switchMode(mode) {
   // Save current drafts before switching
-  if (currentMode.value === "training") {
-    trainingOriginalDraft.value = originalDraft.value;
-    trainingFinalDraft.value = finalDraft.value;
-  } else if (currentMode.value === "assessment") {
+  if (mode == "assessment") {
     Swal.fire({
       text: "The assessment mode is not yet open. It will open from 14 November to 01 December. Please contact ZHANG_KT@hkbu.edu.hk for enquiries.",
       icon: "warning",
     });
     return;
-    // assessmentOriginalDraft.value = originalDraft.value;
-    // assessmentFinalDraft.value = finalDraft.value;
+  }
+  if (currentMode.value === "training") {
+    trainingOriginalDraft.value = originalDraft.value;
+    trainingFinalDraft.value = finalDraft.value;
+  } else if (currentMode.value === "assessment") {
+    assessmentOriginalDraft.value = originalDraft.value;
+    assessmentFinalDraft.value = finalDraft.value;
   }
 
   // Switch mode
