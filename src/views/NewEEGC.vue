@@ -295,18 +295,17 @@ const { sendMessage, talkToChatbot } = useChatFunctions({
 /* ------------ Mode Switching ------------ */
 function switchMode(mode) {
   // Save current drafts before switching
-  if (isTrainingModeFinished.value == false && mode == "assessment") {
-    Swal.fire({
-      text: "Please complete the training mode before switching to assessment mode.",
-      icon: "warning",
-    });
-    return;
-  } else if (currentMode.value === "training") {
+  if (currentMode.value === "training") {
     trainingOriginalDraft.value = originalDraft.value;
     trainingFinalDraft.value = finalDraft.value;
   } else if (currentMode.value === "assessment") {
-    assessmentOriginalDraft.value = originalDraft.value;
-    assessmentFinalDraft.value = finalDraft.value;
+    Swal.fire({
+      text: "The assessment mode is not yet open. It will open from 14 November to 01 December.",
+      icon: "warning",
+    });
+    return;
+    // assessmentOriginalDraft.value = originalDraft.value;
+    // assessmentFinalDraft.value = finalDraft.value;
   }
 
   // Switch mode
