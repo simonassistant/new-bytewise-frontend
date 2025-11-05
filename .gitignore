@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Logs
 logs
 *.log
@@ -49,11 +48,3 @@ out/
 # Temporary files during deployment
 temp/
 tmp/
-=======
-.env
-.vscode
-EMAIL_API_DOCUMENTATION.md
-test.py
-.idea
-*.md
->>>>>>> origin/main
