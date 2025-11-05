@@ -104,16 +104,20 @@
             </button>
           </div>
           <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <h3 class="text-md font-semibold mb-2 text-gray-700">Key Bullet Points</h3>
-
-            <div v-if="isUpdatingDraft" class="p-3 text-gray-500 text-sm italic">
+            <h3 class="text-md font-semibold mb-2 text-gray-700">Checklist</h3>
+            <div class="p-3 text-gray-500 text-sm italic">
+              step 1: revise thesis statement step 2: revise topic sentences step 3: revise one body
+              paragraph step 4: (optional): revise the rest of the essay step 5: submit the final
+              draft
+            </div>
+            <!-- <div v-if="isUpdatingDraft" class="p-3 text-gray-500 text-sm italic">
               Updating bullet points...
             </div>
             <div
               v-else
               class="prose prose-sm max-w-none break-words px-4 [&_pre]:whitespace-pre-wrap [&_code]:whitespace-pre-wrap [&_ol]:list-decimal [&_ul]:list-disc"
               v-html="renderMarkdown(activeBulletPoints)"
-            />
+            /> -->
           </div>
           <!-- Final Draft -->
           <div class="bg-white p-4 rounded-lg shadow">
