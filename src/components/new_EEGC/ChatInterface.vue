@@ -105,7 +105,7 @@
           </div>
           <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
             <h3 class="text-md font-semibold mb-2 text-gray-700">Checklist</h3>
-            <div class="p-3 text-gray-500 text-sm italic">
+            <div class="p-3 text-gray-500 text">
               step 1: revise thesis statement step 2: revise topic sentences step 3: revise one body
               paragraph step 4: (optional): revise the rest of the essay step 5: submit the final
               draft
