@@ -124,6 +124,13 @@
             <h2 class="text-lg font-bold mb-2">
               {{ currentMode === "assessment" ? "Revised Version" : "Final Draft" }}
             </h2>
+            <div class="bg-gray-100 border border-gray-300 text-gray-800 rounded-md p-4 mb-4">
+              Please revise the texts
+              in the box below and complete the steps in the checklist above. When finished, please
+              click the blue button to confirm the final draft and generate report. You will be
+              asked to enter your name and student ID to receive the chat history and report via
+              email.
+            </div>
             <div class="relative w-full">
               <textarea
                 v-model="localFinalDraft"
