@@ -447,14 +447,14 @@ async function generateAssessmentReport(mode = "final") {
                     2. Revised one of the topic sentence  
                     3. Revised one of the body paragraph  
 
-                    If the student has not completed any of the above tasks, then return and only return '109'.
+                    If the student has not completed any of the above tasks, then you should say 'not finished'.
 
-                    If the student has completed all targets, then execute the following: 
+                    Then execute the following: 
                     ${AssessBot_Prompt}\n\n${JSON.stringify(data, null, 2)}`,
       },
       { role: "user", content: makeReportTemplate(mode) },
     ]);
-    if (report.includes("109")) {
+    if (report.includes("not finished")) {
       Swal.fire({
         text: "It seems that you have not revised all the required components (thesis statement, topic sentence, body paragraph). Please make sure to complete these revisions before generating the report.",
         icon: "warning",
