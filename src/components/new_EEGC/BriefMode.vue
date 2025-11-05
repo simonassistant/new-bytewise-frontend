@@ -18,8 +18,8 @@
         </p>
         <p>
           We will assess your performance based on your <strong>chat history</strong> (according to
-          the Human–AI Communication Rubrics) and the <strong>improvement of quality</strong> in your
-          revised essay.
+          the Human–AI Communication Rubrics) and the <strong>improvement of quality</strong> in
+          your revised essay.
         </p>
 
         <hr class="my-4 border-gray-300" />
@@ -38,10 +38,11 @@
         </ul>
 
         <p class="mt-3">
-          ✅ Ready to practice using the platform? <strong>Enter Training Mode</strong> now.
+          ✅ Ready to practice using the platform? Click the sidebar to
+          <strong>Enter Training Mode</strong> now.
           <br />
-          ✅ Ready to assess your AI communication skills and revise your own essay?
-          <strong>Enter Assessment Mode</strong> now.
+          ✅ Ready to assess your AI communication skills and revise your own essay? Click the
+          sidebar to <strong>Enter Assessment Mode</strong> now.
         </p>
       </div>
 
