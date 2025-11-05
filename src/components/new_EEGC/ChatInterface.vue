@@ -161,7 +161,7 @@
                 {{
                   currentMode === "assessment"
                     ? "Submit Assessment"
-                    : "Confirm Final Draft & Generate Report"
+                    : " Confirm Final Draft & Generate Report"
                 }}
               </span>
             </button>
