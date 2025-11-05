@@ -42,7 +42,7 @@
                     rel="noopener noreferrer"
                     class="text-indigo-600 hover:underline"
                   >
-                    HKBU Generative AI Platform </a
+                    HKBU Generative AI Platform (click here) </a
                   >.
                 </p>
                 <button
