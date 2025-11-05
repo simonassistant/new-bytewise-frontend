@@ -18,7 +18,7 @@
         </p>
         <p>
           We will assess your performance based on your <strong>chat history</strong> (according to
-          the Human–AI Communication Rubrics) and the <strong>quality improvement</strong> in your
+          the Human–AI Communication Rubrics) and the <strong>improvement of quality</strong> in your
           revised essay.
         </p>
 
@@ -308,15 +308,6 @@
           <li>Demonstrate independent critical thinking</li>
         </ul>
       </div>
-    </section>
-
-    <!-- 技术说明 -->
-    <section class="bg-green-50 border-l-4 border-green-400 rounded-lg p-4">
-      <h3 class="font-semibold text-green-700 mb-2">🧩 Quick Setup Tips</h3>
-      <p class="text-sm text-gray-700">
-        Use your <strong>HKBU GenAI API key</strong> before starting. Each student has a fixed
-        monthly token quota—keep your key private and monitor usage responsibly.
-      </p>
     </section>
   </div>
 </template>
