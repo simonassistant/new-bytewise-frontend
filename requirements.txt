@@ -1,0 +1,9 @@
+xhtml2pdf
+flask
+flask_socketio
+requests
+python-dotenv
+eventlet
+numpy
+flask-cors
+resend

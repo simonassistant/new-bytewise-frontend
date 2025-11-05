@@ -1,0 +1,4 @@
+.env
+.vscode
+EMAIL_API_DOCUMENTATION.md
+__pycache__
