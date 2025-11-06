@@ -361,7 +361,7 @@ async function sendReportByEmail() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       student_email: props.userEmail,
-      student_name: props.userEmail || "No information given",
+      student_name: props.userName || "No information given",
       bccEmail: props.bccEmail,
       ccEmail: props.ccEmail,
       report_md: createMarkdownReport(history),
