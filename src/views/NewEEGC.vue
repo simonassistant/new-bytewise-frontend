@@ -455,21 +455,23 @@ async function generateAssessmentReport(mode = "final") {
       { role: "user", content: makeReportTemplate(mode) },
     ]);
     if (report.includes("not finish")) {
-      Swal.fire({
+     const result = await Swal.fire({
         text: "It seems that you have not revised all the required components (thesis statement, topic sentence, body paragraph). Please make sure to complete these revisions before generating the report.",
         icon: "warning",
         showCancelButton: true,
-        confirmButtonText: "Yes",
-        cancelButtonText: "No",
-        reverseButtons: true, // Optional: makes "No" appear first for clarity
-      }).then((result) => {
-        if (!result.isConfirmed) {
-          // If the user clicked "No", do nothing (just return)
-          return;
-        }
+        confirmButtonText: "Confirm to Submit",
+        cancelButtonText: "Back to editing",
+        reverseButtons: true,
       });
+
+      if (!result.isConfirmed) {
+        // 🟥 Explicitly reset UI and return a signal
+        isGeneratingAssessment.value = false;
+        return;
+      }
       isGeneratingAssessment.value = false;
     }
+    console.log("Generated Report:", report);
     hiddenReport.value = report;
     isTrainingModeFinished.value = true;
     reportGenerationInstructions.value = makeReportHeader(mode, report);

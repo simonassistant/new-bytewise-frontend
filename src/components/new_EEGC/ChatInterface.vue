@@ -105,11 +105,25 @@
           </div>
           <div class="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
             <h3 class="text-md font-semibold mb-2 text-gray-700">Checklist</h3>
-            <div class="p-3 text-gray-500 text">
-              step 1: revise thesis statement step 2: revise topic sentences step 3: revise one body
-              paragraph step 4: (optional): revise the rest of the essay step 5: submit the final
-              draft
-            </div>
+            <ul style="list-style: none; padding: 0; margin: 0">
+              <li style="margin-bottom: 8px">
+                <label> <input type="checkbox" /> Step 1: Revise thesis statement </label>
+              </li>
+              <li style="margin-bottom: 8px">
+                <label> <input type="checkbox" /> Step 2: Revise topic sentences </label>
+              </li>
+              <li style="margin-bottom: 8px">
+                <label> <input type="checkbox" /> Step 3: Revise one body paragraph </label>
+              </li>
+              <li style="margin-bottom: 8px">
+                <label>
+                  <input type="checkbox" /> Step 4 (optional): Revise the rest of the essay
+                </label>
+              </li>
+              <li>
+                <label> <input type="checkbox" /> Step 5: Submit the final draft </label>
+              </li>
+            </ul>
             <!-- <div v-if="isUpdatingDraft" class="p-3 text-gray-500 text-sm italic">
               Updating bullet points...
             </div>
