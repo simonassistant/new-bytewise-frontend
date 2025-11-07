@@ -115,16 +115,20 @@ export function useAzureSpeech(showNotification) {
      */
     async function speakReplySequentially(replyText) {
         const sentences = splitIntoSentences(replyText);
-        isPlaying.value = true;
-        avatarState.value = "speaking";
+
 
         try {
             let chain = Promise.resolve();
             for (const sentence of sentences) {
+              
                 const synthPromise = synthesizeToBuffer(sentence);
+               
                 chain = chain.then(async () => {
+                    
                     try {
                         const buffer = await synthPromise;
+                           isPlaying.value = true;
+                avatarState.value = "speaking";
                         await playAudioBuffer(buffer);
                     } catch (err) {
                         console.error("TTS sentence error:", err);
