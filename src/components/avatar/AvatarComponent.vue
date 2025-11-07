@@ -4,15 +4,27 @@
     class="relative w-64 h-64 rounded-full mx-auto overflow-hidden transition-all duration-300"
     :class="faceClasses"
   >
+    
+    <!-- Speaking animation (video) -->
+    <video
+      autoplay
+      loop
+      muted
+      playsinline
+      preload="auto"
+      class="avatar-media w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-300"
+      :class="{ 'opacity-100': state === 'speaking', 'opacity-0': state !== 'speaking' }"
+      ref="videoRef"
+    >
+      <source :src="videoSrc" type="video/mp4" />
+    </video>
     <!-- Owl avatar -->
-    <template v-if="state === 'speaking'">
-      <video autoplay loop muted playsinline class="avatar-media w-full h-full object-cover">
-        <source :src="videoSrc" type="video/mp4" />
-      </video>
-    </template>
-    <template v-else>
-      <img :src="imageSrc" alt="Owl Avatar" class="avatar-media w-full h-full object-cover" />
-    </template>
+    <img
+      :src="imageSrc"
+      alt="Avatar"
+      class="avatar-media w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-300"
+      :class="{ 'opacity-0': state === 'speaking', 'opacity-100': state !== 'speaking' }"
+    />
   </div>
 
   <!-- Optional Loader / Placeholder -->
