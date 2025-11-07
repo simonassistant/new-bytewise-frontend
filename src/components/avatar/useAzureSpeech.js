@@ -65,15 +65,22 @@ export function useAzureSpeech(showNotification) {
             tokenObj.authToken,
             tokenObj.region
         );
-        speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural";
+        speechConfig.speechSynthesisVoiceName = "en-US-GuyNeural";
 
         return new Promise((resolve, reject) => {
             const pushStream = speechsdk.AudioOutputStream.createPullStream();
             const audioConfig = speechsdk.AudioConfig.fromStreamOutput(pushStream);
             const synthesizer = new speechsdk.SpeechSynthesizer(speechConfig, audioConfig);
-
-            synthesizer.speakTextAsync(
-                sentence,
+            const ssml = `
+                        <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="en-US">
+                        <voice name="en-US-GuyNeural">
+                            <prosody rate="-8%" pitch="-10%">
+                            ${sentence}
+                            </prosody>
+                        </voice>
+                        </speak>`;
+            synthesizer.speakSsmlAsync(
+                ssml,
                 (result) => {
                     synthesizer.close();
                     if (result.reason === speechsdk.ResultReason.SynthesizingAudioCompleted) {

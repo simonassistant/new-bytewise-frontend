@@ -24,8 +24,10 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 
-const imageSrc = new URL("./owl.png", import.meta.url).href;
-const videoSrc = new URL("./owl_animation.mp4", import.meta.url).href;
+// const imageSrc = new URL("./owl.png", import.meta.url).href;
+// const videoSrc = new URL("./owl_animation.mp4", import.meta.url).href;
+const imageSrc = new URL("./man.png", import.meta.url).href;
+const videoSrc = new URL("./man_talk.mp4", import.meta.url).href;
 
 const props = defineProps({
   state: {
@@ -92,7 +94,7 @@ const faceClasses = computed(() => [
 .animate-glow {
   animation: glow 1s infinite alternate;
 }
-.avatar-media {
+/* .avatar-media {
   transform: scale(1.6);
-}
+} */
 </style>
