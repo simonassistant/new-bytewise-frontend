@@ -10,7 +10,6 @@ export function useAzureSpeech(showNotification) {
     // --- State ---
     const isRecording = ref(false);
     const isPlaying = ref(false);
-    const isRecognizing = ref(false);
     const avatarState = ref("idle");
 
     // --- Token helpers ---
@@ -134,13 +133,10 @@ export function useAzureSpeech(showNotification) {
         }
     }
 
+
     // --- STT (Speech Recognition) ---
-    async function toggleRecording(sendRecognizedText) {
-        if (isRecording.value) {
-            isRecording.value = false;
-            avatarState.value = "idle";
-            return;
-        }
+    async function startRecording(sendRecognizedText) {
+        if (isRecording.value) return;
         try {
             const tokenObj = await getAzureToken();
             if (!tokenObj.authToken) {
@@ -149,70 +145,77 @@ export function useAzureSpeech(showNotification) {
             }
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const mediaRecorder = new MediaRecorder(stream);
-            const chunks = [];
-
-            mediaRecorder.ondataavailable = (e) => {
-                if (e.data.size > 0) chunks.push(e.data);
-            };
-            // When local recording stops, save & download
-            mediaRecorder.onstop = () => {
-                // const audioBlob = new Blob(chunks, { type: "audio/webm" });
-                // const url = URL.createObjectURL(audioBlob);
-                // // --- trigger file download ---
-                // const a = document.createElement("a");
-                // a.href = url;
-                // a.download = `user_audio_${Date.now()}.webm`; // or .wav if you like
-                // document.body.appendChild(a);
-                // a.click();
-                // document.body.removeChild(a);
-                // URL.revokeObjectURL(url);
-                // console.log("🎧 Audio file downloaded!");
-            };
-
-            mediaRecorder.start();
-            isRecording.value = true;
-            avatarState.value = "listening";
-            isRecognizing.value = true;
+            mediaStreamRef.value = stream;
 
             const speechConfig = speechsdk.SpeechConfig.fromAuthorizationToken(
                 tokenObj.authToken,
                 tokenObj.region
             );
             speechConfig.speechRecognitionLanguage = "en-US";
-            const audioConfig = speechsdk.AudioConfig.fromDefaultMicrophoneInput();
-            const recognizer = new speechsdk.SpeechRecognizer(speechConfig, audioConfig);
 
-            recognizer.recognizeOnceAsync((result) => {
-                mediaRecorder.stop();
-                stream.getTracks().forEach((t) => t.stop());
-                isRecording.value = false;
-                isRecognizing.value = false;
-                avatarState.value = "thinking";
-                if (result.reason === speechsdk.ResultReason.RecognizedSpeech) {
-                    const recognizedText = result.text.trim();
-                    if (recognizedText && sendRecognizedText) sendRecognizedText(recognizedText);
-                } else {
-                    showNotification?.("⚠️ Speech not recognized", "error");
+            const audioConfig = speechsdk.AudioConfig.fromDefaultMicrophoneInput();
+            recognizerRef.value = new speechsdk.SpeechRecognizer(speechConfig, audioConfig);
+
+            isRecording.value = true;
+            avatarState.value = "listening";
+
+            recognizerRef.value.startContinuousRecognitionAsync();
+
+            recognizerRef.value.recognized = (s, e) => {
+                if (e.result.reason === speechsdk.ResultReason.RecognizedSpeech) {
+                    recognizedTextBuffer.value += e.result.text + " ";
                 }
-                recognizer.close();
-            });
+            };
+
+            recognizerRef.value.canceled = (s, e) => {
+                console.warn("Recognition canceled:", e);
+            };
+
+            recognizerRef.value.sessionStopped = () => {
+                stopRecordingInternal(sendRecognizedText);
+            };
+
         } catch (err) {
             console.error("Azure STT error:", err);
-            if (err.name == "NotFoundError" || err.name == "NotAllowedError") {
-                showNotification?.("❌ Microphone access denied", "error");
-            } else { showNotification?.("❌ Speech recognition failed", "error"); }
-            isRecording.value = false;
-            isRecognizing.value = false;
-            avatarState.value = "idle";
+            showNotification?.("❌ Speech recognition failed", "error");
+            resetRecordingState();
         }
     }
+
+    function stopRecordingInternal(sendRecognizedText) {
+        if (!isRecording.value) return;
+
+        recognizerRef.value?.stopContinuousRecognitionAsync(() => {
+            const recognizedText = recognizedTextBuffer.value.trim();
+            if (recognizedText && sendRecognizedText) sendRecognizedText(recognizedText);
+            resetRecordingState();
+        });
+        mediaStreamRef.value?.getTracks().forEach((t) => t.stop());
+    }
+
+    function resetRecordingState() {
+        isRecording.value = false;
+        avatarState.value = "idle";
+        recognizedTextBuffer.value = "";
+        recognizerRef.value = null;
+        mediaStreamRef.value = null;
+    }
+
+    // Refs for internal management
+    const recognizerRef = ref(null);
+    const mediaStreamRef = ref(null);
+    const recognizedTextBuffer = ref("");
+
+    // Compose an object similar to your previous toggleRecording prefix
+    const toggleRecording = {
+        start: startRecording,
+        stop: stopRecordingInternal
+    };
 
     return {
         // state
         isRecording,
         isPlaying,
-        isRecognizing,
         avatarState,
 
         // methods

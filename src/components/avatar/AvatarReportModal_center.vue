@@ -1,57 +1,57 @@
 <template>
-  <div v-if="show" class="bg-white w-full rounded-lg shadow-xl p-6 overflow-y-auto mx-auto">
-    <!-- Header -->
-    <div class="flex justify-between items-center border-b pb-3 mb-4">
-      <h2 class="text-lg font-bold">📊 Learning Session Report</h2>
-      <button class="text-gray-500 hover:text-gray-700 text-2xl" @click="$emit('close')">
-        &times;
-      </button>
+  <div v-if="show" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white w-full max-w-3xl rounded-lg shadow-xl p-6 overflow-y-auto max-h-[90vh]">
+      <!-- Header -->
+      <div class="flex justify-between items-center border-b pb-3 mb-4">
+        <h2 class="text-lg font-bold">📊 Learning Session Report</h2>
+        <button class="text-gray-500 hover:text-gray-700 text-2xl" @click="$emit('close')">
+          &times;
+        </button>
+      </div>
+
+      <!-- Report Body -->
+      <div class="prose max-w-none text-sm" v-html="reportHtml"></div>
+
+      <!-- Footer -->
+      <div class="mt-6 flex flex-wrap justify-end gap-1" v-if="!generatingAnalysis">
+        <button
+          class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
+          @click="sendReportByEmail"
+          :disabled="emailSending"
+        >
+          <span v-if="emailSending">⏳ Sending...</span>
+          <span v-else>Resend Report</span>
+        </button>
+        <button
+          class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
+          @click="downloadPDF"
+        >
+          Download PDF
+        </button>
+        <button
+          class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white"
+          @click="downloadMarkdown"
+        >
+          Download Markdown
+        </button>
+        <button
+          class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white"
+          @click="copyReport"
+        >
+          Copy Text
+        </button>
+        <button
+          class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white"
+          @click="$emit('close')"
+        >
+          Close
+        </button>
+      </div>
+      <div v-else class="mt-6 text-center text-gray-500">
+        ⏳ Generating analysis, please wait...
+      </div>
+      <div class="text-sm text-gray-500 mt-4">Generated: {{ timestamp }}</div>
     </div>
-
-    <!-- Report Body -->
-    <div class="prose max-w-none text-sm" v-html="reportHtml"></div>
-
-    <!-- Footer -->
-    <div class="mt-6 flex flex-wrap justify-end gap-1" v-if="!generatingAnalysis">
-      <button
-        class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
-        @click="sendReportByEmail"
-        :disabled="emailSending"
-      >
-        <span v-if="emailSending">⏳ Sending...</span>
-        <span v-else>Resend Report</span>
-      </button>
-      <button
-        class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
-        @click="downloadPDF"
-      >
-        Download PDF
-      </button>
-      <button
-        class="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white"
-        @click="downloadMarkdown"
-      >
-        Download Markdown
-      </button>
-      <button
-        class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white"
-        @click="copyReport"
-      >
-        Copy Text
-      </button>
-      <button
-        class="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-700 text-white"
-        @click="$emit('close')"
-      >
-        Close
-      </button>
-    </div>
-
-    <div v-else class="mt-6 text-center text-gray-500">
-      ⏳ Generating analysis, please wait...
-    </div>
-
-    <div class="text-sm text-gray-500 mt-4">Generated: {{ timestamp }}</div>
   </div>
 </template>
 

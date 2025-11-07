@@ -101,16 +101,16 @@
           <div class="flex justify-center">
             <button
               class="px-6 py-3 rounded-full bg-red-500 text-white text-lg font-bold shadow-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              :disabled="!isConnected || isPlaying || isRecognizing"
+              :disabled="!isConnected || isPlaying || isLoading"
               @click="handleToggleRecording"
             >
-              {{ isRecording ? "⏹ Listening" : "🎤 Speak" }}
+              {{ isRecording ? "⏹ Stop" : "🎤 Speak" }}
             </button>
 
             <button
               class="px-6 py-3 rounded-full bg-green-600 text-white text-lg font-bold shadow-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed ml-4"
               :disabled="!chatHistory.length"
-              @click="showReport = true"
+              @click="finishAndScroll"
               title="Finish & View Report"
             >
               ✓ Finish
@@ -145,18 +145,6 @@
           </button>
         </div>
       </div>
-
-      <!-- Report Modal -->
-      <ReportModal
-        :show="showReport"
-        :chatHistory="chatHistory"
-        :userCount="userCount"
-        :assistantCount="assistantCount"
-        :botName="selectedBot.name"
-        :userEmail="userEmail"
-        :userName="userName"
-        @close="showReport = false"
-      />
     </div>
   </div>
 
@@ -170,7 +158,17 @@
       <span class="text-white text-2xl font-semibold"> Loading... </span>
     </div>
   </div>
-
+  <!-- Report Modal -->
+  <ReportModal
+    :show="showReport"
+    :chatHistory="chatHistory"
+    :userCount="userCount"
+    :assistantCount="assistantCount"
+    :botName="selectedBot.name"
+    :userEmail="userEmail"
+    :userName="userName"
+    @close="showReport = false"
+  />
   <!-- Notification -->
   <div
     v-if="notification.visible"
@@ -220,7 +218,6 @@ let socket = null;
 const {
   isRecording,
   isPlaying,
-  isRecognizing,
   avatarState,
   speakReplySequentially,
   toggleRecording,
@@ -255,7 +252,18 @@ const formattedMessages = computed(() =>
     time: m.timestamp.toLocaleTimeString(),
   }))
 );
+function finishAndScroll() {
+  showReport.value = true;
 
+  // Wait until the DOM updates and then scroll
+  nextTick(() => {
+    // Scroll to the bottom of the page
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth",
+    });
+  });
+}
 const notificationClass = computed(() =>
   notification.value.type === "success" ? "bg-green-500" : "bg-red-500"
 );
@@ -297,7 +305,13 @@ function sendTextToChatbot() {
 }
 
 function handleToggleRecording() {
-  toggleRecording((recognizedText) => sendMessage(recognizedText, "audio"));
+  if (isRecording.value) {
+    // stop listening explicitly
+    toggleRecording.stop();
+  } else {
+    // start listening
+    toggleRecording.start((recognizedText) => sendMessage(recognizedText, "audio"));
+  }
 }
 
 async function sendMessage(text, via = "text") {
@@ -323,6 +337,7 @@ async function sendMessage(text, via = "text") {
       });
       reply = data?.choices?.[0]?.message?.content || data?.error || "[No response]";
     } else {
+      isLoading.value = true;
       chatHistory.value[idx].content = "⏳ Avatar is thinking...";
       socket.emit("user_message", {
         text,
@@ -335,6 +350,7 @@ async function sendMessage(text, via = "text") {
       reply = await new Promise((resolve) =>
         socket.once("assistant_reply", (res) => resolve(res?.content || "[No response]"))
       );
+      isLoading.value = false;
     }
 
     chatHistory.value[idx] = newMessage("assistant", reply);
