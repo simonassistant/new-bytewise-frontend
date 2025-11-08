@@ -111,11 +111,11 @@
         </div>
         <div v-if="isTrainingTutorialVisible" class="bg-white border border-gray-300 rounded-lg p-4 shadow-sm">
           <iframe
-            src="https://scribehow.com/embed/How_to_Use_the_AI_EEGC_Training_Mode__OjrkkyJGQzW-Sl_13nARBQ"
+            src="https://scribehow.com/embed/How_to_Use_AI_Tutor_for_Essay_Revision__HVinLe48TQ2Ld1jEYwdlrg?as=scrollable"
             width="100%"
             height="800"
             allow="fullscreen"
-            style="aspect-ratio: 1 / 1; border: 0; min-height: 480px"
+            style="border: 0; min-height: 640px"
             title="Training Mode Tutorial"
           />
         </div>

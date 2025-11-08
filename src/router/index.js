@@ -4,6 +4,7 @@ import Home from '../views/HomePage.vue'
 import Chat from '../views/ChatPage.vue'
 import Avatar from '../views/AvatarPage.vue'
 import WritingBot from '../views/WritingBot.vue'
+import EEGC from '../views/NewEEGC.vue'
 
 const routes = [
   {
@@ -27,6 +28,11 @@ const routes = [
     path: '/writingBot',
     name: 'WritingBot',
     component: WritingBot
+  },
+  {
+    path: '/EEGC',
+    name: 'EEGC',
+    component: EEGC
   },
 ]
 
