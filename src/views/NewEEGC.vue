@@ -455,7 +455,7 @@ async function generateAssessmentReport(mode = "final") {
       { role: "user", content: makeReportTemplate(mode) },
     ]);
     if (report.includes("not finish")) {
-     const result = await Swal.fire({
+      const result = await Swal.fire({
         text: "It seems that you have not revised all the required components (thesis statement, topic sentence, body paragraph). Please make sure to complete these revisions before generating the report.",
         icon: "warning",
         showCancelButton: true,
@@ -479,7 +479,7 @@ async function generateAssessmentReport(mode = "final") {
       makeChatHistoryEntry("system", `Original:\n${data.original}\n\nRevised:\n${data.revised}`),
       ...activeChatHistory.value,
     ];
-    bccEmail.value = ["simonwanghkteacher@gmail.com", "21253153@life.hkbu.edu.hk"];
+    bccEmail.value = ["simonwanghkteacher@gmail.com"];
     if (currentMode.value === "training") {
       reprotInfo.value = courseInfo.value;
     } else if (currentMode.value === "assessment") {
