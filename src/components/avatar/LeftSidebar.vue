@@ -67,19 +67,6 @@
       </div>
     </div>
 
-    <!-- Footer -->
-    <div v-if="isOpen" class="p-4 border-t text-xs text-gray-600 bg-gray-50 space-y-1">
-      <div class="font-semibold text-gray-800">Created by:</div>
-      <div>Dr. Simon Wang</div>
-      <div>Innovation Officer, Language Centre</div>
-      <div>Hong Kong Baptist University</div>
-      <div>
-        📧
-        <a href="mailto:simonwang@hkbu.edu.hk" class="text-indigo-600 hover:underline">
-          simonwang@hkbu.edu.hk
-        </a>
-      </div>
-    </div>
   </aside>
 </template>
 
