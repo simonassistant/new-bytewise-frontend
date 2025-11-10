@@ -78,6 +78,9 @@ const props = defineProps({
   ccEmail: {
     type: Array,
   },
+  courseTitle: {
+    type: String,
+  },
 });
 
 // timestamp
@@ -365,9 +368,9 @@ async function sendReportByEmail() {
       student_name: props.userName || "No information given",
       bccEmail: props.bccEmail,
       ccEmail: props.ccEmail,
-      report_md: createMarkdownReport(history),
       report_history: history,
       contributionAnalysis: contributionAnalysis.value,
+      courseTitle: props.courseTitle,
     }),
   })
     .then((response) => {
