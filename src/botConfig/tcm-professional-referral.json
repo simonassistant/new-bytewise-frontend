@@ -6,6 +6,9 @@
   "welcomePrompt": "Hello! Thank you for seeing Rebecca Kim. I appreciate you taking the time to evaluate her case. As her primary care physician, I'm very interested in hearing your assessment and understanding how we can work together to help her with these persistent symptoms. Could you start by telling me about your diagnostic approach and what you found during your evaluation?",
   "model": "gpt-4o-mini",
   "reportGenerationInstructions": "Analyze the student's professional communication skills with medical colleagues. Evaluate use of medical terminology, application of ISBAR framework, collaborative care approach, and ability to build interdisciplinary relationships while maintaining professional boundaries.",
-  "bccEmail": ["simonwang@hkbu.edu.hk"],
-  "ccEmail": []
+  "bccEmail": [
+    "simonwang@hkbu.edu.hk"
+  ],
+  "ccEmail": [],
+  "gender": "female"
 }

@@ -6,6 +6,8 @@
   "welcomePrompt": "Well, here I am. My wife Sarah insisted I make this appointment after she had some success with acupuncture for her migraines. I have to be upfront with you though - I'm pretty skeptical about this whole alternative medicine thing. I'm dealing with chronic shoulder pain and sleep issues, and I've tried the conventional route without much success. But I need to understand exactly what you do here and how it's supposed to work before I commit to anything. What's your background and training in this field?",
   "model": "gpt-4o-mini",
   "reportGenerationInstructions": "Analyze the student's clinical interview performance focusing on rapport building with skeptical patients, communication skills, and application of Calgary-Cambridge framework principles.",
-  "bccEmail": ["simonwang@hkbu.edu.hk"],
+  "bccEmail": [
+    "simonwang@hkbu.edu.hk"
+  ],
   "ccEmail": []
 }

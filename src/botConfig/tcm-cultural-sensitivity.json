@@ -6,6 +6,9 @@
   "welcomePrompt": "Hola... um, hello. My daughter Carmen said I should come see you. She had a good experience here, but I have to be honest - I'm not really sure about this Chinese medicine. I've never tried anything like this before. My back has been hurting for months now, and I've tried many things, including some traditional remedies from my community, but Carmen insisted I give this a try. I'm a little nervous, to be honest.",
   "model": "gpt-4o-mini",
   "reportGenerationInstructions": "Analyze the student's cultural sensitivity and communication skills with diverse patients. Evaluate cultural competency, inclusive communication practices, integrative approach to traditional healing practices, and professional development in cross-cultural healthcare.",
-  "bccEmail": ["simonwang@hkbu.edu.hk"],
-  "ccEmail": []
+  "bccEmail": [
+    "simonwang@hkbu.edu.hk"
+  ],
+  "ccEmail": [],
+  "gender": "female"
 }

@@ -39,7 +39,7 @@
         v-if="showAvatar"
         class="chat-avatar-container flex justify-center items-center py-4 border-b"
       >
-        <AvatarComponent :state="avatarState" />
+        <AvatarComponent :state="avatarState" :gender="avatarGender" />
       </div>
 
       <!-- Messages -->
@@ -222,6 +222,7 @@ const {
   speakReplySequentially,
   toggleRecording,
   getAzureToken,
+  avatarGender,
 } = useAzureSpeech(showNotification);
 // --- Computeds ---
 const selectedBot = computed(() => chatbotStore.availableBots.find((b) => b.id === props.avatarId));
@@ -298,6 +299,7 @@ onMounted(async () => {
     selectedBot.value.systemPrompt;
   welcomePrompt.value = selectedBot.value.welcomePrompt;
   model.value = selectedBot.value.model;
+  avatarGender.value = selectedBot.value.gender || "male";
   await getAzureToken();
 });
 function sendTextToChatbot() {

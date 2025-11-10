@@ -4,7 +4,6 @@
     class="relative w-64 h-64 rounded-full mx-auto overflow-hidden transition-all duration-300"
     :class="faceClasses"
   >
-    
     <!-- Speaking animation (video) -->
     <video
       autoplay
@@ -36,15 +35,14 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 
-// const imageSrc = new URL("./owl.png", import.meta.url).href;
-// const videoSrc = new URL("./owl_animation.mp4", import.meta.url).href;
-const imageSrc = new URL("./man.png", import.meta.url).href;
-const videoSrc = new URL("./man_talk.mp4", import.meta.url).href;
-
 const props = defineProps({
   state: {
     type: String,
     default: "idle",
+  },
+  gender: {
+    type: String,
+    default: "male",
   },
   gradientFrom: {
     type: String,
@@ -58,6 +56,20 @@ const props = defineProps({
 
 const assetsLoaded = ref(false);
 
+// Dynamically set image and video based on gender
+const imageSrc = computed(() => {
+  return props.gender === "female"
+    ? new URL("./woman.jpg", import.meta.url).href
+    : new URL("./man.jpg", import.meta.url).href;
+});
+
+const videoSrc = computed(() => {
+  return props.gender === "female"
+    ? new URL("./woman_talk.mp4", import.meta.url).href
+    : new URL("./man_talk.mp4", import.meta.url).href;
+});
+
+// Preload functions
 const preloadImage = (src) =>
   new Promise((resolve, reject) => {
     const img = new Image();
@@ -77,7 +89,10 @@ const preloadVideo = (src) =>
 
 onMounted(async () => {
   try {
-    await Promise.all([preloadImage(imageSrc), preloadVideo(videoSrc)]);
+    await Promise.all([
+      preloadImage(imageSrc.value),
+      preloadVideo(videoSrc.value),
+    ]);
   } catch (err) {
     console.warn("Asset preload failed:", err);
   } finally {
@@ -85,6 +100,7 @@ onMounted(async () => {
   }
 });
 
+// Reactive face classes for animations
 const faceClasses = computed(() => [
   "bg-gradient-to-br",
   props.gradientFrom,
@@ -93,6 +109,7 @@ const faceClasses = computed(() => [
   props.state === "speaking" ? "animate-glow" : "",
 ]);
 </script>
+
 <style scoped>
 @keyframes glow {
   0% {
@@ -106,7 +123,4 @@ const faceClasses = computed(() => [
 .animate-glow {
   animation: glow 1s infinite alternate;
 }
-/* .avatar-media {
-  transform: scale(1.6);
-} */
 </style>
