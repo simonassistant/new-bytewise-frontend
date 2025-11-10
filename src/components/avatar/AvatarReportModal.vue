@@ -370,7 +370,7 @@ async function sendReportByEmail() {
       ccEmail: props.ccEmail,
       report_history: history,
       contributionAnalysis: contributionAnalysis.value,
-      courseTitle: props.courseTitle,
+      course_title: props.courseTitle,
     }),
   })
     .then((response) => {
