@@ -47,9 +47,7 @@
       </button>
     </div>
 
-    <div v-else class="mt-6 text-center text-gray-500">
-      ⏳ Generating analysis, please wait...
-    </div>
+    <div v-else class="mt-6 text-center text-gray-500">⏳ Generating analysis, please wait...</div>
 
     <div class="text-sm text-gray-500 mt-4">Generated: {{ timestamp }}</div>
   </div>
@@ -69,6 +67,9 @@ const props = defineProps({
     type: String,
   },
   userEmail: {
+    type: String,
+  },
+  userName: {
     type: String,
   },
   bccEmail: {
