@@ -114,7 +114,7 @@
           class="bg-white border border-gray-300 rounded-lg p-4 shadow-sm"
         >
           <iframe
-            src="https://scribehow.com/embed/How_to_Use_AI_Tutor_for_Essay_Revision__HVinLe48TQ2Ld1jEYwdlrg?as=scrollable"
+            src="https://smartlessons.hkbu.tech/tutorial-training-mode.html"
             width="100%"
             height="800"
             allow="fullscreen"
