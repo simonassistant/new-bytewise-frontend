@@ -167,7 +167,7 @@
     :botName="selectedBot.name"
     :userEmail="userEmail"
     :userName="userName"
-    :courseTitle="'Chinese Medicine Feedback Report'"
+    :courseTitle="'Communication in Chinese Medicine Clinical Settings'"
     @close="showReport = false"
   />
   <!-- Notification -->
