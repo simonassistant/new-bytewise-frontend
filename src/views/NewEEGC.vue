@@ -177,11 +177,7 @@
           reprotInfo,
         }"
         @close="showReport = false"
-        @submit="
-          {
-            isSubmitted = true;
-            showReport = false;
-          }
+        @submit="isSubmitted = true;
         "
       />
     </div>

@@ -1,6 +1,6 @@
 <template>
   <div v-if="show" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div class="bg-white w-full max-w-3xl rounded-lg shadow-xl p-6 overflow-y-auto max-h-[90vh]">
+    <div class="bg-white w-full max-w-5xl rounded-lg shadow-xl p-6 overflow-y-auto max-h-[90vh]">
       <!-- Header -->
       <div class="flex justify-between items-center border-b pb-3 mb-4">
         <h2 class="text-lg font-bold">📊 Learning Session Report</h2>
@@ -26,20 +26,6 @@
             />
           </div>
           <div>
-            <label for="sectionNumber" class="block text-sm font-medium text-gray-700 mb-1">
-              Section Number:
-            </label>
-            <input
-              id="sectionNumber"
-              v-model="section_number"
-              type="text"
-              placeholder="Enter your section number"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-
-          <div>
             <label for="studentNumber" class="block text-sm font-medium text-gray-700 mb-1">
               Student Number:
             </label>
@@ -52,7 +38,6 @@
               required
             />
           </div>
-
           <div>
             <label for="studentNumber" class="block text-sm font-medium text-gray-700 mb-1">
               Confirm Student Number:
@@ -66,15 +51,31 @@
               required
             />
           </div>
+          <div>
+            <label for="sectionNumber" class="block text-sm font-medium text-gray-700 mb-1">
+              Section Number:
+            </label>
+            <input
+              id="sectionNumber"
+              v-model="section_number"
+              type="text"
+              placeholder="Enter your section number"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Professor:</label>
+          <p class="border rounded-md px-3 py-2 bg-gray-100 text-gray-800">
+            {{ professor_name }} — {{ professor_email }}
+          </p>
         </div>
       </div>
 
-      <!-- Footer -->
       <div class="mt-6 flex flex-wrap justify-end gap-1" v-if="!generatingAnalysis">
         <button
           class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400 disabled:cursor-not-allowed"
           @click="sendReportByEmail"
-          :disabled="emailSending || !isValidEmail(student_email)"
+          :disabled="emailSending || !isValidEmail(student_email) || emailSent"
         >
           <span v-if="emailSending">⏳ Sending...</span>
           <span v-else>📧 Send Report</span>
@@ -146,6 +147,9 @@
 import { ref, watch } from "vue";
 import { jsPDF } from "jspdf";
 import MarkdownIt from "markdown-it";
+import studentSectionMap from "@/components/new_EEGC/student_section_map.json";
+import sectionInfoMap from "@/components/new_EEGC/section_info_map.json";
+
 const markdown = new MarkdownIt({
   html: false, // disallow raw HTML in user messages
   linkify: true, // auto-detect URLs
@@ -182,6 +186,22 @@ const confirm_student_number = ref("");
 const section_number = ref("");
 const contributionAnalysis = ref("[Analyzing contribution...]");
 const generatingAnalysis = ref(true);
+const professor_name = ref("");
+const professor_email = ref("");
+// ✅ Watch student number input to lookup professor
+watch(student_number, (newVal) => {
+  if (newVal && studentSectionMap[newVal]) {
+    const secNum = studentSectionMap[newVal];
+    section_number.value = secNum;
+    professor_name.value = sectionInfoMap[secNum].professor;
+    professor_email.value = sectionInfoMap[secNum].email;
+  } else {
+    section_number.value = "";
+    professor_name.value = "No Prefessor Found";
+    professor_email.value = "Please Check Your Student Number";
+  }
+});
+
 // update timestamp whenever modal is opened
 watch(
   () => props.show,
@@ -408,6 +428,7 @@ function sendReportByEmail() {
   }
 
   emailSending.value = true;
+  const ccEmailList = [...(props.ccEmail || []), professor_email.value];
 
   fetch(`${BASE_URL}/sendEmail/send-email`, {
     method: "POST",
@@ -415,7 +436,7 @@ function sendReportByEmail() {
     body: JSON.stringify({
       student_email: student_email.value,
       bccEmail: props.bccEmail,
-      ccEmail: props.ccEmail,
+      ccEmail: ccEmailList,
       report_history: history,
       hiddenReport: props.hiddenReport,
       report_info: props.reprotInfo,

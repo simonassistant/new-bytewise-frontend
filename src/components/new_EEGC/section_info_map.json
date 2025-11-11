@@ -1,0 +1,198 @@
+{
+    "1": {
+        "professor": "Dr Li, Cissy Y X",
+        "email": "yxli@hkbu.edu.hk"
+    },
+    "2": {
+        "professor": "Ms Li, Mengyuan",
+        "email": "bettyli1439@hkbu.edu.hk"
+    },
+    "3": {
+        "professor": "Ms Li, Mengyuan",
+        "email": "bettyli1439@hkbu.edu.hk"
+    },
+    "4": {
+        "professor": "Ms Li, Mengyuan",
+        "email": "bettyli1439@hkbu.edu.hk"
+    },
+    "6": {
+        "professor": "Miss Lee, Joanne",
+        "email": "joanneli@hkbu.edu.hk"
+    },
+    "7": {
+        "professor": "Miss Lee, Joanne",
+        "email": "joanneli@hkbu.edu.hk"
+    },
+    "8": {
+        "professor": "Miss Lee, Joanne",
+        "email": "joanneli@hkbu.edu.hk"
+    },
+    "9": {
+        "professor": "Dr Zhang, Emma",
+        "email": "zhxemma@hkbu.edu.hk"
+    },
+    "11": {
+        "professor": "Dr Zhang, Emma",
+        "email": "zhxemma@hkbu.edu.hk"
+    },
+    "12": {
+        "professor": "Dr Zhang, Emma",
+        "email": "zhxemma@hkbu.edu.hk"
+    },
+    "13": {
+        "professor": "Mr Yu, Leo K H",
+        "email": "leoyu@hkbu.edu.hk"
+    },
+    "14": {
+        "professor": "Mr Yu, Leo K H",
+        "email": "leoyu@hkbu.edu.hk"
+    },
+    "15": {
+        "professor": "Mr Yu, Leo K H",
+        "email": "leoyu@hkbu.edu.hk"
+    },
+    "17": {
+        "professor": "Mr Acton, Caleb",
+        "email": "csacton@hkbu.edu.hk"
+    },
+    "18": {
+        "professor": "Mr Acton, Caleb",
+        "email": "csacton@hkbu.edu.hk"
+    },
+    "19": {
+        "professor": "Mr Acton, Caleb",
+        "email": "csacton@hkbu.edu.hk"
+    },
+    "20": {
+        "professor": "Mr Acton, Caleb",
+        "email": "csacton@hkbu.edu.hk"
+    },
+    "21": {
+        "professor": "Ms Wong, Nga Chong",
+        "email": "ashleyw@hkbu.edu.hk"
+    },
+    "22": {
+        "professor": "Ms Wong, Nga Chong",
+        "email": "ashleyw@hkbu.edu.hk"
+    },
+    "23": {
+        "professor": "Ms Wong, Nga Chong",
+        "email": "ashleyw@hkbu.edu.hk"
+    },
+    "24": {
+        "professor": "Ms Wong, Nga Chong",
+        "email": "ashleyw@hkbu.edu.hk"
+    },
+    "25": {
+        "professor": "Ms Wong, Nga Chong",
+        "email": "ashleyw@hkbu.edu.hk"
+    },
+    "26": {
+        "professor": "Miss Wong, Louisa W M",
+        "email": "louisawong@hkbu.edu.hk"
+    },
+    "27": {
+        "professor": "Miss Wong, Louisa W M",
+        "email": "louisawong@hkbu.edu.hk"
+    },
+    "28": {
+        "professor": "Miss Wong, Louisa W M",
+        "email": "louisawong@hkbu.edu.hk"
+    },
+    "30": {
+        "professor": "Mr Ngai, Hollis Ho Lun",
+        "email": "hollisngai@hkbu.edu.hk"
+    },
+    "31": {
+        "professor": "Mr Cheung, Angus H Y",
+        "email": "anguscheung@hkbu.edu.hk"
+    },
+    "32": {
+        "professor": "Mr Cheung, Angus H Y",
+        "email": "anguscheung@hkbu.edu.hk"
+    },
+    "33": {
+        "professor": "Mr Cheung, Angus H Y",
+        "email": "anguscheung@hkbu.edu.hk"
+    },
+    "34": {
+        "professor": "Mr Cheung, Angus H Y",
+        "email": "anguscheung@hkbu.edu.hk"
+    },
+    "35": {
+        "professor": "Mr Cheung, Angus H Y",
+        "email": "anguscheung@hkbu.edu.hk"
+    },
+    "36": {
+        "professor": "Dr Wang, Simon H",
+        "email": "simonwang@hkbu.edu.hk"
+    },
+    "37": {
+        "professor": "Dr Wang, Simon H",
+        "email": "simonwang@hkbu.edu.hk"
+    },
+    "38": {
+        "professor": "Dr Wang, Simon H",
+        "email": "simonwang@hkbu.edu.hk"
+    },
+    "40": {
+        "professor": "Dr Guo, Nancy",
+        "email": "nancyguo@hkbu.edu.hk"
+    },
+    "43": {
+        "professor": "Mr WONG, Andrew",
+        "email": "andrewwong@hkbu.edu.hk "
+    },
+    "44": {
+        "professor": "Mr WONG, Andrew",
+        "email": "andrewwong@hkbu.edu.hk "
+    },
+    "45": {
+        "professor": "Mr WONG, Andrew",
+        "email": "andrewwong@hkbu.edu.hk "
+    },
+    "46": {
+        "professor": "Mr WONG, Andrew",
+        "email": "andrewwong@hkbu.edu.hk "
+    },
+    "47": {
+        "professor": "Mr WONG, Andrew",
+        "email": "andrewwong@hkbu.edu.hk "
+    },
+    "48": {
+        "professor": "Mr WOO, Oscar TC",
+        "email": "oscarwoo@hkbu.edu.hk"
+    },
+    "49": {
+        "professor": "Mr WOO, Oscar TC",
+        "email": "oscarwoo@hkbu.edu.hk"
+    },
+    "50": {
+        "professor": "Mr WOO, Oscar TC",
+        "email": "oscarwoo@hkbu.edu.hk"
+    },
+    "51": {
+        "professor": "Mr WOO, Oscar TC",
+        "email": "oscarwoo@hkbu.edu.hk"
+    },
+    "52": {
+        "professor": "Mr WOO, Oscar TC",
+        "email": "oscarwoo@hkbu.edu.hk"
+    },
+    "53": {
+        "professor": "Mr Della Pietra, John",
+        "email": "johndp@hkbu.edu.hk"
+    },
+    "54": {
+        "professor": "Mr Della Pietra, John",
+        "email": "johndp@hkbu.edu.hk"
+    },
+    "55": {
+        "professor": "Mr Della Pietra, John",
+        "email": "johndp@hkbu.edu.hk"
+    },
+    "99": {
+        "professor": "Test Professor",
+        "email": "zhang_kt@hkbu.edu.hk"
+    }
+}
