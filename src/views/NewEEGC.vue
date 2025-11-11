@@ -98,6 +98,31 @@
         </div>
         <BriefMode />
       </template>
+      <!-- Training Mode Section -->
+      <div v-if="currentMode == 'training'" class="mb-6 p-6 bg-gray-50 rounded-lg">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-gray-900">🎓 Training Mode Tutorial</h2>
+          <button
+            @click="isTrainingTutorialVisible = !isTrainingTutorialVisible"
+            class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-5 py-2 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+          >
+            {{ isTrainingTutorialVisible ? "▼ Hide Tutorial" : "▶ Show Tutorial" }}
+          </button>
+        </div>
+        <div
+          v-if="isTrainingTutorialVisible"
+          class="bg-white border border-gray-300 rounded-lg p-4 shadow-sm"
+        >
+          <iframe
+            src="https://scribehow.com/embed/How_to_Use_AI_Tutor_for_Essay_Revision__HVinLe48TQ2Ld1jEYwdlrg?as=scrollable"
+            width="100%"
+            height="800"
+            allow="fullscreen"
+            style="border: 0; min-height: 640px"
+            title="Training Mode Tutorial"
+          />
+        </div>
+      </div>
       <BackgroundAndRubrics
         v-if="currentMode == 'training'"
         v-model:courseInfo="courseInfo"
@@ -228,6 +253,7 @@ const rubric = ref(Rubric);
 const isTrainingModeFinished = ref(false);
 const isTrainingBackgroundAreaVisible = ref(true);
 const isAssessmentBackgroundAreaVisible = ref(true);
+const isTrainingTutorialVisible = ref(false);
 const courseInfo = ref(`Course Information:
 Course: LANG 0036 - English for Academic Purposes
 Level: Intermediate to Advanced
