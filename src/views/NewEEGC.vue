@@ -102,12 +102,21 @@
       <div v-if="currentMode == 'training'" class="mb-6 p-6 bg-gray-50 rounded-lg">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-bold text-gray-900">🎓 Training Mode Tutorial</h2>
-          <button
-            @click="isTrainingTutorialVisible = !isTrainingTutorialVisible"
-            class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-5 py-2 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
-          >
-            {{ isTrainingTutorialVisible ? "▼ Hide Tutorial" : "▶ Show Tutorial" }}
-          </button>
+          <div class="flex gap-2">
+            <button
+              @click="isTrainingTutorialVisible = !isTrainingTutorialVisible"
+              class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-5 py-2 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+            >
+              {{ isTrainingTutorialVisible ? "▼ Hide Tutorial" : "▶ Show Tutorial" }}
+            </button>
+
+            <button
+              @click="openTutorial"
+              class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium px-5 py-2 rounded-md shadow focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+            >
+              🔗 Jump to Tutorial
+            </button>
+          </div>
         </div>
         <div
           v-if="isTrainingTutorialVisible"
@@ -177,8 +186,7 @@
           reprotInfo,
         }"
         @close="showReport = false"
-        @submit="isSubmitted = true;
-        "
+        @submit="isSubmitted = true"
       />
     </div>
   </div>
@@ -313,7 +321,9 @@ const { sendMessage, talkToChatbot } = useChatFunctions({
   courseInfo,
   courseInfoAssessment,
 });
-
+function openTutorial() {
+  window.open("https://smartlessons.hkbu.tech/tutorial-training-mode.html", "_blank");
+}
 /* ------------ Mode Switching ------------ */
 async function switchMode(mode) {
   // Save current drafts before switching
