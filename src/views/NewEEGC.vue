@@ -269,14 +269,14 @@ ${Rubric}`);
 
 const courseInfoAssessment = ref(`
   Course Information:
-  Course: 
-  Level: 
-  Focus: 
+  Course:
+  Level:
+  Focus:
   Assessment: \n
   Student Background:
-  AcademicLevel: 
-  Language: 
-  Goals: 
+  AcademicLevel:
+  Language:
+  Goals:
   Challenges: \n
   Rubric:
 `);
@@ -319,14 +319,25 @@ const { sendMessage, talkToChatbot } = useChatFunctions({
 });
 
 /* ------------ Mode Switching ------------ */
-function switchMode(mode) {
+async function switchMode(mode) {
   // Save current drafts before switching
   if (mode == "assessment") {
-    Swal.fire({
-      text: "The assessment mode is not yet open. It will open from 14 November to 01 December. Please contact ZHANG_KT@hkbu.edu.hk for enquiries.",
+    const password = await Swal.fire({
+      input: "text",
+      text: "The assessment mode is not yet open. It will open from 14 November to 01 December. If you wish to obtain early access, please enter the password. Please contact ZHANG_KT@hkbu.edu.hk for enquiries.",
+      inputPlaceholder: "Password",
       icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Submit",
+      cancelButtonText: "Cancel",
     });
-    return;
+    if (password.value && password.value != "" && password.value !== "a123456") {
+      Swal.fire({
+        text: "Incorrect password.",
+        icon: "error",
+      });
+    }
+    if (!password.value || password.value !== "a123456") return;
   }
   if (currentMode.value === "training") {
     trainingOriginalDraft.value = originalDraft.value;
@@ -467,15 +478,15 @@ async function generateAssessmentReport(mode = "final") {
     const report = await talkToChatbot([
       {
         role: "system",
-        content: ` 
+        content: `
                   Check whether the student has completed the following tasks:
-                    1. Revised the thesis statement  
-                    2. Revised one of the topic sentence  
-                    3. Revised one of the body paragraph  
+                    1. Revised the thesis statement
+                    2. Revised one of the topic sentence
+                    3. Revised one of the body paragraph
 
                     If the student has not completed any of the above tasks, then you should say 'not finished'.
 
-                    Then execute the following: 
+                    Then execute the following:
                     ${AssessBot_Prompt}\n\n${JSON.stringify(data, null, 2)}`,
       },
       { role: "user", content: makeReportTemplate(mode) },
