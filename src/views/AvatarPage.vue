@@ -167,6 +167,7 @@
     :botName="selectedBot.name"
     :userEmail="userEmail"
     :userName="userName"
+    :reportGenerationInstructions="selectedBot.reportGenerationInstructions"
     :courseTitle="'Communication in Chinese Medicine Clinical Settings'"
     @close="showReport = false"
   />
