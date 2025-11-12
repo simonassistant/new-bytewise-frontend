@@ -140,6 +140,7 @@
 
       <div class="text-sm text-gray-500 mt-4">Generated: {{ timestamp }}</div>
     </div>
+    <FeedbackModal :show="showFeedbackModal" @close="showFeedbackModal = false" />
   </div>
 </template>
 
@@ -149,7 +150,7 @@ import { jsPDF } from "jspdf";
 import MarkdownIt from "markdown-it";
 import studentSectionMap from "@/components/new_EEGC/student_section_map.json";
 import sectionInfoMap from "@/components/new_EEGC/section_info_map.json";
-
+import FeedbackModal from "@/components/new_EEGC/FeedbackModal.vue";
 const markdown = new MarkdownIt({
   html: false, // disallow raw HTML in user messages
   linkify: true, // auto-detect URLs
@@ -177,6 +178,9 @@ const props = defineProps({
   reprotInfo: {
     type: String,
   },
+  mode: {
+    type: String,
+  },
 });
 
 // timestamp
@@ -188,6 +192,8 @@ const contributionAnalysis = ref("[Analyzing contribution...]");
 const generatingAnalysis = ref(true);
 const professor_name = ref("");
 const professor_email = ref("");
+const showFeedbackModal = ref(false);
+
 // ✅ Watch student number input to lookup professor
 watch(student_number, (newVal) => {
   if (newVal && studentSectionMap[newVal]) {
@@ -410,17 +416,21 @@ const student_email = ref("@life.hkbu.edu.hk");
 const emailSending = ref(false);
 const emailSent = ref(false);
 import { BASE_URL } from "@/components/base_url";
+import Swal from "sweetalert2";
 
-function sendReportByEmail() {
+async function sendReportByEmail() {
   const history = props.chatHistory;
+
   if (!history.length) {
     alert("No conversation to export");
     return;
   }
+
   if (student_number.value !== confirm_student_number.value) {
     alert("Student number does not match!");
     return;
   }
+
   // Validate student email address
   if (!isValidEmail(student_email.value)) {
     alert("Please enter a valid email address");
@@ -430,38 +440,45 @@ function sendReportByEmail() {
   emailSending.value = true;
   const ccEmailList = [...(props.ccEmail || []), professor_email.value];
 
-  fetch(`${BASE_URL}/sendEmail/send-email`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      student_email: student_email.value,
-      bccEmail: props.bccEmail,
-      ccEmail: ccEmailList,
-      report_history: history,
-      hiddenReport: props.hiddenReport,
-      report_info: props.reprotInfo,
-      contributionAnalysis: contributionAnalysis.value,
-      student_number: student_number.value,
-      section_number: section_number.value,
-    }),
-  })
-    .then((response) => {
-      if (response.ok) {
-        emailSent.value = true;
-        alert(
-          "Report sent successfully! (It may take a few minutes to arrive, please check your spam folder if you can not receive the email)"
-        );
-        emit("submit");
-      } else {
-        throw new Error("Failed to send email");
-      }
-    })
-    .catch((error) => {
-      alert(`Error: ${error.message}`);
-    })
-    .finally(() => {
-      emailSending.value = false;
+  try {
+    const response = await fetch(`${BASE_URL}/sendEmail/send-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student_email: student_email.value,
+        bccEmail: props.bccEmail,
+        ccEmail: ccEmailList,
+        report_history: history,
+        hiddenReport: props.hiddenReport,
+        report_info: props.reprotInfo,
+        contributionAnalysis: contributionAnalysis.value,
+        student_number: student_number.value,
+        section_number: section_number.value,
+      }),
     });
+
+    if (!response.ok) {
+      throw new Error("Failed to send email");
+    }
+
+    emailSent.value = true;
+    emit("submit");
+
+    if (props.mode === "assessment") {
+      showFeedbackModal.value = true;
+    } else {
+      await Swal.fire({
+        icon: "success",
+        title: "Assessment Submitted",
+        text: "Your assessment has been submitted successfully.",
+        confirmButtonText: "OK",
+      });
+    }
+  } catch (error) {
+    alert(`Error: ${error.message}`);
+  } finally {
+    emailSending.value = false;
+  }
 }
 
 // Email validation function

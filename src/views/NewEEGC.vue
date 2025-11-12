@@ -184,6 +184,7 @@
           bccEmail,
           ccEmail,
           reprotInfo,
+          mode: currentMode,
         }"
         @close="showReport = false"
         @submit="isSubmitted = true"
@@ -550,9 +551,9 @@ const makeReportHeader = (mode, body) =>
 
 const submitAssessment = async () => {
   if (!isOriginalDraftConfirmed.value) return alert("Please confirm your original essay first.");
-  userMessage.value = "done";
-  await sendMessage();
-  setTimeout(() => generateAssessmentReport("final"), 1000);
+  // userMessage.value = "done";
+  // await sendMessage();
+  await generateAssessmentReport("final");
 };
 
 const confirmFinalDraft = async () => {
