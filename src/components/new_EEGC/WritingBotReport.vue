@@ -8,6 +8,45 @@
           &times;
         </button>
       </div>
+      <!-- New Rating & Comment Section -->
+      <div class="mb-6 p-4 bg-gray-50 rounded-lg border">
+        <h3 class="text-md font-semibold mb-3 text-gray-700">🌟 Session Feedback</h3>
+
+        <!-- Rating Stars -->
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Rate Your Learning Session:
+          </label>
+          <div class="flex items-center gap-2">
+            <template v-for="star in 5" :key="star">
+              <button
+                type="button"
+                @click="rating = star"
+                class="text-3xl font-bold transition-transform transform hover:scale-110 focus:outline-none"
+                :class="star <= rating ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-200'"
+                aria-label="Rate {{ star }} star"
+              >
+                ★
+              </button>
+            </template>
+            <span class="text-gray-700 font-medium">{{ rating }}/5</span>
+          </div>
+        </div>
+
+        <!-- Comment Box -->
+        <div>
+          <label for="comment" class="block text-sm font-medium text-gray-700 mb-1">
+            Additional Comments:
+          </label>
+          <textarea
+            id="comment"
+            v-model="comment"
+            placeholder="Share your thoughts about the session..."
+            rows="3"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          ></textarea>
+        </div>
+      </div>
       <!-- User Input Section -->
       <div class="mb-6 p-4 bg-gray-50 rounded-lg border">
         <h3 class="text-md font-semibold mb-3 text-gray-700">📧 Email Settings</h3>
@@ -140,17 +179,16 @@
 
       <div class="text-sm text-gray-500 mt-4">Generated: {{ timestamp }}</div>
     </div>
-    <FeedbackModal :show="showFeedbackModal" @close="showFeedbackModal = false" />
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { jsPDF } from "jspdf";
 import MarkdownIt from "markdown-it";
 import studentSectionMap from "@/components/new_EEGC/student_section_map.json";
 import sectionInfoMap from "@/components/new_EEGC/section_info_map.json";
-import FeedbackModal from "@/components/new_EEGC/FeedbackModal.vue";
+
 const markdown = new MarkdownIt({
   html: false, // disallow raw HTML in user messages
   linkify: true, // auto-detect URLs
@@ -192,8 +230,8 @@ const contributionAnalysis = ref("[Analyzing contribution...]");
 const generatingAnalysis = ref(true);
 const professor_name = ref("");
 const professor_email = ref("");
-const showFeedbackModal = ref(false);
-
+const rating = ref(0);
+const comment = ref("");
 // ✅ Watch student number input to lookup professor
 watch(student_number, (newVal) => {
   if (newVal && studentSectionMap[newVal]) {
@@ -223,6 +261,16 @@ watch(
     }
   }
 );
+const combined_feedback = computed(() => {
+  const baseReport = props.hiddenReport?.trim() || "[No hidden report provided]";
+  const feedbackRating = `\n🌟 **Rating:** ${rating.value}/5`;
+  const feedbackComment = `\n💬 **Comment:** ${
+    comment.value?.trim() || "No additional comment provided."
+  }`;
+
+  return `${baseReport}\n\n---\n### 🧑‍🎓 Student Feedback${feedbackRating}${feedbackComment}`;
+});
+
 function renderMarkdown(text) {
   return markdown.render(text || "");
 }
@@ -449,7 +497,7 @@ async function sendReportByEmail() {
         bccEmail: props.bccEmail,
         ccEmail: ccEmailList,
         report_history: history,
-        hiddenReport: props.hiddenReport,
+        hiddenReport: combined_feedback,
         report_info: props.reprotInfo,
         contributionAnalysis: contributionAnalysis.value,
         student_number: student_number.value,
@@ -463,17 +511,12 @@ async function sendReportByEmail() {
 
     emailSent.value = true;
     emit("submit");
-
-    if (props.mode === "assessment") {
-      showFeedbackModal.value = true;
-    } else {
-      await Swal.fire({
-        icon: "success",
-        title: "Assessment Submitted",
-        text: "Your assessment has been submitted successfully.",
-        confirmButtonText: "OK",
-      });
-    }
+    await Swal.fire({
+      icon: "success",
+      title: "Assessment Submitted",
+      text: "Your assessment has been submitted successfully.",
+      confirmButtonText: "OK",
+    });
   } catch (error) {
     alert(`Error: ${error.message}`);
   } finally {
