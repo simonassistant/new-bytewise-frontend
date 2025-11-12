@@ -9,7 +9,7 @@
         </button>
       </div>
       <!-- New Rating & Comment Section -->
-      <div class="mb-6 p-4 bg-gray-50 rounded-lg border">
+      <div class="mb-6 p-4 bg-gray-50 rounded-lg border" v-if="props.mode == 'assessment'">
         <h3 class="text-md font-semibold mb-3 text-gray-700">🌟 Session Feedback</h3>
 
         <!-- Rating Stars -->
@@ -183,7 +183,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch } from "vue";
 import { jsPDF } from "jspdf";
 import MarkdownIt from "markdown-it";
 import studentSectionMap from "@/components/new_EEGC/student_section_map.json";
@@ -261,15 +261,6 @@ watch(
     }
   }
 );
-const combined_feedback = computed(() => {
-  const baseReport = props.hiddenReport?.trim() || "[No hidden report provided]";
-  const feedbackRating = `\n🌟 **Rating:** ${rating.value}/5`;
-  const feedbackComment = `\n💬 **Comment:** ${
-    comment.value?.trim() || "No additional comment provided."
-  }`;
-
-  return `${baseReport}\n\n---\n### 🧑‍🎓 Student Feedback${feedbackRating}${feedbackComment}`;
-});
 
 function renderMarkdown(text) {
   return markdown.render(text || "");
@@ -484,7 +475,12 @@ async function sendReportByEmail() {
     alert("Please enter a valid email address");
     return;
   }
-
+  const baseReport = props.hiddenReport?.trim() || "[No hidden report provided]";
+  const feedbackRating = `\n🌟 **Rating:** ${rating.value}/5`;
+  const feedbackComment = `\n💬 **Comment:** ${
+    comment.value?.trim() || "No additional comment provided."
+  }`;
+  const combined_feedback = `${baseReport}\n\n---\n### 🧑‍🎓 Student Feedback${feedbackRating}${feedbackComment}`;
   emailSending.value = true;
   const ccEmailList = [...(props.ccEmail || []), professor_email.value];
 

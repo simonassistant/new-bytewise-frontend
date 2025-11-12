@@ -471,6 +471,7 @@ const confirmDraft = () => {
 /* ------------ Report Generation ------------ */
 async function generateAssessmentReport(mode = "final") {
   isGeneratingAssessment.value = true;
+  isThinking.value = true;
   try {
     const data = {
       original: originalDraft.value || "(empty)",
@@ -515,7 +516,6 @@ async function generateAssessmentReport(mode = "final") {
       }
       isGeneratingAssessment.value = false;
     }
-    console.log("Generated Report:", report);
     hiddenReport.value = report;
     isTrainingModeFinished.value = true;
     reportGenerationInstructions.value = makeReportHeader(mode, report);
@@ -536,6 +536,7 @@ async function generateAssessmentReport(mode = "final") {
     showNotification("⚠️ Error generating report — fallback used", "error");
   } finally {
     isGeneratingAssessment.value = false;
+    isThinking.value = false;
   }
 }
 
