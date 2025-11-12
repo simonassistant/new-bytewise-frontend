@@ -11,7 +11,7 @@
       <h2 class="text-xl font-bold text-gray-800 mb-2">Assessment Submitted 🎉</h2>
       <p class="text-gray-600 mb-4">
         Your assessment has been submitted successfully!<br />
-        Please rate your experience below 👇
+        Please rate your experience below
       </p>
 
       <!-- Star Rating -->
