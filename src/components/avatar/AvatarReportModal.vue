@@ -9,8 +9,43 @@
     </div>
 
     <!-- Report Body -->
-    <div class="prose max-w-none text-sm" v-html="reportHtml"></div>
+    <div class="text-sm space-y-4">
+      <p><strong>Generated:</strong> {{ new Date().toLocaleString() }}</p>
+      <p><strong>Total Messages:</strong> {{ chatHistory.length }}</p>
+      <p><strong>Student Name:</strong> {{ userName || "No information given" }}</p>
+      <p><strong>Student Email:</strong> {{ userEmail || "No information given" }}</p>
 
+      <h3 class="text-lg font-semibold mt-4">📈 Your Contribution Analysis</h3>
+      <div
+        class="prose prose-sm max-w-none break-words [&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_code]:whitespace-pre-wrap [&_ol]:list-decimal [&_ol]:ml-6 [&_ul]:list-disc"
+        v-html="renderMarkdown(contributionAnalysis)"
+      />
+      <h3 class="text-lg font-semibold mt-4">📝 Complete Conversation</h3>
+      <div class="bg-gray-50 p-4 rounded-lg max-h-[400px] overflow-y-auto">
+        <div
+          v-for="(msg, idx) in chatHistory"
+          :key="idx"
+          class="mb-3 p-3 rounded-md"
+          :class="msg.role === 'user' ? 'bg-blue-50' : 'bg-green-50'"
+        >
+          <strong>{{ msg.role === "user" ? "👤 You" : "🤖 Assistant" }}:</strong>
+          <div class="whitespace-pre-line mt-1">{{ msg.content }}</div>
+          <div class="text-xs text-gray-500 mt-1">
+            {{ new Date(msg.timestamp).toLocaleTimeString() }}
+          </div>
+        </div>
+      </div>
+
+      <hr class="my-4" />
+
+      <div class="text-center text-gray-500 text-sm">
+        <strong>Created by:</strong> Dr. Simon Wang, Innovation Officer<br />
+        Language Centre, Hong Kong Baptist University<br />
+        <a href="mailto:simonwang@hkbu.edu.hk" class="underline text-blue-600"
+          >simonwang@hkbu.edu.hk</a
+        >
+      </div>
+    </div>
     <!-- Footer -->
     <div class="mt-6 flex flex-wrap justify-end gap-1" v-if="!generatingAnalysis">
       <button
@@ -56,7 +91,12 @@
 <script setup>
 import { ref, watch, computed } from "vue";
 import { jsPDF } from "jspdf";
-
+import MarkdownIt from "markdown-it";
+const markdown = new MarkdownIt({
+  html: false, // disallow raw HTML in user messages
+  linkify: true, // auto-detect URLs
+  typographer: true, // nicer quotes & dashes
+});
 const props = defineProps({
   show: Boolean,
   chatHistory: {
@@ -82,7 +122,9 @@ const props = defineProps({
     type: String,
   },
 });
-
+function renderMarkdown(text) {
+  return markdown.render(text || "");
+}
 // timestamp
 const timestamp = ref("");
 const contributionAnalysis = ref("[Analyzing contribution...]");

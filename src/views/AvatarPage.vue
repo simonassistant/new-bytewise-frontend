@@ -282,7 +282,6 @@ const headerButtons = [
     action: () => (showAvatar.value = !showAvatar.value),
   },
   { id: "new", label: "🔄 New Session", action: () => startNewSession() },
-  { id: "back", label: "⬅ Back", action: () => goBack() },
 ];
 function handleUserDataUpdate({ name, email }) {
   userName.value = name;
@@ -379,9 +378,7 @@ function scrollToBottom() {
     if (el) el.scrollTop = el.scrollHeight;
   });
 }
-function goBack() {
-  router.push("/");
-}
+
 function toggleInputMode() {
   inputMode.value = inputMode.value === "audio" ? "text" : "audio";
 }
