@@ -103,9 +103,9 @@
               required
             />
           </div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Professor:</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Teacher:</label>
           <p class="border rounded-md px-3 py-2 bg-gray-100 text-gray-800">
-            {{ professor_name }} — {{ professor_email }}
+            {{ teacher_name }} — {{ teacher_email }}
           </p>
         </div>
       </div>
@@ -228,21 +228,21 @@ const confirm_student_number = ref("");
 const section_number = ref("");
 const contributionAnalysis = ref("[Analyzing contribution...]");
 const generatingAnalysis = ref(true);
-const professor_name = ref("");
-const professor_email = ref("");
+const teacher_name = ref("");
+const teacher_email = ref("");
 const rating = ref(0);
 const comment = ref("");
-// ✅ Watch student number input to lookup professor
+// ✅ Watch student number input to lookup teacher
 watch(student_number, (newVal) => {
   if (newVal && studentSectionMap[newVal]) {
     const secNum = studentSectionMap[newVal];
     section_number.value = secNum;
-    professor_name.value = sectionInfoMap[secNum].professor;
-    professor_email.value = sectionInfoMap[secNum].email;
+    teacher_name.value = sectionInfoMap[secNum].teacher;
+    teacher_email.value = sectionInfoMap[secNum].email;
   } else {
     section_number.value = "";
-    professor_name.value = "No Prefessor Found";
-    professor_email.value = "Please Check Your Student Number";
+    teacher_name.value = "No Teacher Found";
+    teacher_email.value = "Please Check Your Student Number";
   }
 });
 
@@ -482,7 +482,7 @@ async function sendReportByEmail() {
   }`;
   const combined_feedback = `${baseReport}\n\n---\n### 🧑‍🎓 Student Feedback${feedbackRating}${feedbackComment}`;
   emailSending.value = true;
-  const ccEmailList = [...(props.ccEmail || []), professor_email.value];
+  const ccEmailList = [...(props.ccEmail || []), teacher_email.value];
 
   try {
     const response = await fetch(`${BASE_URL}/sendEmail/send-email`, {
