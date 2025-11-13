@@ -523,7 +523,11 @@ async function generateAssessmentReport(mode = "final") {
       makeChatHistoryEntry("system", `Original:\n${data.original}\n\nRevised:\n${data.revised}`),
       ...activeChatHistory.value,
     ];
-    bccEmail.value = ["simonwanghkteacher@gmail.com"];
+    bccEmail.value = [
+      currentMode.value === "training"
+        ? "simonwanghkteacher@gmail.com"
+        : "simonwanghkteacher+test@gmail.com",
+    ];
     if (currentMode.value === "training") {
       reprotInfo.value = courseInfo.value;
     } else if (currentMode.value === "assessment") {
