@@ -265,7 +265,7 @@ Level: Intermediate to Advanced
 Focus: Academic writing and critical thinking
 Assessment: Essay writing with rubric-based evaluation\n
 Student Background:
-AcademicLevel: University student
+Academic Level: University student
 Language: English as additional language
 Goals: Improve academic writing skills
 Challenges: Structure, vocabulary, critical analysis\n
@@ -279,7 +279,7 @@ const courseInfoAssessment = ref(`
   Focus:
   Assessment: \n
   Student Background:
-  AcademicLevel:
+  Academic Level:
   Language:
   Goals:
   Challenges: \n
