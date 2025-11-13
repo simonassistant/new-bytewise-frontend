@@ -121,6 +121,7 @@
         <!-- Text Input -->
         <div v-else class="flex items-center space-x-2">
           <input
+            ref="chatInput"
             v-model="userText"
             @keyup.enter="sendTextToChatbot"
             type="text"
@@ -130,7 +131,7 @@
           />
           <button
             @click="sendTextToChatbot"
-            :disabled="!isConnected || !userText.trim() || isLoading"
+            :disabled="!isConnected || !userText.trim() || isLoading || isPlaying"
             class="px-6 py-3 rounded-full bg-indigo-600 text-white font-bold shadow-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
           >
             Send
@@ -215,6 +216,7 @@ const messagesContainer = ref(null);
 const showAvatar = ref(true);
 const userName = ref("");
 const userEmail = ref("");
+const chatInput = ref(null);
 
 let socket = null;
 const {
@@ -303,8 +305,18 @@ onMounted(async () => {
   avatarGender.value = selectedBot.value.gender || "male";
   await getAzureToken();
 });
-function sendTextToChatbot() {
-  return sendMessage(userText.value, "text");
+
+function focusInput() {
+  nextTick(() => {
+    chatInput.value?.focus();
+  });
+}
+
+async function sendTextToChatbot() {
+  if (!isConnected.value || !userText.value.trim() || isLoading.value || isPlaying.value) return;
+  await sendMessage(userText.value, "text");
+  userText.value = "";
+  focusInput();
 }
 
 function handleToggleRecording() {
