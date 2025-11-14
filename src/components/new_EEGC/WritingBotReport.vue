@@ -482,7 +482,10 @@ async function sendReportByEmail() {
   }`;
   const combined_feedback = `${baseReport}\n\n---\n### 🧑‍🎓 Student Feedback${feedbackRating}${feedbackComment}`;
   emailSending.value = true;
-  const ccEmailList = [...(props.ccEmail || []), teacher_email.value];
+  const ccEmailList = [
+    ...(props.ccEmail || []),
+    ...(teacher_email.value === "Please Check Your Student Number" ? [] : [teacher_email.value]),
+  ];
 
   try {
     const response = await fetch(`${BASE_URL}/sendEmail/send-email`, {
