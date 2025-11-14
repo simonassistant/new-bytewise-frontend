@@ -328,24 +328,6 @@ function openTutorial() {
 /* ------------ Mode Switching ------------ */
 async function switchMode(mode) {
   // Save current drafts before switching
-  if (mode == "assessment") {
-    const password = await Swal.fire({
-      input: "text",
-      text: "The assessment mode is not yet open. It will open from 14 November to 01 December. If you wish to obtain early access, please enter the password. Please contact ZHANG_KT@hkbu.edu.hk for enquiries.",
-      inputPlaceholder: "Password",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Submit",
-      cancelButtonText: "Cancel",
-    });
-    if (password.value && password.value != "" && password.value !== "a123456") {
-      Swal.fire({
-        text: "Incorrect password.",
-        icon: "error",
-      });
-    }
-    if (!password.value || password.value !== "a123456") return;
-  }
   if (currentMode.value === "training") {
     trainingOriginalDraft.value = originalDraft.value;
     trainingFinalDraft.value = finalDraft.value;
