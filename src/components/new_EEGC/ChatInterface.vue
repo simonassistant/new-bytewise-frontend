@@ -5,10 +5,7 @@
         <!-- Left: Chat messages + input -->
         <div class="flex flex-col w-1/2" style="height: 70vh">
           <!-- Chat history -->
-          <div
-            ref="chatMessages"
-            class="chat-messages flex-1 overflow-y-auto p-5 space-y-4"
-          >
+          <div ref="chatMessages" class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
             <div
               v-for="(msg, i) in activeChatHistory"
               :key="i"
@@ -40,9 +37,7 @@
                 v-model="localUserMessage"
                 :style="{ height: inputHeight + 'px' }"
                 :placeholder="
-                  isConnected
-                    ? 'Type your message...'
-                    : 'Please connect to API first...'
+                  isConnected ? 'Type your message...' : 'Please connect to API first...'
                 "
                 class="border rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed w-full"
                 @keyup.enter.exact.prevent="$emit('sendMessage')"
@@ -72,19 +67,15 @@
           <!-- Original Draft -->
           <div
             class="bg-gray-100 border border-gray-300 text-gray-800 rounded-md p-4 mb-4"
+            v-if="currentMode == 'training'"
           >
-            Topic: Some people believe that individual actions are insignificant
-            in the fight against climate change compared to the efforts of
-            governments and large corporations. To what extent do you agree or
-            disagree with this statement?
+            Topic: Some people believe that individual actions are insignificant in the fight
+            against climate change compared to the efforts of governments and large corporations. To
+            what extent do you agree or disagree with this statement?
           </div>
           <div class="bg-white p-4 rounded-lg shadow">
             <h2 class="text-lg font-bold mb-2">
-              {{
-                currentMode === "assessment"
-                  ? "Your Original Essay"
-                  : "Original Draft"
-              }}
+              {{ currentMode === "assessment" ? "Your Original Essay" : "Original Draft" }}
             </h2>
 
             <textarea
@@ -148,18 +139,13 @@
           <!-- Final Draft -->
           <div class="bg-white p-4 rounded-lg shadow">
             <h2 class="text-lg font-bold mb-2">
-              {{
-                currentMode === "assessment" ? "Revised Version" : "Final Draft"
-              }}
+              {{ currentMode === "assessment" ? "Revised Version" : "Final Draft" }}
             </h2>
-            <div
-              class="bg-gray-100 border border-gray-300 text-gray-800 rounded-md p-4 mb-4"
-            >
-              Please revise the texts in the box below and complete the steps in
-              the checklist above. When finished, please click the blue button
-              to confirm the final draft and generate report. You will be asked
-              to enter your name and student ID to receive the chat history and
-              report via email.
+            <div class="bg-gray-100 border border-gray-300 text-gray-800 rounded-md p-4 mb-4">
+              Please revise the texts in the box below and complete the steps in the checklist
+              above. When finished, please click the blue button to confirm the final draft and
+              generate report. You will be asked to enter your name and student ID to receive the
+              chat history and report via email.
             </div>
             <div class="relative w-full">
               <textarea
@@ -172,10 +158,8 @@
                 "
                 class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 :disabled="
-                  (currentMode === 'assessment' &&
-                    !isOriginalDraftConfirmedAssessment) ||
-                  (currentMode === 'training' &&
-                    !isOriginalDraftConfirmedTraining)
+                  (currentMode === 'assessment' && !isOriginalDraftConfirmedAssessment) ||
+                  (currentMode === 'training' && !isOriginalDraftConfirmedTraining)
                 "
               />
             </div>
@@ -187,14 +171,10 @@
                   : $emit('confirmFinalDraft')
               "
               class="w-full mt-2 px-3 py-2 text-white rounded-lg text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-              :class="
-                currentMode === 'assessment' ? 'bg-green-600' : 'bg-blue-600'
-              "
+              :class="currentMode === 'assessment' ? 'bg-green-600' : 'bg-blue-600'"
               :disabled="
-                (currentMode === 'assessment' &&
-                  !isOriginalDraftConfirmedAssessment) ||
-                (currentMode === 'training' &&
-                  !isOriginalDraftConfirmedTraining) ||
+                (currentMode === 'assessment' && !isOriginalDraftConfirmedAssessment) ||
+                (currentMode === 'training' && !isOriginalDraftConfirmedTraining) ||
                 isGeneratingAssessment ||
                 isSubmitted
               "
@@ -336,8 +316,7 @@ const msgClasses = (msg) =>
 const chatMessages = ref(null);
 function scrollToBottom() {
   nextTick(() => {
-    if (chatMessages.value)
-      chatMessages.value.scrollTop = chatMessages.value.scrollHeight;
+    if (chatMessages.value) chatMessages.value.scrollTop = chatMessages.value.scrollHeight;
   });
 }
 watch(() => props.activeChatHistory?.length, scrollToBottom, { flush: "post" });
@@ -353,10 +332,7 @@ function startDrag(e) {
   const move = (ev) => {
     const currentY = ev.touches?.[0]?.clientY ?? ev.clientY;
     const diff = dragState.startY - currentY;
-    inputHeight.value = Math.max(
-      60,
-      Math.min(400, dragState.startHeight + diff)
-    );
+    inputHeight.value = Math.max(60, Math.min(400, dragState.startHeight + diff));
   };
   const stop = () => {
     window.removeEventListener("mousemove", move);
