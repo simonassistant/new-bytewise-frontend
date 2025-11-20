@@ -28,23 +28,56 @@
             <div class="flex flex-col gap-4 justify-center items-stretch w-full">
               <div class="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <h3 class="font-semibold text-yellow-800 mb-2 text-sm">🔑 API Configuration</h3>
-                <input
-                  type="password"
-                  v-model="apiKey"
-                  placeholder="Paste your API key..."
-                  class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
-                />
-                <p class="text-xs text-gray-600 mt-1">
-                  Get your key from
-                  <a
-                    href="https://genai.hkbu.edu.hk/settings/api-docs"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-indigo-600 hover:underline"
-                  >
-                    HKBU Generative AI Platform (click here) </a
-                  >.
-                </p>
+
+                <!-- Row with API key (left) + dropdown (right), vertically aligned -->
+                <div class="flex flex-col md:flex-row md:items-start md:gap-4 gap-2">
+                  <!-- API key block (left) -->
+                  <div class="w-full md:w-1/2 text-left flex flex-col">
+                    <label class="block text-xs font-semibold text-gray-700 mb-1"> API Key </label>
+                    <input
+                      type="password"
+                      v-model="apiKey"
+                      placeholder="Paste your API key..."
+                      class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
+                    />
+                    <!-- Help text kept inside this column; this won't affect alignment
+                 because the parent uses items-start and both inputs sit in first row -->
+                    <p class="text-xs text-gray-600 mt-1">
+                      Get your key from
+                      <a
+                        href="https://genai.hkbu.edu.hk/settings/api-docs"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-indigo-600 hover:underline"
+                      >
+                        HKBU Generative AI Platform (click here) </a
+                      >.
+                    </p>
+                  </div>
+
+                  <!-- Model dropdown block (right) -->
+                  <div class="w-full md:w-1/2 text-left flex flex-col">
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">
+                      Select Chatbot Model
+                    </label>
+                    <select
+                      v-model="model"
+                      class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-indigo-300"
+                    >
+                      <!-- OpenAI family -->
+                      <optgroup label="OpenAI Models">
+                        <option value="gpt-5">gpt-5</option>
+                        <option value="gpt-5-mini">gpt-5-mini</option>
+                        <option value="gpt-4.1">gpt-4.1</option>
+                        <option value="gpt-4.1-mini">gpt-4.1-mini</option>
+                        <option value="o1">o1</option>
+                        <option value="o3-mini">o3-mini</option>
+                      </optgroup>
+
+                    </select>
+                  </div>
+                </div>
+
                 <button
                   @click="showVideoTutorial = !showVideoTutorial"
                   class="mt-3 text-xs text-indigo-600 hover:text-indigo-800 underline"
@@ -59,7 +92,7 @@
                     allow="fullscreen"
                     style="aspect-ratio: 1 / 1; border: 0; min-height: 480px"
                     title="API Key Setup Tutorial"
-                  />
+                  ></iframe>
                 </div>
               </div>
             </div>
@@ -68,7 +101,7 @@
               <button
                 class="px-20 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium disabled:opacity-50 transition-opacity"
                 @click="connectAPI"
-                :disabled="isConnecting || isConnected || !apiKey.trim()"
+                :disabled="isConnecting || isConnected || !apiKey.trim() || !model"
               >
                 <span v-if="isConnecting">🔄 Connecting...</span>
                 <span v-else-if="isConnected">✔️ Connected</span>
@@ -172,6 +205,7 @@
         @confirmDraft="confirmDraft"
         @submitAssessment="submitAssessment"
         @confirmFinalDraft="confirmFinalDraft"
+        @update:currentTopic="handleTopicChange"
       />
 
       <!-- Report Modal -->
@@ -248,7 +282,7 @@ const notification = ref({ message: "", type: "success", visible: false });
 const isThinking = ref(false);
 const isConnected = ref(false);
 const isConnecting = ref(false);
-const model = ref("gpt-4.1");
+const model = ref("gpt-5-mini");
 const isOriginalDraftConfirmed = ref(false);
 const bulletPoints = ref("No bullet points extracted yet.");
 const hasSubmittedTrainingBackground = ref(false);
@@ -287,7 +321,10 @@ const courseInfoAssessment = ref(`
 `);
 
 const reprotInfo = ref("");
-
+const currentTopic =
+  ref(`Some people believe that individual actions are insignificant in the fight
+            against climate change compared to the efforts of governments and large corporations. To
+            what extent do you agree or disagree with this statement?`);
 const modeColors = {
   training: "bg-green-100 text-green-800",
   assessment: "bg-red-100 text-red-800",
@@ -321,13 +358,32 @@ const { sendMessage, talkToChatbot } = useChatFunctions({
   isUpdatingDraft,
   courseInfo,
   courseInfoAssessment,
+  currentTopic,
 });
 function openTutorial() {
   window.open("https://smartlessons.hkbu.tech/tutorial-training-mode.html", "_blank");
 }
+
+function handleTopicChange(newTopic) {
+  if (newTopic == "Automation") {
+    currentTopic.value = `Automation is transforming industries, potentially reducing jobs while boosting
+                  efficiency. Does this technological shift ultimately enhance or undermine global
+                  employment prospects in the long term?`;
+  } else if (newTopic == "Migrant") {
+    currentMode.value = `Migrant workers face exploitation due to weak regulations, enduring long hours and
+                  unfair pay. Should governments enforce stricter laws to safeguard their rights?`;
+  }
+}
 /* ------------ Mode Switching ------------ */
 async function switchMode(mode) {
   // Save current drafts before switching
+  if(!isConnected.value && mode !== "briefing") {
+    return Swal.fire({
+      title: "Not connected to API",
+      text: "Please connect to the chatbot API before switching modes.",
+      icon: "warning",
+    });
+  }
   if (currentMode.value === "training") {
     trainingOriginalDraft.value = originalDraft.value;
     trainingFinalDraft.value = finalDraft.value;

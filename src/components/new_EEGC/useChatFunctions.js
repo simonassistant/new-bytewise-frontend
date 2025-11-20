@@ -17,6 +17,7 @@ export function useChatFunctions({
     isUpdatingDraft,
     courseInfo,
     courseInfoAssessment,
+    currentTopic
 }) {
     async function talkToChatbot(chat_history) {
         const res = await fetch(`${BASE_URL}/chatbot/chat`, {
@@ -61,6 +62,7 @@ export function useChatFunctions({
                             Assessment_Mode_Prompt +
                             "These are the student information details:\n" +
                             `Course Info: ${courseInfoAssessment.value || "(none)"}\n` +
+                            `Current Topic: ${currentTopic.value || "(none)"}\n` +
                             "Original Draft:\n---\n" +
                             `${originalDraft.value || "(empty)"}\n---\n\n` +
                             "Current Revised Version:\n---\n" +
@@ -77,6 +79,7 @@ export function useChatFunctions({
                             Trainging_Mode_Prompt +
                             "These are the student information details:\n" +
                             `Course Info: ${courseInfo.value || "(none)"}\n` +
+                            `Current Topic: ${currentTopic.value || "(none)"}\n` +
                             "Original Draft:\n---\n" +
                             `${originalDraft.value || "(empty)"}\n---\n\n` +
                             "Final Draft:\n---\n" +

@@ -73,6 +73,63 @@
             against climate change compared to the efforts of governments and large corporations. To
             what extent do you agree or disagree with this statement?
           </div>
+          <div class="bg-gray-100 border border-gray-300 text-gray-800 rounded-md p-4 mb-4" v-else>
+            <div class="space-y-3">
+              <p class="text-sm font-semibold text-gray-800">Select Topic</p>
+
+              <!-- Switch buttons -->
+              <div class="inline-flex rounded-full bg-gray-100 p-1 shadow-inner" role="tablist">
+                <!-- Automation button -->
+                <button
+                  type="button"
+                  class="px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                  :class="
+                    currentTopic === 'Automation'
+                      ? 'bg-indigo-600 text-white shadow'
+                      : 'text-gray-600 hover:text-gray-800'
+                  "
+                  @click="selectTopic('Automation')"
+                  role="tab"
+                  :aria-selected="(currentTopic === 'Automation').toString()"
+                >
+                  Automation
+                </button>
+
+                <!-- Migrant button -->
+                <button
+                  type="button"
+                  class="ml-1 px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                  :class="
+                    currentTopic === 'Migrant'
+                      ? 'bg-indigo-600 text-white shadow'
+                      : 'text-gray-600 hover:text-gray-800'
+                  "
+                  @click="selectTopic('Migrant')"
+                  role="tab"
+                  :aria-selected="(currentTopic === 'Migrant').toString()"
+                >
+                  Migrant Workers
+                </button>
+              </div>
+
+              <!-- Description text below (auto-wraps nicely) -->
+              <div
+                class="text-xs sm:text-sm text-gray-700 leading-relaxed border border-gray-200 rounded-lg p-3 bg-white"
+              >
+                <template v-if="currentTopic === 'Automation'">
+                  Automation is transforming industries, potentially reducing jobs while boosting
+                  efficiency. Does this technological shift ultimately enhance or undermine global
+                  employment prospects in the long term?
+                </template>
+
+                <template v-else-if="currentTopic === 'Migrant'">
+                  Migrant workers face exploitation due to weak regulations, enduring long hours and
+                  unfair pay. Should governments enforce stricter laws to safeguard their rights?
+                </template>
+              </div>
+            </div>
+          </div>
+
           <div class="bg-white p-4 rounded-lg shadow">
             <h2 class="text-lg font-bold mb-2">
               {{ currentMode === "assessment" ? "Your Original Essay" : "Original Draft" }}
@@ -127,14 +184,6 @@
                 <label> <input type="checkbox" /> Step 5: Submit the final draft </label>
               </li>
             </ul>
-            <!-- <div v-if="isUpdatingDraft" class="p-3 text-gray-500 text-sm italic">
-              Updating bullet points...
-            </div>
-            <div
-              v-else
-              class="prose prose-sm max-w-none break-words px-4 [&_pre]:whitespace-pre-wrap [&_code]:whitespace-pre-wrap [&_ol]:list-decimal [&_ul]:list-disc"
-              v-html="renderMarkdown(activeBulletPoints)"
-            /> -->
           </div>
           <!-- Final Draft -->
           <div class="bg-white p-4 rounded-lg shadow">
@@ -224,6 +273,7 @@ const emits = defineEmits([
   "update:userMessage",
   "update:originalDraft",
   "update:finalDraft",
+  "update:currentTopic",   // 🔹 new emit
   "sendMessage",
   "confirmDraft",
   "submitAssessment",
@@ -235,11 +285,14 @@ const emits = defineEmits([
 ------------------------------ */
 const trainingBulletPoints = ref("No bullet points extracted yet.");
 const assessmentBulletPoints = ref("No bullet points extracted yet.");
+const currentTopic = ref("Automation");
+
 onMounted(() => {
   if (props.currentMode == "training") {
     localFinalDraft.value = props.originalDraft;
   }
 });
+
 // track which was last updated
 watch(
   () => props.bulletPoints,
@@ -253,10 +306,13 @@ watch(
   { immediate: true }
 );
 
-// compute active bullet points based on mode
-// const activeBulletPoints = computed(() =>
-//   props.currentMode === "training" ? trainingBulletPoints.value : assessmentBulletPoints.value
-// );
+/* -----------------------------
+   ✅ Emit when topic selected
+------------------------------ */
+function selectTopic(topic) {
+  currentTopic.value = topic;
+  emits("update:currentTopic", topic);
+}
 
 /* -----------------------------
    ✅ Mode-specific originality confirmation
@@ -271,7 +327,7 @@ const activeIsOriginalDraftConfirmed = computed(() =>
 );
 
 async function confirmModeSpecificDraft() {
-  await emits("confirmDraft"); //this await is useful, do not trust IDE warings
+  await emits("confirmDraft"); // this await is useful, do not trust IDE warnings
   if (!props.isOriginalDraftConfirmed) return;
   if (props.currentMode === "assessment") {
     isOriginalDraftConfirmedAssessment.value = true;
