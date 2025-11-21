@@ -73,7 +73,6 @@
                         <option value="o1">o1</option>
                         <option value="o3-mini">o3-mini</option>
                       </optgroup>
-
                     </select>
                   </div>
                 </div>
@@ -321,8 +320,7 @@ const courseInfoAssessment = ref(`
 `);
 
 const reprotInfo = ref("");
-const currentTopic =
-  ref(`Some people believe that individual actions are insignificant in the fight
+const currentTopic = ref(`Some people believe that individual actions are insignificant in the fight
             against climate change compared to the efforts of governments and large corporations. To
             what extent do you agree or disagree with this statement?`);
 const modeColors = {
@@ -365,19 +363,19 @@ function openTutorial() {
 }
 
 function handleTopicChange(newTopic) {
-  if (newTopic == "Automation") {
+  if (newTopic.toLowerCase() == "automation") {
     currentTopic.value = `Automation is transforming industries, potentially reducing jobs while boosting
                   efficiency. Does this technological shift ultimately enhance or undermine global
                   employment prospects in the long term?`;
-  } else if (newTopic == "Migrant") {
-    currentMode.value = `Migrant workers face exploitation due to weak regulations, enduring long hours and
+  } else if (newTopic.toLowerCase() == "migrant") {
+    currentTopic.value = `Migrant workers face exploitation due to weak regulations, enduring long hours and
                   unfair pay. Should governments enforce stricter laws to safeguard their rights?`;
   }
 }
 /* ------------ Mode Switching ------------ */
 async function switchMode(mode) {
   // Save current drafts before switching
-  if(!isConnected.value && mode !== "briefing") {
+  if (!isConnected.value && mode !== "briefing") {
     return Swal.fire({
       title: "Not connected to API",
       text: "Please connect to the chatbot API before switching modes.",
