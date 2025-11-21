@@ -77,55 +77,58 @@
             <div class="space-y-3">
               <p class="text-sm font-semibold text-gray-800">Select Topic</p>
 
-              <!-- Switch buttons -->
-              <div class="inline-flex rounded-full bg-gray-100 p-1 shadow-inner" role="tablist">
-                <!-- Automation button -->
+              <div class="space-y-3">
+                <!-- Automation block -->
                 <button
                   type="button"
-                  class="px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                  class="w-full text-left rounded-lg border p-3 sm:p-4 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                   :class="
                     currentTopic === 'Automation'
-                      ? 'bg-indigo-600 text-white shadow'
-                      : 'text-gray-600 hover:text-gray-800'
+                      ? 'border-indigo-600 bg-indigo-50 shadow-sm'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
                   "
                   @click="selectTopic('Automation')"
-                  role="tab"
-                  :aria-selected="(currentTopic === 'Automation').toString()"
+                  role="radio"
+                  :aria-checked="(currentTopic === 'Automation').toString()"
                 >
-                  Automation
+                  <p
+                    class="text-xs sm:text-sm font-semibold mb-1"
+                    :class="currentTopic === 'Automation' ? 'text-indigo-700' : 'text-gray-800'"
+                  >
+                    Automation
+                  </p>
+                  <p class="text-xs sm:text-sm text-gray-700 leading-relaxed">
+                    Automation is transforming industries, potentially reducing jobs while boosting
+                    efficiency. Does this technological shift ultimately enhance or undermine global
+                    employment prospects in the long term?
+                  </p>
                 </button>
 
-                <!-- Migrant button -->
+                <!-- Migrant Workers block -->
                 <button
                   type="button"
-                  class="ml-1 px-4 py-2 text-xs sm:text-sm font-medium rounded-full transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+                  class="w-full text-left rounded-lg border p-3 sm:p-4 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
                   :class="
                     currentTopic === 'Migrant'
-                      ? 'bg-indigo-600 text-white shadow'
-                      : 'text-gray-600 hover:text-gray-800'
+                      ? 'border-indigo-600 bg-indigo-50 shadow-sm'
+                      : 'border-gray-200 bg-white hover:border-gray-300'
                   "
                   @click="selectTopic('Migrant')"
-                  role="tab"
-                  :aria-selected="(currentTopic === 'Migrant').toString()"
+                  role="radio"
+                  :aria-checked="(currentTopic === 'Migrant').toString()"
                 >
-                  Migrant Workers
+                  <p
+                    class="text-xs sm:text-sm font-semibold mb-1"
+                    :class="currentTopic === 'Migrant' ? 'text-indigo-700' : 'text-gray-800'"
+                  >
+                    Migrant Workers
+                  </p>
+                  <p class="text-xs sm:text-sm text-gray-700 leading-relaxed">
+                    Migrant workers face exploitation due to weak regulations, enduring long hours
+                    and unfair pay. Should governments enforce stricter laws to safeguard their
+                    rights?
+                  </p>
                 </button>
-              </div>
-
-              <!-- Description text below (auto-wraps nicely) -->
-              <div
-                class="text-xs sm:text-sm text-gray-700 leading-relaxed border border-gray-200 rounded-lg p-3 bg-white"
-              >
-                <template v-if="currentTopic === 'Automation'">
-                  Automation is transforming industries, potentially reducing jobs while boosting
-                  efficiency. Does this technological shift ultimately enhance or undermine global
-                  employment prospects in the long term?
-                </template>
-
-                <template v-else-if="currentTopic === 'Migrant'">
-                  Migrant workers face exploitation due to weak regulations, enduring long hours and
-                  unfair pay. Should governments enforce stricter laws to safeguard their rights?
-                </template>
               </div>
             </div>
           </div>
@@ -273,7 +276,7 @@ const emits = defineEmits([
   "update:userMessage",
   "update:originalDraft",
   "update:finalDraft",
-  "update:currentTopic",   // 🔹 new emit
+  "update:currentTopic", // 🔹 new emit
   "sendMessage",
   "confirmDraft",
   "submitAssessment",
