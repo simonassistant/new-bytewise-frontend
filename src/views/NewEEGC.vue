@@ -619,7 +619,6 @@ onMounted(async () => {
   const saved = localStorage.getItem("chatbot_api_key");
   if (saved) {
     apiKey.value = saved;
-    await connectAPI(true);
   }
   switchMode(currentMode.value);
 });
