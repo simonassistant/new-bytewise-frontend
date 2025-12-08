@@ -1,5 +1,43 @@
 <template>
-  <div class="w-full p-4 flex-1 flex flex-col">
+  <!-- Password Protection Screen -->
+  <div 
+    v-if="!isPasswordVerified" 
+    class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full mx-4">
+      <div class="text-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">🔒 Protected Page</h1>
+        <p class="text-gray-600">Please enter the password to access this page</p>
+      </div>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+          <input
+            v-model="passwordInput"
+            type="password"
+            @keyup.enter="verifyPassword"
+            placeholder="Enter password..."
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+            :class="passwordError ? 'border-red-500' : ''"
+          />
+          <p v-if="passwordError" class="mt-2 text-sm text-red-600">
+            ❌ {{ passwordError }}
+          </p>
+        </div>
+        
+        <button
+          @click="verifyPassword"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        >
+          Unlock
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content (only shown after password verification) -->
+  <div v-else class="w-full p-4 flex-1 flex flex-col">
     <!-- Header -->
     <CourseHeader />
     <!-- Mode Selection -->
@@ -246,6 +284,12 @@ import {
 } from "@/components/new_EEGC/promptAndEssay.js";
 
 /* ------------ State ------------ */
+/* Password Protection */
+const isPasswordVerified = ref(false);
+const passwordInput = ref("");
+const passwordError = ref("");
+const CORRECT_PASSWORD = "A-password";
+
 const currentMode = ref("briefing");
 const stats = ref({ exchanges: 0, questions: 0, revisions: 0 });
 
@@ -358,6 +402,19 @@ const { sendMessage, talkToChatbot } = useChatFunctions({
   courseInfoAssessment,
   currentTopic,
 });
+/* ------------ Password Verification ------------ */
+function verifyPassword() {
+  if (passwordInput.value === CORRECT_PASSWORD) {
+    isPasswordVerified.value = true;
+    passwordError.value = "";
+    // Store verification in session (optional - will require password again on page refresh)
+    sessionStorage.setItem("eegc_password_verified", "true");
+  } else {
+    passwordError.value = "Incorrect password. Please try again.";
+    passwordInput.value = "";
+  }
+}
+
 function openTutorial() {
   window.open("https://smartlessons.hkbu.tech/tutorial-training-mode.html", "_blank");
 }
@@ -615,6 +672,12 @@ const handleBeforeUnload = (e) => {
 };
 
 onMounted(async () => {
+  // Check if password was already verified in this session
+  const sessionVerified = sessionStorage.getItem("eegc_password_verified");
+  if (sessionVerified === "true") {
+    isPasswordVerified.value = true;
+  }
+  
   window.addEventListener("beforeunload", handleBeforeUnload);
   const saved = localStorage.getItem("chatbot_api_key");
   if (saved) {
