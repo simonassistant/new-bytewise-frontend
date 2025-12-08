@@ -4,7 +4,7 @@ import Home from '../views/HomePage.vue'
 import Chat from '../views/ChatPage.vue'
 import Avatar from '../views/AvatarPage.vue'
 import WritingBot from '../views/WritingBot.vue'
-import EEGC from '../views/NewEEGC.vue'
+import CloseEEGC from '../views/ClouseEEGC.vue'
 import ThreeBotsSimulation from '../views/ThreeBotsSimulation.vue'
 import NotFound from '../views/NotFound.vue'
 const routes = [
@@ -28,7 +28,7 @@ const routes = [
   {
     path: '/EEGC',
     name: 'EEGC',
-    component: EEGC
+    component: CloseEEGC
   },
   {
     path: '/old_EEGC',
