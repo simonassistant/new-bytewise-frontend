@@ -1,4 +1,5 @@
 <template>
+  {{ imageSrc }}
   <div
     v-if="assetsLoaded"
     class="relative w-64 h-64 rounded-full mx-auto overflow-hidden transition-all duration-300"
@@ -44,6 +45,10 @@ const props = defineProps({
     type: String,
     default: "male",
   },
+  appearance: {
+    type: String,
+    default: "asain",
+  },
   gradientFrom: {
     type: String,
     default: "from-indigo-500",
@@ -58,15 +63,33 @@ const assetsLoaded = ref(false);
 
 // Dynamically set image and video based on gender
 const imageSrc = computed(() => {
-  return props.gender === "female"
-    ? new URL("./woman.jpg", import.meta.url).href
-    : new URL("./man.jpg", import.meta.url).href;
+  const isFemale = props.gender === "female";
+  const appearance = props.appearance; // or props.apperance if that's the actual prop
+
+  if (appearance === "asian") {
+    return isFemale
+      ? new URL("./asian_woman.jpg", import.meta.url).href
+      : new URL("./asian_man.jpg", import.meta.url).href;
+  } else {
+    return isFemale
+      ? new URL("./western_woman.jpg", import.meta.url).href
+      : new URL("./western_man.jpg", import.meta.url).href;
+  }
 });
 
 const videoSrc = computed(() => {
-  return props.gender === "female"
-    ? new URL("./woman_talk.mp4", import.meta.url).href
-    : new URL("./man_talk.mp4", import.meta.url).href;
+  const isFemale = props.gender === "female";
+  const appearance = props.appearance; // or props.apperance
+
+  if (appearance === "asian") {
+    return isFemale
+      ? new URL("./asian_woman_talk.mp4", import.meta.url).href
+      : new URL("./asian_man_talk.mp4", import.meta.url).href;
+  } else {
+    return isFemale
+      ? new URL("./western_woman_talk.mp4", import.meta.url).href
+      : new URL("./western_man_talk.mp4", import.meta.url).href;
+  }
 });
 
 // Preload functions
@@ -89,10 +112,7 @@ const preloadVideo = (src) =>
 
 onMounted(async () => {
   try {
-    await Promise.all([
-      preloadImage(imageSrc.value),
-      preloadVideo(videoSrc.value),
-    ]);
+    await Promise.all([preloadImage(imageSrc.value), preloadVideo(videoSrc.value)]);
   } catch (err) {
     console.warn("Asset preload failed:", err);
   } finally {

@@ -39,7 +39,7 @@
         v-if="showAvatar"
         class="chat-avatar-container flex justify-center items-center py-4 border-b"
       >
-        <AvatarComponent :state="avatarState" :gender="avatarGender" />
+        <AvatarComponent :state="avatarState" :gender="avatarGender" :appearance="avatarAppearance" />
       </div>
 
       <!-- Messages -->
@@ -217,7 +217,7 @@ const showAvatar = ref(true);
 const userName = ref("");
 const userEmail = ref("");
 const chatInput = ref(null);
-
+const avatarAppearance = ref("");
 let socket = null;
 const {
   isRecording,
@@ -303,7 +303,9 @@ onMounted(async () => {
   welcomePrompt.value = selectedBot.value.welcomePrompt;
   model.value = selectedBot.value.model;
   avatarGender.value = selectedBot.value.gender || "male";
+  avatarAppearance.value = selectedBot.value.appearance || "asian";
   await getAzureToken();
+
 });
 
 function focusInput() {
