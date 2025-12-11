@@ -1,5 +1,4 @@
 <template>
-  {{ imageSrc }}
   <div
     v-if="assetsLoaded"
     class="relative w-64 h-64 rounded-full mx-auto overflow-hidden transition-all duration-300"
