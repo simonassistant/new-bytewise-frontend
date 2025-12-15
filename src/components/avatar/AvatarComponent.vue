@@ -1,7 +1,7 @@
 <template>
   <div
     v-if="assetsLoaded"
-    class="relative w-64 h-64 rounded-full mx-auto overflow-hidden transition-all duration-300"
+    class="relative w-full h-full rounded-full mx-auto overflow-hidden transition-all duration-300"
     :class="faceClasses"
   >
     <!-- Speaking animation (video) -->
@@ -27,7 +27,7 @@
   </div>
 
   <!-- Optional Loader / Placeholder -->
-  <div v-else class="w-64 h-64 flex items-center justify-center text-gray-500 mx-auto">
+  <div v-else class="w-full h-full flex items-center justify-center text-gray-500 mx-auto text-sm sm:text-base">
     Loading...
   </div>
 </template>

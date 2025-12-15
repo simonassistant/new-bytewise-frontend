@@ -1,32 +1,40 @@
 <template>
   <div
     v-if="selectedBot"
-    class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800"
+    class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-gray-800 relative"
   >
+    <!-- Mobile Sidebar Overlay -->
+    <div
+      v-if="isSidebarOpen"
+      class="fixed inset-0 bg-black/50 z-40 md:hidden"
+      @click="isSidebarOpen = false"
+    ></div>
+
     <!-- Left Sidebar -->
     <LeftSidebar
       v-model:isOpen="isSidebarOpen"
       @updateUserData="handleUserDataUpdate"
       :tokenUsage="tokenUsage"
+      class="md:relative fixed md:z-auto z-50 h-full"
     />
 
     <!-- Main Chat Area -->
     <div
-      class="flex flex-col flex-1 bg-white shadow-lg overflow-hidden transition-all duration-300"
+      class="flex flex-col flex-1 bg-white shadow-lg overflow-hidden transition-all duration-300 w-full md:w-auto"
     >
       <!-- Header -->
       <div
-        class="chat-header flex justify-between items-center p-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white"
+        class="chat-header flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 sm:p-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white gap-3"
       >
-        <div>
-          <h1 class="text-xl font-bold">{{ selectedBot.name }}</h1>
-          <div class="text-sm opacity-80">🎙️ Speak with your AI assistant</div>
+        <div class="flex-1 min-w-0">
+          <h1 class="text-lg sm:text-xl font-bold truncate">{{ selectedBot.name }}</h1>
+          <div class="text-xs sm:text-sm opacity-80">🎙️ Speak with your AI assistant</div>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-1 sm:gap-2 flex-wrap">
           <button
             v-for="btn in headerButtons"
             :key="btn.id"
-            class="bg-white/20 px-3 py-1 rounded-lg hover:bg-white/30"
+            class="bg-white/20 px-2 sm:px-3 py-1 rounded-lg hover:bg-white/30 text-xs sm:text-sm whitespace-nowrap"
             @click="btn.action"
           >
             {{ btn.label }}
@@ -37,20 +45,22 @@
       <!-- Avatar moved here -->
       <div
         v-if="showAvatar"
-        class="chat-avatar-container flex justify-center items-center py-4 border-b"
+        class="chat-avatar-container flex justify-center items-center py-2 sm:py-4 border-b"
       >
-        <AvatarComponent :state="avatarState" :gender="avatarGender" :appearance="avatarAppearance" />
+        <div class="w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64">
+          <AvatarComponent :state="avatarState" :gender="avatarGender" :appearance="avatarAppearance" />
+        </div>
       </div>
 
       <!-- Messages -->
-      <div ref="messagesContainer" class="chat-messages flex-1 overflow-y-auto p-5 space-y-4">
+      <div ref="messagesContainer" class="chat-messages flex-1 overflow-y-auto p-3 sm:p-5 space-y-3 sm:space-y-4">
         <div v-for="(msg, i) in formattedMessages" :key="i" class="flex" :class="msg.align">
           <div
-            class="max-w-8xl px-4 py-3 rounded-2xl shadow text-base break-words"
+            class="max-w-[85%] sm:max-w-2xl md:max-w-3xl px-3 sm:px-4 py-2 sm:py-3 rounded-2xl shadow text-sm sm:text-base break-words"
             :class="msg.style"
           >
             <div class="font-semibold text-xs mb-1">{{ msg.label }}</div>
-            <div class="text-base whitespace-pre-wrap">{{ msg.content }}</div>
+            <div class="text-sm sm:text-base whitespace-pre-wrap">{{ msg.content }}</div>
             <div class="text-xs text-gray-400 mt-2 text-right">
               {{ msg.time }}
             </div>
@@ -59,14 +69,14 @@
       </div>
 
       <!-- Input -->
-      <div class="chat-input-container p-4 border-t bg-gray-50 relative">
+      <div class="chat-input-container p-3 sm:p-4 border-t bg-gray-50 relative">
         <!-- Overlay if not connected -->
         <div
           v-if="!isConnected"
           class="absolute inset-0 flex items-center justify-center bg-white/70 z-10"
         >
           <button
-            class="px-6 py-3 rounded-full bg-blue-500 text-white text-lg font-bold shadow-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            class="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-blue-500 text-white text-base sm:text-lg font-bold shadow-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
             @click="connectAPI"
             :disabled="isConnecting"
           >
@@ -75,9 +85,9 @@
         </div>
 
         <!-- Mode Toggle -->
-        <div class="flex justify-end mb-4">
+        <div class="flex justify-center sm:justify-end mb-3 sm:mb-4">
           <div class="flex items-center space-x-2">
-            <span class="text-sm font-medium text-gray-700">Audio Mode</span>
+            <span class="text-xs sm:text-sm font-medium text-gray-700">Audio</span>
             <button
               @click="toggleInputMode"
               :class="[
@@ -92,15 +102,15 @@
                 ]"
               ></span>
             </button>
-            <span class="text-sm font-medium text-gray-700">Text Mode</span>
+            <span class="text-xs sm:text-sm font-medium text-gray-700">Text</span>
           </div>
         </div>
 
         <!-- Audio Input -->
         <div v-if="inputMode === 'audio'">
-          <div class="flex justify-center">
+          <div class="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4">
             <button
-              class="px-6 py-3 rounded-full bg-red-500 text-white text-lg font-bold shadow-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              class="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-red-500 text-white text-base sm:text-lg font-bold shadow-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto"
               :disabled="!isConnected || isPlaying || isLoading"
               @click="handleToggleRecording"
             >
@@ -108,7 +118,7 @@
             </button>
 
             <button
-              class="px-6 py-3 rounded-full bg-green-600 text-white text-lg font-bold shadow-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed ml-4"
+              class="px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-green-600 text-white text-base sm:text-lg font-bold shadow-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto"
               :disabled="!chatHistory.length"
               @click="finishAndScroll"
               title="Finish & View Report"
@@ -119,31 +129,33 @@
         </div>
 
         <!-- Text Input -->
-        <div v-else class="flex items-center space-x-2">
+        <div v-else class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2">
           <input
             ref="chatInput"
             v-model="userText"
             @keyup.enter="sendTextToChatbot"
             type="text"
             placeholder="Type your message..."
-            class="flex-1 p-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow disabled:bg-gray-100"
+            class="flex-1 p-2 sm:p-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-shadow disabled:bg-gray-100 text-sm sm:text-base"
             :disabled="!isConnected || isLoading"
           />
-          <button
-            @click="sendTextToChatbot"
-            :disabled="!isConnected || !userText.trim() || isLoading || isPlaying"
-            class="px-6 py-3 rounded-full bg-indigo-600 text-white font-bold shadow-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-          >
-            Send
-          </button>
-          <button
-            class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow transition transform hover:scale-105"
-            :disabled="!chatHistory.length"
-            @click="showReport = true"
-            title="Finish & View Report"
-          >
-            ✓
-          </button>
+          <div class="flex gap-2">
+            <button
+              @click="sendTextToChatbot"
+              :disabled="!isConnected || !userText.trim() || isLoading || isPlaying"
+              class="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-indigo-600 text-white text-sm sm:text-base font-bold shadow-lg hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+            >
+              Send
+            </button>
+            <button
+              class="px-3 sm:px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed shadow transition transform hover:scale-105 text-sm sm:text-base"
+              :disabled="!chatHistory.length"
+              @click="showReport = true"
+              title="Finish & View Report"
+            >
+              ✓
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -161,6 +173,7 @@
   </div>
   <!-- Report Modal -->
   <ReportModal
+    ref="reportModalRef"
     :show="showReport"
     :chatHistory="chatHistory"
     :userCount="userCount"
@@ -175,7 +188,7 @@
   <!-- Notification -->
   <div
     v-if="notification.visible"
-    class="fixed top-5 right-5 z-50 px-4 py-3 rounded-lg shadow-lg text-white"
+    class="fixed top-3 right-3 sm:top-5 sm:right-5 z-50 px-3 sm:px-4 py-2 sm:py-3 rounded-lg shadow-lg text-white text-sm sm:text-base max-w-[calc(100vw-1.5rem)]"
     :class="notificationClass"
   >
     {{ notification.message }}
@@ -204,7 +217,7 @@ const systemPrompt = ref("");
 const welcomePrompt = ref("");
 const model = ref("");
 const isConnected = ref(false);
-const isSidebarOpen = ref(true);
+const isSidebarOpen = ref(false); // Closed by default on mobile
 const inputMode = ref("audio");
 const userText = ref("");
 const isLoading = ref(false);
@@ -257,16 +270,28 @@ const formattedMessages = computed(() =>
     time: m.timestamp.toLocaleTimeString(),
   }))
 );
+const reportModalRef = ref(null);
+
 function finishAndScroll() {
   showReport.value = true;
 
-  // Wait until the DOM updates and then scroll
+  // Wait until the DOM updates and then scroll to the modal
   nextTick(() => {
-    // Scroll to the bottom of the page
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: "smooth",
-    });
+    if (reportModalRef.value?.$el) {
+      reportModalRef.value.$el.scrollIntoView({ 
+        behavior: "smooth", 
+        block: "start" 
+      });
+    } else {
+      // Fallback: try to find the modal element
+      const modalElement = document.querySelector('.bg-white.w-full.rounded-lg.shadow-xl');
+      if (modalElement) {
+        modalElement.scrollIntoView({ 
+          behavior: "smooth", 
+          block: "start" 
+        });
+      }
+    }
   });
 }
 const notificationClass = computed(() =>
@@ -304,6 +329,12 @@ onMounted(async () => {
   model.value = selectedBot.value.model;
   avatarGender.value = selectedBot.value.gender || "male";
   avatarAppearance.value = selectedBot.value.appearance || "asian";
+  
+  // Open sidebar by default on desktop, closed on mobile
+  if (window.innerWidth >= 768) {
+    isSidebarOpen.value = true;
+  }
+  
   await getAzureToken();
 
 });
