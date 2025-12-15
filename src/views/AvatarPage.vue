@@ -173,6 +173,7 @@
   </div>
   <!-- Report Modal -->
   <ReportModal
+    v-if="selectedBot"
     ref="reportModalRef"
     :show="showReport"
     :chatHistory="chatHistory"

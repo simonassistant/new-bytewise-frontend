@@ -27,7 +27,10 @@
   </div>
 
   <!-- Optional Loader / Placeholder -->
-  <div v-else class="w-full h-full flex items-center justify-center text-gray-500 mx-auto text-sm sm:text-base">
+  <div
+    v-else
+    class="w-full h-full flex items-center justify-center text-gray-500 mx-auto text-sm sm:text-base"
+  >
     Loading...
   </div>
 </template>
@@ -65,6 +68,10 @@ const imageSrc = computed(() => {
   const isFemale = props.gender === "female";
   const appearance = props.appearance; // or props.apperance if that's the actual prop
 
+  if (appearance.includes("Mr")) {
+    return new URL(`./${appearance}.png`, import.meta.url).href;
+  }
+
   if (appearance === "asian") {
     return isFemale
       ? new URL("./asian_woman.jpg", import.meta.url).href
@@ -79,7 +86,9 @@ const imageSrc = computed(() => {
 const videoSrc = computed(() => {
   const isFemale = props.gender === "female";
   const appearance = props.appearance; // or props.apperance
-
+  if (appearance.includes("Mr")) {
+    return new URL(`./${appearance}_talk.mp4`, import.meta.url).href;
+  }
   if (appearance === "asian") {
     return isFemale
       ? new URL("./asian_woman_talk.mp4", import.meta.url).href
