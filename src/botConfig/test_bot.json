@@ -1,5 +1,5 @@
 {
-  "name": "A test bot",
+  "name": "Test bot1 ",
   "styleClass": "from-blue-400 to-purple-600",
   "model": "gpt-4.1-mini",
   "welcomePrompt": "hi, this is a test avatar.",
