@@ -60,7 +60,26 @@
       </div>
 
       <div class="p-4 border-t bg-gray-50">
-        <div v-if="!isConnected" class="flex items-center justify-center py-4">
+        <div class="flex justify-center mb-3">
+          <div class="inline-flex items-center bg-gray-200 rounded-full p-1">
+            <button
+              @click="switchToTextMode"
+              :class="['px-4 py-1.5 rounded-full text-sm font-medium transition', inputMode === 'text' ? 'bg-white shadow text-indigo-600' : 'text-gray-600 hover:text-gray-800']"
+            >
+              ⌨️ Type
+            </button>
+            <button
+              @click="switchToVoiceMode"
+              :class="['px-4 py-1.5 rounded-full text-sm font-medium transition', inputMode === 'voice' ? 'bg-white shadow text-purple-600' : 'text-gray-600 hover:text-gray-800']"
+              :title="!voiceAvailable ? 'Voice requires Azure Speech credentials' : ''"
+            >
+              🎤 Speak
+              <span v-if="!voiceAvailable" class="text-xs opacity-60">🔒</span>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="!isConnected" class="flex items-center justify-center py-2">
           <button
             @click="connectAndStart"
             :disabled="isConnecting"
@@ -71,25 +90,6 @@
         </div>
 
         <div v-else>
-          <div class="flex justify-center mb-3">
-            <div class="inline-flex items-center bg-gray-200 rounded-full p-1">
-              <button
-                @click="switchToTextMode"
-                :class="['px-4 py-1.5 rounded-full text-sm font-medium transition', inputMode === 'text' ? 'bg-white shadow text-indigo-600' : 'text-gray-600 hover:text-gray-800']"
-              >
-                ⌨️ Type
-              </button>
-              <button
-                @click="switchToVoiceMode"
-                :class="['px-4 py-1.5 rounded-full text-sm font-medium transition', inputMode === 'voice' ? 'bg-white shadow text-purple-600' : 'text-gray-600 hover:text-gray-800']"
-                :title="!voiceAvailable ? 'Voice requires Azure Speech credentials' : ''"
-              >
-                🎤 Speak
-                <span v-if="!voiceAvailable" class="text-xs opacity-60">🔒</span>
-              </button>
-            </div>
-          </div>
-
           <div v-if="inputMode === 'text'" class="flex gap-2">
             <input
               ref="chatInput"
