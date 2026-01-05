@@ -13,6 +13,7 @@
     "lint": "eslint . --fix"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.89.0",
     "@tailwindcss/vite": "^4.1.13",
     "audiobuffer-to-wav": "^1.0.0",
     "axios": "^1.12.2",

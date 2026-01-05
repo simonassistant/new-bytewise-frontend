@@ -200,8 +200,7 @@
 import { ref, computed, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useChatbotStore } from "../components/text_chatbot/chatbotStore";
-import { io } from "socket.io-client";
-import { BASE_URL } from "@/components/base_url";
+import { chatWithOpenRouter } from "@/lib/chatApi";
 import AvatarComponent from "../components/avatar/AvatarComponent.vue";
 import LeftSidebar from "../components/avatar/LeftSidebar.vue";
 import ReportModal from "../components/avatar/AvatarReportModal.vue";
@@ -232,7 +231,6 @@ const userName = ref("");
 const userEmail = ref("");
 const chatInput = ref(null);
 const avatarAppearance = ref("");
-let socket = null;
 const {
   isRecording,
   isPlaying,
@@ -371,35 +369,21 @@ async function sendMessage(text, via = "text") {
   const idx = chatHistory.value.length - 1;
 
   try {
+    isLoading.value = true;
+    avatarState.value = "thinking";
+    
+    const fullHistory = [
+      { role: "system", content: systemPrompt.value },
+      ...chatHistory.value.slice(0, -1).map(({ role, content }) => ({ role, content })),
+    ];
+
+    const data = await chatWithOpenRouter(fullHistory, model.value);
+    
     let reply;
-    if (via === "text") {
-      isLoading.value = true;
-      avatarState.value = "thinking";
-      const providerUrl = "/chatbot/chat_openrouter";
-      const data = await apiCall(providerUrl, {
-        chat_history: [
-          { role: "system", content: systemPrompt.value },
-          ...chatHistory.value.map(({ role, content }) => ({ role, content })),
-        ],
-        api_key: apiKey.value,
-        model_name: model.value,
-      });
-      reply = data?.choices?.[0]?.message?.content || data?.error || "[No response]";
+    if (data.error) {
+      reply = `❌ ${data.error}`;
     } else {
-      isLoading.value = true;
-      chatHistory.value[idx].content = "⏳ Avatar is thinking...";
-      socket.emit("user_message", {
-        text,
-        system_prompt: systemPrompt.value,
-        api_key: apiKey.value,
-        model: model.value,
-        provider: selectedProvider.value,
-        history: chatHistory.value.map(({ role, content }) => ({ role, content })),
-      });
-      reply = await new Promise((resolve) =>
-        socket.once("assistant_reply", (res) => resolve(res?.content || "[No response]"))
-      );
-      isLoading.value = false;
+      reply = data?.choices?.[0]?.message?.content || "[No response]";
     }
 
     chatHistory.value[idx] = newMessage("assistant", reply);
@@ -433,38 +417,31 @@ function showNotification(msg, type = "success") {
   notification.value = { message: msg, type, visible: true };
   setTimeout(() => (notification.value.visible = false), 3000);
 }
-async function apiCall(endpoint, payload) {
-  const res = await fetch(`${BASE_URL}${endpoint}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
-}
 
 // --- API Connect ---
 async function connectAPI() {
   isConnecting.value = true;
   isConnected.value = false;
   try {
-    let providerUrl = "/chatbot/chat_openrouter";
-    const data = await apiCall(providerUrl, {
-      chat_history: [
-        { role: "system", content: "connection test, return 1 if you can read." },
-        { role: "user", content: "Hello!" },
-      ],
-      api_key: apiKey.value,
-      model_name: model.value,
-    });
-    const reply = data?.choices?.[0]?.message?.content || data?.response || data?.message;
-    if (reply?.trim()) {
-      isConnected.value = true;
-      showNotification("✅ Connected and working!");
+    const testHistory = [
+      { role: "system", content: "connection test, return 1 if you can read." },
+      { role: "user", content: "Hello!" },
+    ];
+
+    const data = await chatWithOpenRouter(testHistory, model.value);
+    
+    if (data.error) {
+      showNotification(`⚠️ ${data.error}`, "error");
     } else {
-      showNotification("⚠️ Connected, but no valid reply.", "error");
+      const reply = data?.choices?.[0]?.message?.content || "";
+      if (reply.trim()) {
+        isConnected.value = true;
+        showNotification("✅ Connected and working!");
+      } else {
+        showNotification("⚠️ Connected, but no valid reply.", "error");
+      }
     }
-    connectWebSocket();
+    
     if (!chatHistory.value.length && isConnected.value) {
       chatHistory.value.push(newMessage("assistant", welcomePrompt.value));
       scrollToBottom();
@@ -476,12 +453,6 @@ async function connectAPI() {
   } finally {
     isConnecting.value = false;
   }
-}
-
-// --- WebSocket ---
-function connectWebSocket() {
-  socket = io(`${BASE_URL}/streaming-avatar`, { transports: ["websocket"] });
-  socket.on("connect", () => console.log("WebSocket connected"));
 }
 
 // --- Chat Actions ---

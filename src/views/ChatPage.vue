@@ -179,7 +179,7 @@
 import { ref, computed, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { useChatbotStore } from "@/components/text_chatbot/chatbotStore";
-import { BASE_URL } from "@/components/base_url";
+import { chatWithOpenRouter, chatWithHKBU, preprocessChatHistory } from "@/lib/chatApi";
 import LeftSidebar from "@/components/text_chatbot/LeftSidebar.vue";
 import ReportModal from "@/components/text_chatbot/ReportModal.vue";
 import MarkdownIt from "markdown-it";
@@ -274,43 +274,37 @@ onMounted(async () => {
 const goBack = () => router.push("/");
 
 async function connectAPI(auto = false) {
-  if (!apiKey.value && !auto) return;
-  localStorage.setItem("chatbot_api_key", apiKey.value);
+  if (!apiKey.value && selectedProvider.value === "hkbu" && !auto) return;
+  if (selectedProvider.value === "hkbu") {
+    localStorage.setItem("chatbot_api_key", apiKey.value);
+  }
 
   isConnecting.value = true;
-  // 🔍 test provider connection by sending a dummy message
   try {
-    let providerUrl = "";
+    const testHistory = [
+      { role: "system", content: "connection test, return 1 if you can read the text." },
+      { role: "user", content: "Hello!" },
+    ];
+
+    let data;
     if (selectedProvider.value === "hkbu") {
-      providerUrl = `${BASE_URL}/chatbot/chat`;
-    } else if (selectedProvider.value === "openrouter") {
-      providerUrl = `${BASE_URL}/chatbot/chat_openrouter`;
+      data = await chatWithHKBU(testHistory, apiKey.value, model.value);
+    } else {
+      data = await chatWithOpenRouter(testHistory, model.value);
     }
 
-    const res = await fetch(providerUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_history: [
-          { role: "system", content: "connection test, return 1 if you can read the text." },
-          { role: "user", content: "Hello!" },
-        ],
-        api_key: apiKey.value,
-        model_name: model.value,
-      }),
-    });
-
-    const data = await res.json();
-
-    // ✅ check if provider replied with content
-    const reply = data?.choices?.[0]?.message?.content || data?.response || data?.message || "";
-
-    if (reply && reply.trim().length > 0) {
-      showNotification("✅ Connected and working!", "success");
-      isConnected.value = true;
-    } else {
-      showNotification("⚠️ Connected, but no valid reply received.", "error");
+    if (data.error) {
+      showNotification(`⚠️ ${data.error}`, "error");
       isConnected.value = false;
+    } else {
+      const reply = data?.choices?.[0]?.message?.content || "";
+      if (reply.trim().length > 0) {
+        showNotification("✅ Connected and working!", "success");
+        isConnected.value = true;
+      } else {
+        showNotification("⚠️ Connected, but no valid reply received.", "error");
+        isConnected.value = false;
+      }
     }
   } catch (err) {
     console.error(err);
@@ -320,7 +314,6 @@ async function connectAPI(auto = false) {
     isConnecting.value = false;
   }
 
-  // welcome message only if chat is empty
   if (!chatHistory.value.length && isConnected.value) {
     chatHistory.value.push(newMessage("assistant", welcomePrompt.value));
     scrollToBottom();
@@ -357,34 +350,27 @@ async function sendTextToChatbot() {
 
   isLoading.value = true;
   try {
-    let providerUrl = "";
-    if (selectedProvider.value == "hkbu") {
-      providerUrl = `${BASE_URL}/chatbot/chat`;
-    } else if (selectedProvider.value == "openrouter") {
-      providerUrl = `${BASE_URL}/chatbot/chat_openrouter`;
-    }
-    const res = await fetch(providerUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_history: [
-          { role: "system", content: systemPrompt.value }, // wrap systemPrompt as system role
-          ...chatHistory.value.map(({ role, content }) => ({
-            role,
-            content,
-          })),
-        ],
-        api_key: apiKey.value,
-        model_name: model.value,
-      }),
-    });
-    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+    const fullHistory = [
+      { role: "system", content: systemPrompt.value },
+      ...chatHistory.value.slice(0, -1).map(({ role, content }) => ({ role, content })),
+    ];
 
-    const data = await res.json();
-    chatHistory.value[idx] = newMessage(
-      "assistant",
-      data?.choices?.[0]?.message?.content || data?.error || "[No response]"
-    );
+    let data;
+    if (selectedProvider.value === "hkbu") {
+      const processedHistory = preprocessChatHistory(fullHistory);
+      data = await chatWithHKBU(processedHistory, apiKey.value, model.value);
+    } else {
+      data = await chatWithOpenRouter(fullHistory, model.value);
+    }
+
+    if (data.error) {
+      chatHistory.value[idx] = newMessage("assistant", `❌ ${data.error}`);
+    } else {
+      chatHistory.value[idx] = newMessage(
+        "assistant",
+        data?.choices?.[0]?.message?.content || "[No response]"
+      );
+    }
   } catch (e) {
     console.error(e);
     chatHistory.value[idx] = newMessage(

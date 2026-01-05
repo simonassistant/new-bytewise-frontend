@@ -78,6 +78,7 @@
 <script setup>
 import { ref, watch, computed } from "vue";
 import { jsPDF } from "jspdf";
+import { chatWithOpenRouter } from "@/lib/chatApi";
 
 const props = defineProps({
   show: Boolean,
@@ -186,18 +187,13 @@ async function analyzeContribution(userMessages, props) {
         )}`,
       },
     ];
-    const res = await fetch(`${BASE_URL}/chatbot/chat_openrouter`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_history,
-        api_key: "", // fill in if required
-        model_name: "gpt-4.1-mini",
-      }),
-    });
-
-    const data = await res.json();
-    return data?.choices?.[0]?.message?.content || data?.error || "[No response]";
+    
+    const data = await chatWithOpenRouter(chat_history, "openai/gpt-4.1-mini");
+    
+    if (data.error) {
+      return `[Error: ${data.error}]`;
+    }
+    return data?.choices?.[0]?.message?.content || "[No response]";
   } catch (err) {
     console.error("Error analyzing contribution:", err);
     return "[Request failed]";
@@ -367,7 +363,6 @@ function copyReport() {
 const student_email = ref("");
 const emailSending = ref(false);
 const emailSent = ref(false);
-import { BASE_URL } from "../base_url";
 
 function sendReportByEmail() {
   const history = props.chatHistory;
@@ -376,42 +371,16 @@ function sendReportByEmail() {
     return;
   }
 
-  // Validate student email address
   if (!isValidEmail(student_email.value)) {
     alert("Please enter a valid email address");
     return;
   }
 
-  emailSending.value = true;
-
-  fetch(`${BASE_URL}/sendEmail/send-email`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      student_email: student_email.value,
-      bccEmail: props.bccEmail,
-      ccEmail: props.ccEmail,
-      report_md: createMarkdownReport(history),
-      report_history: history,
-      contributionAnalysis: contributionAnalysis.value,
-    }),
-  })
-    .then((response) => {
-      if (response.ok) {
-        emailSent.value = true;
-        alert(
-          "Report sent successfully! (It may take a few minutes to arrive, please check your spam folder if you can not receive the email)"
-        );
-      } else {
-        throw new Error("Failed to send email");
-      }
-    })
-    .catch((error) => {
-      alert(`Error: ${error.message}`);
-    })
-    .finally(() => {
-      emailSending.value = false;
-    });
+  const report = createMarkdownReport(history);
+  const subject = encodeURIComponent("HKBU Learning Session Report");
+  const body = encodeURIComponent(report);
+  window.open(`mailto:${student_email.value}?subject=${subject}&body=${body}`, "_blank");
+  alert("Email client opened with report. Please send from your email client.");
 }
 
 // Email validation function
