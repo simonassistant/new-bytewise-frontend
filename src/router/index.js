@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/HomePage.vue'
-import Chat from '../views/ChatPage.vue'
-import Avatar from '../views/AvatarPage.vue'
+import ChatWorkspace from '../views/ChatWorkspace.vue'
 import NotFound from '../views/NotFound.vue'
 
 const routes = [
@@ -11,15 +10,9 @@ const routes = [
     component: Home
   },
   {
-    path: '/chat/:botId',
+    path: '/chat/:appId',
     name: 'Chat',
-    component: Chat,
-    props: true
-  },
-  {
-    path: '/avatar/:avatarId',
-    name: 'Avatar',
-    component: Avatar,
+    component: ChatWorkspace,
     props: true
   },
   {

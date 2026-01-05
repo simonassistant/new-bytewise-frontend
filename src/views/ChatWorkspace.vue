@@ -1,0 +1,323 @@
+<template>
+  <div v-if="selectedApp" class="flex h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
+    <div class="flex flex-col flex-1 bg-white shadow-lg overflow-hidden">
+      <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 sm:p-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white gap-2">
+        <div class="flex items-center gap-3 min-w-0 flex-1">
+          <button @click="goHome" class="p-2 rounded-lg bg-white/20 hover:bg-white/30">
+            <span class="text-lg">←</span>
+          </button>
+          <div class="min-w-0">
+            <h1 class="text-lg font-bold truncate">{{ selectedApp.name }}</h1>
+            <div class="text-xs opacity-80">{{ inputMode === 'voice' ? '🎤 Voice Mode' : '⌨️ Text Mode' }}</div>
+          </div>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+          <button
+            @click="showAvatar = !showAvatar"
+            class="px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-sm"
+          >
+            {{ showAvatar ? '👤 Hide Avatar' : '👤 Show Avatar' }}
+          </button>
+          <button
+            @click="startNewSession"
+            class="px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-sm"
+          >
+            🔄 New
+          </button>
+          <button
+            v-if="chatHistory.length > 1"
+            @click="showReport = true"
+            class="px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-sm"
+          >
+            📊 Report
+          </button>
+        </div>
+      </header>
+
+      <div v-if="showAvatar" class="flex justify-center items-center py-4 border-b bg-gray-50">
+        <div class="w-32 h-32 sm:w-48 sm:h-48">
+          <AvatarComponent :state="avatarState" :gender="selectedApp.gender || 'male'" :appearance="selectedApp.appearance || 'asian'" />
+        </div>
+      </div>
+
+      <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-3">
+        <div v-for="(msg, i) in chatHistory" :key="i" class="flex" :class="msg.role === 'user' ? 'justify-end' : 'justify-start'">
+          <div
+            class="max-w-[85%] sm:max-w-2xl px-4 py-3 rounded-2xl shadow text-sm break-words"
+            :class="msg.role === 'user' 
+              ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-br-none' 
+              : 'bg-gray-100 border text-gray-800 rounded-bl-none'"
+          >
+            <div class="font-semibold text-xs mb-1 opacity-70">
+              {{ msg.role === 'user' ? '👤 You' : '🤖 Assistant' }}
+            </div>
+            <div class="whitespace-pre-wrap">{{ msg.content }}</div>
+            <div class="text-xs opacity-50 mt-2 text-right">
+              {{ msg.timestamp?.toLocaleTimeString() }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 border-t bg-gray-50">
+        <div v-if="!isConnected" class="flex items-center justify-center py-4">
+          <button
+            @click="connectAndStart"
+            :disabled="isConnecting"
+            class="px-6 py-3 rounded-full bg-indigo-600 text-white font-bold shadow-lg hover:bg-indigo-700 disabled:bg-gray-400"
+          >
+            {{ isConnecting ? 'Connecting...' : '▶ Start Conversation' }}
+          </button>
+        </div>
+
+        <div v-else>
+          <div class="flex justify-center mb-3">
+            <div class="inline-flex items-center bg-gray-200 rounded-full p-1">
+              <button
+                @click="inputMode = 'text'"
+                :class="['px-4 py-1.5 rounded-full text-sm font-medium transition', inputMode === 'text' ? 'bg-white shadow text-indigo-600' : 'text-gray-600']"
+              >
+                ⌨️ Type
+              </button>
+              <button
+                @click="inputMode = 'voice'"
+                :class="['px-4 py-1.5 rounded-full text-sm font-medium transition', inputMode === 'voice' ? 'bg-white shadow text-purple-600' : 'text-gray-600']"
+              >
+                🎤 Speak
+              </button>
+            </div>
+          </div>
+
+          <div v-if="inputMode === 'text'" class="flex gap-2">
+            <input
+              ref="chatInput"
+              v-model="userText"
+              @keyup.enter="sendTextMessage"
+              type="text"
+              placeholder="Type your message..."
+              :disabled="isLoading || isPlaying"
+              class="flex-1 p-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100"
+            />
+            <button
+              @click="sendTextMessage"
+              :disabled="!userText.trim() || isLoading || isPlaying"
+              class="px-6 py-3 rounded-full bg-indigo-600 text-white font-bold hover:bg-indigo-700 disabled:bg-gray-400"
+            >
+              Send
+            </button>
+          </div>
+
+          <div v-else class="flex justify-center gap-3">
+            <button
+              @click="handleVoiceToggle"
+              :disabled="isPlaying || isLoading"
+              :class="[
+                'px-6 py-3 rounded-full font-bold shadow-lg transition',
+                isRecording ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white',
+                (isPlaying || isLoading) && 'opacity-50 cursor-not-allowed'
+              ]"
+            >
+              {{ isRecording ? '⏹ Stop Recording' : '🎤 Hold to Speak' }}
+            </button>
+          </div>
+
+          <div v-if="isLoading" class="text-center text-sm text-gray-500 mt-2">
+            {{ avatarState === 'thinking' ? '🤔 Thinking...' : avatarState === 'speaking' ? '🔊 Speaking...' : '' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ReportModal
+      v-if="showReport"
+      :show="showReport"
+      :chatHistory="chatHistory"
+      :reportGenerationInstructions="selectedApp.reportGenerationInstructions"
+      :userName="userName"
+      :userEmail="userEmail"
+      :bccEmail="selectedApp.bccEmail"
+      :ccEmail="selectedApp.ccEmail"
+      :courseTitle="selectedApp.name"
+      @close="showReport = false"
+    />
+  </div>
+
+  <div v-else class="flex h-screen items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
+    <div class="text-white text-center">
+      <div class="text-2xl mb-4">Loading...</div>
+      <button @click="goHome" class="px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30">
+        ← Back to Home
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, nextTick, watch } from "vue";
+import { useRouter } from "vue-router";
+import { useChatbotStore } from "@/components/text_chatbot/chatbotStore";
+import { chatWithOpenRouter } from "@/lib/chatApi";
+import AvatarComponent from "@/components/avatar/AvatarComponent.vue";
+import ReportModal from "@/components/avatar/AvatarReportModal.vue";
+import { useAzureSpeech } from "@/components/avatar/useAzureSpeech";
+
+const props = defineProps({ appId: { type: String, required: true } });
+const router = useRouter();
+const chatbotStore = useChatbotStore();
+
+const chatHistory = ref([]);
+const userText = ref("");
+const isConnected = ref(false);
+const isConnecting = ref(false);
+const isLoading = ref(false);
+const inputMode = ref("text");
+const showAvatar = ref(false);
+const showReport = ref(false);
+const messagesContainer = ref(null);
+const chatInput = ref(null);
+const userName = ref("");
+const userEmail = ref("");
+
+function showNotification(msg, type = "success") {
+  console.log(msg);
+}
+
+const {
+  isRecording,
+  isPlaying,
+  avatarState,
+  speakReplySequentially,
+  toggleRecording,
+  isAzureConfigured,
+  setAzureCredentials,
+} = useAzureSpeech(showNotification);
+
+const selectedApp = computed(() => 
+  chatbotStore.availableBots.find((b) => b.id === props.appId)
+);
+
+const systemPrompt = computed(() => {
+  if (!selectedApp.value) return "";
+  return inputMode.value === "voice"
+    ? "Respond in plain text only — do not use Markdown, code blocks, or bold text. Keep your reply under 2 sentences. Additionally, follow these instructions: " + selectedApp.value.systemPrompt
+    : selectedApp.value.systemPrompt;
+});
+
+onMounted(async () => {
+  await chatbotStore.loadBots();
+  if (!selectedApp.value) {
+    router.push("/");
+  }
+});
+
+function goHome() {
+  router.push("/");
+}
+
+async function connectAndStart() {
+  isConnecting.value = true;
+  try {
+    const testHistory = [
+      { role: "system", content: "connection test" },
+      { role: "user", content: "Hello" },
+    ];
+    const data = await chatWithOpenRouter(testHistory, selectedApp.value?.model || "openai/gpt-4.1-mini");
+    if (data.error) {
+      console.error(data.error);
+    } else {
+      isConnected.value = true;
+      if (selectedApp.value?.welcomePrompt) {
+        chatHistory.value.push(newMessage("assistant", selectedApp.value.welcomePrompt));
+        if (inputMode.value === "voice" && isAzureConfigured()) {
+          await speakReplySequentially(selectedApp.value.welcomePrompt);
+        }
+      }
+    }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    isConnecting.value = false;
+  }
+}
+
+function startNewSession() {
+  chatHistory.value = [];
+  if (isConnected.value && selectedApp.value?.welcomePrompt) {
+    chatHistory.value.push(newMessage("assistant", selectedApp.value.welcomePrompt));
+  }
+}
+
+async function sendTextMessage() {
+  if (!userText.value.trim() || isLoading.value) return;
+  await sendMessage(userText.value.trim());
+  userText.value = "";
+  nextTick(() => chatInput.value?.focus());
+}
+
+function handleVoiceToggle() {
+  if (!isAzureConfigured()) {
+    alert("Voice features require Azure Speech credentials. Please configure them in settings.");
+    return;
+  }
+  if (isRecording.value) {
+    toggleRecording.stop();
+  } else {
+    toggleRecording.start((recognizedText) => sendMessage(recognizedText));
+  }
+}
+
+async function sendMessage(text) {
+  if (!text.trim()) return;
+  
+  chatHistory.value.push(newMessage("user", text));
+  chatHistory.value.push(newMessage("assistant", "⏳ Thinking..."));
+  const idx = chatHistory.value.length - 1;
+  scrollToBottom();
+
+  isLoading.value = true;
+  try {
+    const fullHistory = [
+      { role: "system", content: systemPrompt.value },
+      ...chatHistory.value.slice(0, -1).map(({ role, content }) => ({ role, content })),
+    ];
+
+    const data = await chatWithOpenRouter(fullHistory, selectedApp.value?.model || "openai/gpt-4.1-mini");
+    
+    let reply;
+    if (data.error) {
+      reply = `Error: ${data.error}`;
+    } else {
+      reply = data?.choices?.[0]?.message?.content || "[No response]";
+    }
+
+    chatHistory.value[idx] = newMessage("assistant", reply);
+    scrollToBottom();
+
+    if (inputMode.value === "voice" && isAzureConfigured()) {
+      await speakReplySequentially(reply);
+    }
+  } catch (e) {
+    console.error(e);
+    chatHistory.value[idx] = newMessage("assistant", "Sorry, an error occurred.");
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+function newMessage(role, content) {
+  return { role, content, timestamp: new Date() };
+}
+
+function scrollToBottom() {
+  nextTick(() => {
+    const el = messagesContainer.value;
+    if (el) el.scrollTop = el.scrollHeight;
+  });
+}
+
+watch(inputMode, (newMode) => {
+  if (newMode === "voice") {
+    showAvatar.value = true;
+  }
+});
+</script>
