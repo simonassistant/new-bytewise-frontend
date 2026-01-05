@@ -70,6 +70,29 @@
           <span v-else>Sign In</span>
         </button>
 
+        <div class="relative my-4">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-gray-500">or</span>
+          </div>
+        </div>
+
+        <button
+          @click="guestLogin('student')"
+          class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 mb-2"
+        >
+          Guest Login (Student)
+        </button>
+
+        <button
+          @click="guestLogin('teacher')"
+          class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+        >
+          Guest Login (Teacher)
+        </button>
+
         <p class="text-center text-sm text-gray-500 mt-4">
           This is a demo login. OAuth integration with auth.hkbu.tech coming soon.
         </p>
@@ -118,6 +141,15 @@ async function handleLogin() {
     }
   } else {
     errorMessage.value = result.error || 'Login failed. Please try again.'
+  }
+}
+
+function guestLogin(role) {
+  authStore.guestLogin(role)
+  if (role === 'teacher') {
+    router.push('/dashboard')
+  } else {
+    router.push('/eegc')
   }
 }
 </script>

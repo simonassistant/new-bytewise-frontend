@@ -45,6 +45,18 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('eegc_user')
   }
 
+  function guestLogin(role) {
+    user.value = {
+      id: `guest_${Date.now()}`,
+      name: role === 'teacher' ? 'Guest Teacher' : 'Guest Student',
+      email: `guest_${role}@demo.local`,
+      role: role,
+      isGuest: true,
+      loginTime: new Date().toISOString()
+    }
+    localStorage.setItem('eegc_user', JSON.stringify(user.value))
+  }
+
   function initFromStorage() {
     const stored = localStorage.getItem('eegc_user')
     if (stored) {
@@ -126,6 +138,7 @@ export const useAuthStore = defineStore('auth', () => {
     currentSessionId,
     login,
     logout,
+    guestLogin,
     initFromStorage,
     createChatSession,
     saveMessage,
