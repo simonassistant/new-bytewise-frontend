@@ -11,7 +11,23 @@
             <div class="text-xs opacity-80">{{ currentModeLabel }}</div>
           </div>
         </div>
-        <div class="flex gap-2 flex-wrap">
+        <div class="flex gap-2 flex-wrap items-center">
+          <div 
+            class="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs"
+            :class="aiStatus.connected ? 'bg-green-500/30' : 'bg-red-500/30'"
+          >
+            <span :class="aiStatus.connected ? 'text-green-200' : 'text-red-200'">
+              {{ aiStatus.connected ? '🟢 AI Connected' : '🔴 AI Offline' }}
+            </span>
+            <button 
+              @click="testConnection" 
+              :disabled="isTesting"
+              class="ml-1 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-xs"
+              title="Test AI connection"
+            >
+              {{ isTesting ? '...' : '🔄' }}
+            </button>
+          </div>
           <button
             @click="showSystemPrompt = !showSystemPrompt"
             class="px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-sm"
@@ -39,6 +55,21 @@
           </button>
         </div>
       </header>
+
+      <div v-if="!aiStatus.connected" class="p-3 bg-red-50 border-b border-red-200">
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-red-800">
+            <span class="font-medium">AI not connected:</span> {{ aiStatus.error || 'API key not configured' }}
+          </div>
+          <button 
+            @click="testConnection" 
+            :disabled="isTesting"
+            class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+          >
+            {{ isTesting ? 'Testing...' : 'Test Connection' }}
+          </button>
+        </div>
+      </div>
 
       <div v-if="showSystemPrompt" class="p-4 bg-indigo-50 border-b border-indigo-200">
         <div class="flex justify-between items-start gap-2 mb-2">
@@ -96,10 +127,10 @@
         <div v-if="!isConnected" class="flex items-center justify-center py-2">
           <button
             @click="connectAndStart"
-            :disabled="isConnecting"
+            :disabled="isConnecting || !aiStatus.connected"
             class="px-6 py-3 rounded-full bg-indigo-600 text-white font-bold shadow-lg hover:bg-indigo-700 disabled:bg-gray-400"
           >
-            {{ isConnecting ? 'Connecting...' : '▶ Start Conversation' }}
+            {{ isConnecting ? 'Connecting...' : !aiStatus.connected ? 'AI Offline' : '▶ Start Conversation' }}
           </button>
         </div>
 
@@ -175,10 +206,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from "vue";
+import { ref, reactive, computed, onMounted, nextTick, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useChatbotStore } from "@/components/text_chatbot/chatbotStore";
-import { chatWithOpenRouter } from "@/lib/chatApi";
+import { chatWithOpenRouter, testAIConnection } from "@/lib/chatApi";
 import AvatarComponent from "@/components/avatar/AvatarComponent.vue";
 import ReportModal from "@/components/avatar/AvatarReportModal.vue";
 import { useAzureSpeech } from "@/components/avatar/useAzureSpeech";
@@ -200,6 +231,9 @@ const messagesContainer = ref(null);
 const chatInput = ref(null);
 const userName = ref("");
 const userEmail = ref("");
+
+const aiStatus = reactive({ connected: false, error: null, provider: null });
+const isTesting = ref(false);
 
 function showNotification(msg, type = "success") {
   console.log(msg);
@@ -234,11 +268,28 @@ const systemPrompt = computed(() => {
     : selectedApp.value.systemPrompt;
 });
 
+async function testConnection() {
+  isTesting.value = true;
+  try {
+    const result = await testAIConnection();
+    aiStatus.connected = result.connected;
+    aiStatus.error = result.error || null;
+    aiStatus.provider = result.provider;
+  } catch (e) {
+    aiStatus.connected = false;
+    aiStatus.error = e.message;
+  } finally {
+    isTesting.value = false;
+  }
+}
+
 onMounted(async () => {
   await chatbotStore.loadBots();
   if (!selectedApp.value) {
     router.push("/");
+    return;
   }
+  await testConnection();
 });
 
 function goHome() {
@@ -256,22 +307,15 @@ function switchToVoiceMode() {
 }
 
 async function connectAndStart() {
+  if (!aiStatus.connected) return;
+  
   isConnecting.value = true;
   try {
-    const testHistory = [
-      { role: "system", content: "connection test" },
-      { role: "user", content: "Hello" },
-    ];
-    const data = await chatWithOpenRouter(testHistory, selectedApp.value?.model || "openai/gpt-4.1-mini");
-    if (data.error) {
-      console.error(data.error);
-    } else {
-      isConnected.value = true;
-      if (selectedApp.value?.welcomePrompt) {
-        chatHistory.value.push(newMessage("assistant", selectedApp.value.welcomePrompt));
-        if (inputMode.value === "voice" && voiceAvailable.value) {
-          await speakReplySequentially(selectedApp.value.welcomePrompt);
-        }
+    isConnected.value = true;
+    if (selectedApp.value?.welcomePrompt) {
+      chatHistory.value.push(newMessage("assistant", selectedApp.value.welcomePrompt));
+      if (inputMode.value === "voice" && voiceAvailable.value) {
+        await speakReplySequentially(selectedApp.value.welcomePrompt);
       }
     }
   } catch (e) {
