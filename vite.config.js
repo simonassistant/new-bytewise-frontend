@@ -14,25 +14,15 @@ export default defineConfig({
   ].filter(Boolean),
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@assets': fileURLToPath(new URL('./attached_assets', import.meta.url))
     },
   },
   server: {
     host: '0.0.0.0',
     port: 5000,
-    allowedHosts: true,
-    hmr: {
-      clientPort: 443
-    },
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:8000',
-        changeOrigin: true,
-        ws: true
-      }
-    }
+    allowedHosts: true
   },
-  // Optimize for production builds
   build: {
     target: 'es2015',
     minify: 'terser',
@@ -45,5 +35,4 @@ export default defineConfig({
       }
     }
   },
-
 })

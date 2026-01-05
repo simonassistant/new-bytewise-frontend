@@ -1,0 +1,12 @@
+{
+  "name": "Test bot1 ",
+  "styleClass": "from-blue-400 to-purple-600",
+  "model": "gpt-4.1-mini",
+  "welcomePrompt": "hi, this is a test avatar.",
+  "systemPrompt": "you are a chatbot",
+  "reportGenerationInstructions": "Generate a concise report evaluating how fully the LLM fulfilled the prompt’s objectives—structuring a professional 300-word cover letter, editing or drafting one with specified sections, ensuring one-page formatting aligned with the job description, and consistently appending the required contact statement—to determine compliance and completeness.",
+  "bccEmail": [],
+  "ccEmail": [],
+  "appearance": "asian",
+  "gender": "female"
+}

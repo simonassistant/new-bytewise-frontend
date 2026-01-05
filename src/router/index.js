@@ -1,32 +1,45 @@
+// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import LoginPage from '@/views/LoginPage.vue'
+import Home from '../views/HomePage.vue'
+import Chat from '../views/ChatPage.vue'
+import Avatar from '../views/AvatarPage.vue'
+import WritingBot from '../views/WritingBot.vue'
+// import CloseEEGC from '../views/ClouseEEGC.vue'
 import NewEEGC from '@/views/NewEEGC.vue'
-import TeacherDashboard from '@/views/TeacherDashboard.vue'
-import NotFound from '@/views/NotFound.vue'
-
+import ThreeBotsSimulation from '../views/ThreeBotsSimulation.vue'
+import NotFound from '../views/NotFound.vue'
 const routes = [
   {
     path: '/',
-    redirect: '/login'
+    name: 'Home',
+    component: Home
   },
   {
-    path: '/login',
-    name: 'Login',
-    component: LoginPage,
-    meta: { requiresGuest: true }
+    path: '/chat/:botId',
+    name: 'Chat',
+    component: Chat,
+    props: true
   },
   {
-    path: '/eegc',
+    path: '/avatar/:avatarId',
+    name: 'Avatar',
+    component: Avatar,
+    props: true
+  },
+  {
+    path: '/EEGC',
     name: 'EEGC',
-    component: NewEEGC,
-    meta: { requiresAuth: true }
+    component: NewEEGC
   },
   {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: TeacherDashboard,
-    meta: { requiresAuth: true, requiresTeacher: true }
+    path: '/old_EEGC',
+    name: 'old_EEGC',
+    component: WritingBot
+  },
+  {
+    path: '/three-bots-simulation',
+    name: 'ThreeBotsSimulation',
+    component: ThreeBotsSimulation
   },
   {
     path: '/:pathMatch(.*)*',
@@ -38,28 +51,6 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes
-})
-
-router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore()
-  
-  if (!authStore.user) {
-    authStore.initFromStorage()
-  }
-
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    return next('/login')
-  }
-
-  if (to.meta.requiresGuest && authStore.isAuthenticated) {
-    return next(authStore.isTeacher ? '/dashboard' : '/eegc')
-  }
-
-  if (to.meta.requiresTeacher && !authStore.isTeacher) {
-    return next('/eegc')
-  }
-
-  next()
 })
 
 export default router
