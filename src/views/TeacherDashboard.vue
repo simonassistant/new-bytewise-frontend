@@ -40,11 +40,21 @@
       </div>
 
       <div class="bg-white rounded-lg shadow">
-        <div class="px-6 py-4 border-b border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <h2 class="text-xl font-semibold text-gray-900">Student Chat History</h2>
+          <button
+            @click="loadStudents"
+            class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+          >
+            Refresh
+          </button>
         </div>
         
-        <div v-if="students.length === 0" class="p-8 text-center text-gray-500">
+        <div v-if="loading" class="p-8 text-center text-gray-500">
+          <p>Loading students...</p>
+        </div>
+
+        <div v-else-if="students.length === 0" class="p-8 text-center text-gray-500">
           <p class="text-lg mb-2">No student sessions yet</p>
           <p class="text-sm">Student chat histories will appear here once they start using the EEGC tutor.</p>
         </div>
@@ -58,19 +68,12 @@
           >
             <div class="flex justify-between items-start">
               <div>
-                <h3 class="text-lg font-medium text-gray-900">{{ student.name }}</h3>
-                <p class="text-gray-600">{{ student.email }}</p>
+                <h3 class="text-lg font-medium text-gray-900">{{ student.username }}</h3>
                 <p class="text-sm text-gray-500 mt-1">
-                  {{ student.sessions }} session(s) | Last active: {{ student.lastActive }}
+                  {{ student.session_count }} session(s)
                 </p>
               </div>
               <div class="flex items-center gap-2">
-                <span 
-                  v-if="student.hasUnreviewed"
-                  class="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full"
-                >
-                  Needs Review
-                </span>
                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
@@ -83,6 +86,7 @@
       <StudentHistoryModal
         v-if="selectedStudent"
         :student="selectedStudent"
+        :teacher-id="authStore.user?.id"
         @close="selectedStudent = null"
       />
     </main>
@@ -90,34 +94,39 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import StudentHistoryModal from '@/components/dashboard/StudentHistoryModal.vue'
+import axios from 'axios'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
 const selectedStudent = ref(null)
-
-const students = ref([
-  {
-    id: 'demo_1',
-    name: 'Demo Student',
-    email: 'demo@student.edu',
-    sessions: 3,
-    lastActive: '2 hours ago',
-    hasUnreviewed: true
-  }
-])
+const students = ref([])
+const loading = ref(true)
 
 const totalSessions = computed(() => {
-  return students.value.reduce((sum, s) => sum + s.sessions, 0)
+  return students.value.reduce((sum, s) => sum + (s.session_count || 0), 0)
 })
 
 const pendingReviews = computed(() => {
-  return students.value.filter(s => s.hasUnreviewed).length
+  return students.value.filter(s => s.session_count > 0).length
 })
+
+async function loadStudents() {
+  loading.value = true
+  try {
+    const response = await axios.get('/api/db/students')
+    students.value = response.data
+  } catch (error) {
+    console.error('Error loading students:', error)
+    students.value = []
+  } finally {
+    loading.value = false
+  }
+}
 
 function openStudentHistory(student) {
   selectedStudent.value = student
@@ -127,4 +136,8 @@ function handleLogout() {
   authStore.logout()
   router.push('/login')
 }
+
+onMounted(() => {
+  loadStudents()
+})
 </script>

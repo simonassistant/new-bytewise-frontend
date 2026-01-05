@@ -1,4 +1,4 @@
-modules = ["vue-node-20", "web", "nodejs-20", "python-3.11"]
+modules = ["vue-node-20", "web", "nodejs-20", "python-3.11", "postgresql-16"]
 [agent]
 expertMode = true
 
