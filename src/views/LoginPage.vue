@@ -57,12 +57,17 @@
           </div>
         </div>
 
+        <div v-if="errorMessage" class="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {{ errorMessage }}
+        </div>
+
         <button
           @click="handleLogin"
-          :disabled="!canLogin"
+          :disabled="!canLogin || isLoading"
           class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
-          Sign In
+          <span v-if="isLoading">Signing in...</span>
+          <span v-else>Sign In</span>
         </button>
 
         <p class="text-center text-sm text-gray-500 mt-4">
@@ -84,24 +89,35 @@ const authStore = useAuthStore()
 const name = ref('')
 const email = ref('')
 const selectedRole = ref('')
+const isLoading = ref(false)
+const errorMessage = ref('')
 
 const canLogin = computed(() => {
   return name.value.trim() && email.value.trim() && selectedRole.value
 })
 
-function handleLogin() {
-  if (!canLogin.value) return
+async function handleLogin() {
+  if (!canLogin.value || isLoading.value) return
   
-  authStore.login({
+  isLoading.value = true
+  errorMessage.value = ''
+  
+  const result = await authStore.login({
     name: name.value.trim(),
     email: email.value.trim(),
     role: selectedRole.value
   })
 
-  if (selectedRole.value === 'teacher') {
-    router.push('/dashboard')
+  isLoading.value = false
+
+  if (result.success) {
+    if (selectedRole.value === 'teacher') {
+      router.push('/dashboard')
+    } else {
+      router.push('/eegc')
+    }
   } else {
-    router.push('/eegc')
+    errorMessage.value = result.error || 'Login failed. Please try again.'
   }
 }
 </script>

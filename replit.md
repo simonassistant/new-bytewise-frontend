@@ -1,37 +1,90 @@
-# ByteWise Frontend
+# EEGC Essay Tutor
 
 ## Overview
-A Vue.js 3 frontend application for ByteWise, featuring chatbot interfaces, avatar components, and educational/writing bot tools.
+An essay revision chatbot system for English for Graduate Communication (EEGC) courses. The system features:
+- **Student Mode**: AI-assisted essay revision with Training and Assessment modes
+- **Teacher Mode**: Dashboard to view student chat histories and add comments
+- **Mock Login**: Role-based authentication (OAuth integration with auth.hkbu.tech pending)
+- **AI Integration**: Uses HKBU GenAI platform (students provide their own API keys)
 
 ## Tech Stack
-- **Framework**: Vue.js 3.5
-- **Build Tool**: Vite 7
+### Frontend
+- **Framework**: Vue.js 3.5 with Vite 7
 - **Styling**: Tailwind CSS 4
 - **State Management**: Pinia
 - **Routing**: Vue Router 4
+- **Port**: 5000
+
+### Backend
+- **Framework**: Flask with Flask-SocketIO
+- **Database**: PostgreSQL (Replit built-in)
+- **AI**: HKBU GenAI platform API
+- **Port**: 8000
 
 ## Project Structure
 ```
 src/
-├── assets/           # Static assets
-├── botConfig/        # Bot configuration JSON files
-├── components/       # Vue components
-│   ├── avatar/       # Avatar/video chat components
-│   ├── new_EEGC/     # EEGC educational components
-│   ├── text_chatbot/ # Text chatbot components
-│   └── writing_bot/  # Writing assistance components
-├── router/           # Vue Router configuration
-├── views/            # Page-level components
-├── App.vue           # Root component
-├── main.js           # Application entry point
-└── style.css         # Global styles
+├── components/
+│   ├── dashboard/        # Teacher dashboard components
+│   │   └── StudentHistoryModal.vue
+│   └── new_EEGC/         # EEGC chatbot components
+├── stores/
+│   └── auth.js           # Authentication state (Pinia)
+├── views/
+│   ├── LoginPage.vue     # Mock login with role selection
+│   ├── NewEEGC.vue       # Main EEGC essay tutor interface
+│   └── TeacherDashboard.vue
+└── router/index.js
+
+server/
+├── app/routers/
+│   ├── chatbot.py        # HKBU GenAI chatbot endpoints
+│   ├── database.py       # User/session/message CRUD endpoints
+│   └── openrouter.py     # OpenRouter API endpoints
+├── migrations/
+│   └── 001_init.sql      # Database schema
+└── main.py               # Flask app entry point
 ```
 
-## Development
-- **Port**: 5000 (configured in vite.config.js)
-- **Command**: `npm run dev`
+## Database Schema
+- **users**: id, username, role (student/teacher), created_at
+- **chat_sessions**: id, user_id, title, created_at, updated_at
+- **messages**: id, session_id, role, content, created_at
+- **teacher_comments**: id, session_id, teacher_id, comment, created_at
 
-## Deployment
-- **Type**: Static site
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
+## API Endpoints
+
+### Database API (`/api/db/`)
+- `POST /users` - Create or get user
+- `GET /students` - Get all students (for teachers)
+- `POST /sessions` - Create chat session
+- `GET /sessions/:user_id` - Get user's sessions
+- `POST /messages` - Save message
+- `GET /messages/:session_id` - Get session messages
+- `POST /comments` - Add teacher comment
+- `GET /comments/:session_id` - Get session comments
+- `GET /health` - Database health check
+
+### Chatbot API (`/api/chatbot/`)
+- `POST /chat` - Send message to HKBU GenAI (requires API key)
+
+## Development
+```bash
+# Frontend runs on port 5000
+npm run dev
+
+# Backend runs on port 8000
+cd server && python main.py
+```
+
+## User Preferences
+- Uses HKBU GenAI platform with user-provided API keys (not Replit AI integration)
+- Mock login system (pending OAuth credentials for auth.hkbu.tech)
+- Vite dev server proxies /api requests to Flask backend
+
+## Recent Changes (2026-01-05)
+- Added PostgreSQL database integration for user/session/message persistence
+- Updated auth store with database API integration
+- Created teacher dashboard with real-time student data fetching
+- Added proper error handling to database routes
+- Created SQL migration file for schema reproducibility

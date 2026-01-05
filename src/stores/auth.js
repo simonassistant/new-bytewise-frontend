@@ -4,17 +4,23 @@ import axios from 'axios'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
+  const loginError = ref(null)
   const isAuthenticated = computed(() => !!user.value)
   const isTeacher = computed(() => user.value?.role === 'teacher')
   const isStudent = computed(() => user.value?.role === 'student')
   const currentSessionId = ref(null)
 
   async function login(userData) {
+    loginError.value = null
     try {
       const response = await axios.post('/api/db/users', {
         username: userData.name || userData.email,
         role: userData.role
       })
+      
+      if (response.data.error) {
+        throw new Error(response.data.error)
+      }
       
       user.value = {
         id: response.data.id,
@@ -24,24 +30,18 @@ export const useAuthStore = defineStore('auth', () => {
         loginTime: new Date().toISOString()
       }
       localStorage.setItem('eegc_user', JSON.stringify(user.value))
-      return user.value
+      return { success: true, user: user.value }
     } catch (error) {
       console.error('Login error:', error)
-      user.value = {
-        id: `user_${Date.now()}`,
-        name: userData.name,
-        email: userData.email,
-        role: userData.role,
-        loginTime: new Date().toISOString()
-      }
-      localStorage.setItem('eegc_user', JSON.stringify(user.value))
-      return user.value
+      loginError.value = error.response?.data?.error || error.message || 'Login failed'
+      return { success: false, error: loginError.value }
     }
   }
 
   function logout() {
     user.value = null
     currentSessionId.value = null
+    loginError.value = null
     localStorage.removeItem('eegc_user')
   }
 
@@ -57,32 +57,42 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function createChatSession(title = 'New Chat') {
-    if (!user.value?.id) return null
+    if (!user.value?.id) return { success: false, error: 'Not logged in' }
     try {
       const response = await axios.post('/api/db/sessions', {
         user_id: user.value.id,
         title
       })
+      
+      if (response.data.error) {
+        throw new Error(response.data.error)
+      }
+      
       currentSessionId.value = response.data.id
-      return response.data
+      return { success: true, session: response.data }
     } catch (error) {
       console.error('Create session error:', error)
-      return null
+      return { success: false, error: error.response?.data?.error || error.message }
     }
   }
 
   async function saveMessage(role, content) {
-    if (!currentSessionId.value) return null
+    if (!currentSessionId.value) return { success: false, error: 'No active session' }
     try {
       const response = await axios.post('/api/db/messages', {
         session_id: currentSessionId.value,
         role,
         content
       })
-      return response.data
+      
+      if (response.data.error) {
+        throw new Error(response.data.error)
+      }
+      
+      return { success: true, message: response.data }
     } catch (error) {
       console.error('Save message error:', error)
-      return null
+      return { success: false, error: error.response?.data?.error || error.message }
     }
   }
 
@@ -109,6 +119,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     user,
+    loginError,
     isAuthenticated,
     isTeacher,
     isStudent,
