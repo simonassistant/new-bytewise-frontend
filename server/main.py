@@ -3,8 +3,9 @@ from flask_socketio import SocketIO
 from flask_cors import CORS
 from app.routers.streaming_avatar import streaming_avatar, register_socketio_handlers
 from app.routers.chatbot import chatbot
+from app.routers.emailSend import emailSend
 from app.routers.openrouter import openrouter
-from app.routers.database import database
+from app.routers.supabase import supabase
 from dotenv import load_dotenv
 load_dotenv()
 # Create Flask app
@@ -19,7 +20,10 @@ app.register_blueprint(chatbot, url_prefix="/api/chatbot")  # this is hkbu chatb
 app.register_blueprint(
     openrouter, url_prefix="/api/openrouter"
 )  # this is openrouter chatbot
-app.register_blueprint(database, url_prefix="/api/db")
+app.register_blueprint(
+    emailSend, url_prefix="/api/sendEmail"
+)  # this is EEGC email sender
+app.register_blueprint(supabase, url_prefix="/api/supabase")
 
 # Initialize SocketIO with eventlet
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
@@ -28,5 +32,5 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 register_socketio_handlers(socketio)
 
 if __name__ == "__main__":
-    # Run on port 8000 to avoid conflict with frontend on port 5000
-    socketio.run(app, host="127.0.0.1", port=8000, debug=True)
+    # Run
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
