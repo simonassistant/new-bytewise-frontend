@@ -1,0 +1,6 @@
+.env
+.vscode
+EMAIL_API_DOCUMENTATION.md
+test.py
+.idea
+*.md
