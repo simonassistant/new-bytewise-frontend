@@ -1,43 +1,33 @@
 <template>
-  <!-- Password Protection Screen -->
-  <div 
-    v-if="!isPasswordVerified" 
-    class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50"
-  >
-    <div class="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full mx-4">
-      <div class="text-center mb-6">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">🔒 Protected Page</h1>
-        <p class="text-gray-600">Please enter the password to access this page</p>
+  <!-- User Header -->
+  <div class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <span class="text-lg font-semibold text-gray-900">EEGC Essay Tutor</span>
+        <span v-if="authStore.user" class="text-sm text-gray-600">
+          Welcome, {{ authStore.user.name }}
+        </span>
       </div>
-      
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-          <input
-            v-model="passwordInput"
-            type="password"
-            @keyup.enter="verifyPassword"
-            placeholder="Enter password..."
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-            :class="passwordError ? 'border-red-500' : ''"
-          />
-          <p v-if="passwordError" class="mt-2 text-sm text-red-600">
-            ❌ {{ passwordError }}
-          </p>
-        </div>
-        
+      <div class="flex items-center gap-3">
         <button
-          @click="verifyPassword"
-          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+          v-if="authStore.isTeacher"
+          @click="router.push('/dashboard')"
+          class="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
         >
-          Unlock
+          Dashboard
+        </button>
+        <button
+          @click="handleLogout"
+          class="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+        >
+          Sign Out
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Main Content (only shown after password verification) -->
-  <div v-else class="w-full p-4 flex-1 flex flex-col">
+  <!-- Main Content -->
+  <div class="w-full p-4 flex-1 flex flex-col">
     <!-- Header -->
     <CourseHeader />
     <!-- Mode Selection -->
@@ -266,6 +256,7 @@
 
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { useRouter } from "vue-router";
 import BriefMode from "@/components/new_EEGC/BriefMode.vue";
 import ReportModal from "@/components/new_EEGC/WritingBotReport.vue";
 import ChatInterface from "@/components/new_EEGC/ChatInterface.vue";
@@ -273,6 +264,7 @@ import CourseHeader from "@/components/new_EEGC/CourseHeader.vue";
 import ModeSelector from "@/components/new_EEGC/ModeSelector.vue";
 import BackgroundAndRubrics from "@/components/new_EEGC/BackgroundAndRubrics.vue";
 import { useChatFunctions } from "@/components/new_EEGC/useChatFunctions";
+import { useAuthStore } from "@/stores/auth";
 import Swal from "sweetalert2";
 
 import {
@@ -283,12 +275,16 @@ import {
   Rubric,
 } from "@/components/new_EEGC/promptAndEssay.js";
 
+/* ------------ Auth & Navigation ------------ */
+const router = useRouter();
+const authStore = useAuthStore();
+
+function handleLogout() {
+  authStore.logout();
+  router.push('/login');
+}
+
 /* ------------ State ------------ */
-/* Password Protection */
-const isPasswordVerified = ref(false);
-const passwordInput = ref("");
-const passwordError = ref("");
-const CORRECT_PASSWORD = "A-password";
 
 const currentMode = ref("briefing");
 const stats = ref({ exchanges: 0, questions: 0, revisions: 0 });
@@ -402,19 +398,6 @@ const { sendMessage, talkToChatbot } = useChatFunctions({
   courseInfoAssessment,
   currentTopic,
 });
-/* ------------ Password Verification ------------ */
-function verifyPassword() {
-  if (passwordInput.value === CORRECT_PASSWORD) {
-    isPasswordVerified.value = true;
-    passwordError.value = "";
-    // Store verification in session (optional - will require password again on page refresh)
-    sessionStorage.setItem("eegc_password_verified", "true");
-  } else {
-    passwordError.value = "Incorrect password. Please try again.";
-    passwordInput.value = "";
-  }
-}
-
 function openTutorial() {
   window.open("https://smartlessons.hkbu.tech/tutorial-training-mode.html", "_blank");
 }
@@ -672,12 +655,6 @@ const handleBeforeUnload = (e) => {
 };
 
 onMounted(async () => {
-  // Check if password was already verified in this session
-  const sessionVerified = sessionStorage.getItem("eegc_password_verified");
-  if (sessionVerified === "true") {
-    isPasswordVerified.value = true;
-  }
-  
   window.addEventListener("beforeunload", handleBeforeUnload);
   const saved = localStorage.getItem("chatbot_api_key");
   if (saved) {
