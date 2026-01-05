@@ -8,7 +8,7 @@
           </button>
           <div class="min-w-0">
             <h1 class="text-lg font-bold truncate">{{ selectedApp.name }}</h1>
-            <div class="text-xs opacity-80">{{ inputMode === 'voice' ? '🎤 Voice Mode' : '⌨️ Text Mode' }}</div>
+            <div class="text-xs opacity-80">{{ currentModeLabel }}</div>
           </div>
         </div>
         <div class="flex gap-2 flex-wrap">
@@ -74,16 +74,18 @@
           <div class="flex justify-center mb-3">
             <div class="inline-flex items-center bg-gray-200 rounded-full p-1">
               <button
-                @click="inputMode = 'text'"
-                :class="['px-4 py-1.5 rounded-full text-sm font-medium transition', inputMode === 'text' ? 'bg-white shadow text-indigo-600' : 'text-gray-600']"
+                @click="switchToTextMode"
+                :class="['px-4 py-1.5 rounded-full text-sm font-medium transition', inputMode === 'text' ? 'bg-white shadow text-indigo-600' : 'text-gray-600 hover:text-gray-800']"
               >
                 ⌨️ Type
               </button>
               <button
-                @click="inputMode = 'voice'"
-                :class="['px-4 py-1.5 rounded-full text-sm font-medium transition', inputMode === 'voice' ? 'bg-white shadow text-purple-600' : 'text-gray-600']"
+                @click="switchToVoiceMode"
+                :class="['px-4 py-1.5 rounded-full text-sm font-medium transition', inputMode === 'voice' ? 'bg-white shadow text-purple-600' : 'text-gray-600 hover:text-gray-800']"
+                :title="!voiceAvailable ? 'Voice requires Azure Speech credentials' : ''"
               >
                 🎤 Speak
+                <span v-if="!voiceAvailable" class="text-xs opacity-60">🔒</span>
               </button>
             </div>
           </div>
@@ -107,22 +109,28 @@
             </button>
           </div>
 
-          <div v-else class="flex justify-center gap-3">
-            <button
-              @click="handleVoiceToggle"
-              :disabled="isPlaying || isLoading"
-              :class="[
-                'px-6 py-3 rounded-full font-bold shadow-lg transition',
-                isRecording ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-purple-600 hover:bg-purple-700 text-white',
-                (isPlaying || isLoading) && 'opacity-50 cursor-not-allowed'
-              ]"
-            >
-              {{ isRecording ? '⏹ Stop Recording' : '🎤 Hold to Speak' }}
-            </button>
+          <div v-else-if="inputMode === 'voice'" class="flex flex-col items-center gap-3">
+            <div v-if="!voiceAvailable" class="text-center text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <p class="font-medium text-yellow-800">Voice mode requires Azure Speech credentials</p>
+              <p class="text-xs text-yellow-700 mt-1">Please configure Azure Speech settings to use voice features</p>
+            </div>
+            <div v-else class="flex justify-center gap-3">
+              <button
+                @click="handleVoiceToggle"
+                :disabled="isPlaying || isLoading"
+                :class="[
+                  'px-6 py-3 rounded-full font-bold shadow-lg transition',
+                  isRecording ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse' : 'bg-purple-600 hover:bg-purple-700 text-white',
+                  (isPlaying || isLoading) && 'opacity-50 cursor-not-allowed'
+                ]"
+              >
+                {{ isRecording ? '⏹ Stop Recording' : '🎤 Press to Speak' }}
+              </button>
+            </div>
           </div>
 
           <div v-if="isLoading" class="text-center text-sm text-gray-500 mt-2">
-            {{ avatarState === 'thinking' ? '🤔 Thinking...' : avatarState === 'speaking' ? '🔊 Speaking...' : '' }}
+            {{ avatarState === 'thinking' ? '🤔 Thinking...' : avatarState === 'speaking' ? '🔊 Speaking...' : '⏳ Processing...' }}
           </div>
         </div>
       </div>
@@ -189,12 +197,20 @@ const {
   speakReplySequentially,
   toggleRecording,
   isAzureConfigured,
-  setAzureCredentials,
 } = useAzureSpeech(showNotification);
+
+const voiceAvailable = computed(() => isAzureConfigured());
 
 const selectedApp = computed(() => 
   chatbotStore.availableBots.find((b) => b.id === props.appId)
 );
+
+const currentModeLabel = computed(() => {
+  if (inputMode.value === 'voice') {
+    return voiceAvailable.value ? '🎤 Voice Mode' : '🎤 Voice Mode (Unavailable)';
+  }
+  return '⌨️ Text Mode';
+});
 
 const systemPrompt = computed(() => {
   if (!selectedApp.value) return "";
@@ -214,6 +230,16 @@ function goHome() {
   router.push("/");
 }
 
+function switchToTextMode() {
+  inputMode.value = "text";
+  nextTick(() => chatInput.value?.focus());
+}
+
+function switchToVoiceMode() {
+  inputMode.value = "voice";
+  showAvatar.value = true;
+}
+
 async function connectAndStart() {
   isConnecting.value = true;
   try {
@@ -228,7 +254,7 @@ async function connectAndStart() {
       isConnected.value = true;
       if (selectedApp.value?.welcomePrompt) {
         chatHistory.value.push(newMessage("assistant", selectedApp.value.welcomePrompt));
-        if (inputMode.value === "voice" && isAzureConfigured()) {
+        if (inputMode.value === "voice" && voiceAvailable.value) {
           await speakReplySequentially(selectedApp.value.welcomePrompt);
         }
       }
@@ -255,8 +281,7 @@ async function sendTextMessage() {
 }
 
 function handleVoiceToggle() {
-  if (!isAzureConfigured()) {
-    alert("Voice features require Azure Speech credentials. Please configure them in settings.");
+  if (!voiceAvailable.value) {
     return;
   }
   if (isRecording.value) {
@@ -293,7 +318,7 @@ async function sendMessage(text) {
     chatHistory.value[idx] = newMessage("assistant", reply);
     scrollToBottom();
 
-    if (inputMode.value === "voice" && isAzureConfigured()) {
+    if (inputMode.value === "voice" && voiceAvailable.value) {
       await speakReplySequentially(reply);
     }
   } catch (e) {

@@ -75,10 +75,11 @@ Once you receive the OAuth credentials from the platform admin:
 
 ## Recent Changes (2026-01-05)
 - Created unified ChatWorkspace combining text and voice modes
-- Built marketplace homepage with category filters and search
+- Built marketplace homepage showing ALL apps without pagination
+- Added category-based dropdown menus in header (Career, GCAP, IELTS, TCM, Other)
 - Added lightweight backend for OAuth integration
 - Removed separate ChatPage/AvatarPage in favor of unified interface
-- Added keyboard shortcut (Cmd/Ctrl+K) for quick search
+- Fixed text/voice mode toggle with graceful handling when Azure credentials unavailable
 
 ## User Flow
 1. User visits marketplace → browses or searches apps
