@@ -60,6 +60,36 @@
         </div>
       </div>
 
+      <!-- Azure Speech Configuration -->
+      <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 sm:p-4 space-y-3">
+        <h3 class="font-semibold text-sm sm:text-base text-purple-800 mb-2">🎤 Azure Speech Settings</h3>
+        <div>
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Speech Key</label>
+          <input
+            type="password"
+            v-model="azureKey"
+            @input="emitAzureCredentials"
+            placeholder="Enter Azure Speech key"
+            class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-purple-300"
+          />
+        </div>
+        <div>
+          <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Region</label>
+          <select
+            v-model="azureRegion"
+            @change="emitAzureCredentials"
+            class="w-full border rounded-lg p-2 text-sm focus:ring focus:ring-purple-300"
+          >
+            <option value="eastasia">East Asia</option>
+            <option value="southeastasia">Southeast Asia</option>
+            <option value="eastus">East US</option>
+            <option value="westus">West US</option>
+            <option value="westeurope">West Europe</option>
+          </select>
+        </div>
+        <p class="text-xs text-gray-500">Required for voice features. Get your key from Azure Portal.</p>
+      </div>
+
       <!-- Token Usage -->
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
         <h3 class="font-semibold text-sm sm:text-base text-blue-800 mb-2">📊 Token Usage</h3>
@@ -74,7 +104,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 
 // eslint-disable-next-line no-unused-vars
 const props = defineProps({
@@ -82,13 +112,19 @@ const props = defineProps({
   tokenUsage: Number,
 });
 
-const emit = defineEmits(["update:isOpen", "updateUserData"]);
+const emit = defineEmits(["update:isOpen", "updateUserData", "updateAzureCredentials"]);
 
 const name = ref("");
 const emailLocal = ref("");
 const emailSuffix = ref("@hkbu.edu.hk");
+const azureKey = ref("");
+const azureRegion = ref("eastasia");
 
-// Emit combined data
+onMounted(() => {
+  azureKey.value = localStorage.getItem("azure_speech_key") || "";
+  azureRegion.value = localStorage.getItem("azure_speech_region") || "eastasia";
+});
+
 function emitUserData() {
   const fullEmail = emailLocal.value ? `${emailLocal.value}${emailSuffix.value}` : "";
   emit("updateUserData", {
@@ -97,8 +133,15 @@ function emitUserData() {
   });
 }
 
-// Automatically emit updates when values change
+function emitAzureCredentials() {
+  emit("updateAzureCredentials", {
+    key: azureKey.value,
+    region: azureRegion.value,
+  });
+}
+
 watch([name, emailLocal, emailSuffix], emitUserData);
+watch([azureKey, azureRegion], emitAzureCredentials);
 </script>
 
 <style scoped>

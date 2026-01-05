@@ -14,6 +14,7 @@
     <LeftSidebar
       v-model:isOpen="isSidebarOpen"
       @updateUserData="handleUserDataUpdate"
+      @updateAzureCredentials="handleAzureCredentialsUpdate"
       :tokenUsage="tokenUsage"
       class="md:relative fixed md:z-auto z-50 h-full"
     />
@@ -237,7 +238,9 @@ const {
   avatarState,
   speakReplySequentially,
   toggleRecording,
-  getAzureToken,
+  getAzureConfig,
+  setAzureCredentials,
+  isAzureConfigured,
   avatarGender,
 } = useAzureSpeech(showNotification);
 // --- Computeds ---
@@ -313,6 +316,10 @@ function handleUserDataUpdate({ name, email }) {
   userName.value = name;
   userEmail.value = email;
 }
+
+function handleAzureCredentialsUpdate({ key, region }) {
+  setAzureCredentials(key, region);
+}
 // --- Lifecycle ---
 onMounted(async () => {
   await chatbotStore.loadBots();
@@ -334,7 +341,10 @@ onMounted(async () => {
     isSidebarOpen.value = true;
   }
   
-  await getAzureToken();
+  // Check if Azure Speech is configured for voice features
+  if (!isAzureConfigured()) {
+    console.log("Azure Speech not configured. Voice features require Azure credentials in sidebar settings.");
+  }
 
 });
 
