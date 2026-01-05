@@ -13,6 +13,12 @@
         </div>
         <div class="flex gap-2 flex-wrap">
           <button
+            @click="showSystemPrompt = !showSystemPrompt"
+            class="px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-sm"
+          >
+            📋 Prompt
+          </button>
+          <button
             @click="showAvatar = !showAvatar"
             class="px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-sm"
           >
@@ -33,6 +39,14 @@
           </button>
         </div>
       </header>
+
+      <div v-if="showSystemPrompt" class="p-4 bg-indigo-50 border-b border-indigo-200">
+        <div class="flex justify-between items-start gap-2 mb-2">
+          <h3 class="font-bold text-indigo-800 text-sm">System Prompt</h3>
+          <button @click="showSystemPrompt = false" class="text-indigo-600 hover:text-indigo-800 text-sm">✕</button>
+        </div>
+        <p class="text-sm text-indigo-900 whitespace-pre-wrap bg-white p-3 rounded-lg border border-indigo-200 max-h-48 overflow-y-auto">{{ selectedApp.systemPrompt }}</p>
+      </div>
 
       <div v-if="showAvatar" class="flex justify-center items-center py-4 border-b bg-gray-50">
         <div class="w-32 h-32 sm:w-48 sm:h-48">
@@ -181,6 +195,7 @@ const isLoading = ref(false);
 const inputMode = ref("text");
 const showAvatar = ref(false);
 const showReport = ref(false);
+const showSystemPrompt = ref(false);
 const messagesContainer = ref(null);
 const chatInput = ref(null);
 const userName = ref("");
