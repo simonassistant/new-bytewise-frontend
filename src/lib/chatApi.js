@@ -1,6 +1,61 @@
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || ''
 
+/**
+ * Fix common character encoding issues where UTF-8 characters are misinterpreted
+ * This fixes issues like "seeker's" displaying as "seeker鈥檚"
+ */
+export function fixEncodingIssues(text) {
+  if (!text || typeof text !== 'string') return text
+
+  // Map of common mojibake patterns to their correct characters
+  const replacements = {
+    // Smart quotes and apostrophes
+    'â€™': "'",  // Right single quotation mark
+    'â€˜': "'",  // Left single quotation mark
+    'â€œ': '"',  // Left double quotation mark
+    'â€': '"',   // Right double quotation mark
+    'â€"': '—',  // Em dash
+    'â€"': '–',  // En dash
+    'â€¦': '…',  // Ellipsis
+
+    // Alternative patterns
+    'â€™s': "'s",
+    'donâ€™t': "don't",
+    'canâ€™t': "can't",
+    'wonâ€™t': "won't",
+    'itâ€™s': "it's",
+    'thatâ€™s': "that's",
+    'thereâ€™s': "there's",
+    'youâ€™re': "you're",
+    'weâ€™re': "we're",
+    'theyâ€™re': "they're",
+    'Iâ€™m': "I'm",
+    'youâ€™ve': "you've",
+    'weâ€™ve': "we've",
+    'theyâ€™ve': "they've",
+    'Iâ€™ve': "I've",
+    'shouldâ€™ve': "should've",
+    'wouldâ€™ve': "would've",
+    'couldâ€™ve': "could've",
+
+    // Chinese encoding issues
+    '鈥檚': "'s",
+    '鈥檛': "'t",
+    '鈥檙e': "'re",
+    '鈥檓': "'m",
+    '鈥檝e': "'ve",
+    '鈥': "'",
+  }
+
+  let fixed = text
+  for (const [wrong, right] of Object.entries(replacements)) {
+    fixed = fixed.replaceAll(wrong, right)
+  }
+
+  return fixed
+}
+
 export async function testAIConnection() {
   const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY
   
@@ -39,7 +94,7 @@ export async function testAIConnection() {
 
 export async function chatWithOpenRouter(chatHistory, modelName = 'openai/gpt-4.1-mini', temperature = 0.5) {
   const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY
-  
+
   if (!apiKey) {
     console.error('OPENROUTER_API_KEY not configured')
     return { error: 'OPENROUTER_API_KEY not configured' }
@@ -49,7 +104,7 @@ export async function chatWithOpenRouter(chatHistory, modelName = 'openai/gpt-4.
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json; charset=utf-8',
     },
     body: JSON.stringify({
       model: modelName,
@@ -64,7 +119,14 @@ export async function chatWithOpenRouter(chatHistory, modelName = 'openai/gpt-4.
     return { error: `OpenRouter API error: ${response.status} - ${errorText}` }
   }
 
-  return response.json()
+  const data = await response.json()
+
+  // Fix encoding issues in the response content
+  if (data?.choices?.[0]?.message?.content) {
+    data.choices[0].message.content = fixEncodingIssues(data.choices[0].message.content)
+  }
+
+  return data
 }
 
 export async function chatWithHKBU(chatHistory, apiKey, modelName = 'gpt-4', topP = 1.0) {
@@ -76,7 +138,7 @@ export async function chatWithHKBU(chatHistory, apiKey, modelName = 'gpt-4', top
     headers: {
       'accept': 'application/json',
       'api-key': apiKey,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json; charset=utf-8',
     },
     body: JSON.stringify({
       messages: chatHistory,
@@ -90,7 +152,14 @@ export async function chatWithHKBU(chatHistory, apiKey, modelName = 'gpt-4', top
     return { error: `HKBU API error: ${response.status} - ${errorText}` }
   }
 
-  return response.json()
+  const data = await response.json()
+
+  // Fix encoding issues in the response content
+  if (data?.choices?.[0]?.message?.content) {
+    data.choices[0].message.content = fixEncodingIssues(data.choices[0].message.content)
+  }
+
+  return data
 }
 
 export function preprocessChatHistory(chatHistory) {
