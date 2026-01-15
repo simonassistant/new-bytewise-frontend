@@ -1,55 +1,41 @@
 import { ref } from "vue";
 import * as speechsdk from "microsoft-cognitiveservices-speech-sdk";
-import { BASE_URL } from "@/components/base_url";
 
 /**
  * Handles Azure TTS (Text-to-Speech) and STT (Speech-to-Text)
- * Includes token management and utility helpers.
+ * Uses user-provided subscription key stored in localStorage for security.
  */
 export function useAzureSpeech(showNotification) {
-    // --- State ---
     const isRecording = ref(false);
     const isPlaying = ref(false);
     const avatarState = ref("idle");
     const avatarGender = ref("male");
-    // --- Token helpers ---
-    function setCookie(name, value, minutes) {
-        const d = new Date();
-        d.setTime(d.getTime() + minutes * 60 * 1000);
-        const expires = "expires=" + d.toUTCString();
-        document.cookie = `${name}=${encodeURIComponent(value)};${expires};path=/`;
+    const azureSpeechKey = ref(localStorage.getItem("azure_speech_key") || "");
+    const azureSpeechRegion = ref(localStorage.getItem("azure_speech_region") || "eastasia");
+
+    function setAzureCredentials(key, region) {
+        azureSpeechKey.value = key;
+        azureSpeechRegion.value = region || "eastasia";
+        localStorage.setItem("azure_speech_key", key);
+        localStorage.setItem("azure_speech_region", azureSpeechRegion.value);
     }
 
-    function getCookie(name) {
-        const decodedCookie = decodeURIComponent(document.cookie);
-        const cookies = decodedCookie.split("; ");
-        for (let cookie of cookies) {
-            const [key, value] = cookie.split("=");
-            if (key === name) return value;
-        }
-        return null;
+    function clearAzureCredentials() {
+        azureSpeechKey.value = "";
+        azureSpeechRegion.value = "eastasia";
+        localStorage.removeItem("azure_speech_key");
+        localStorage.removeItem("azure_speech_region");
     }
 
-    /**
-     * Fetch or retrieve cached Azure token and region
-     */
-    async function getAzureToken() {
-        const cachedToken = getCookie("azureToken");
-        const cachedRegion = getCookie("azureRegion");
-        if (cachedToken && cachedRegion) {
-            return { authToken: cachedToken, region: cachedRegion };
+    function getAzureConfig() {
+        if (!azureSpeechKey.value) {
+            return { subscriptionKey: null, region: null };
         }
-        try {
-            const res = await fetch(`${BASE_URL}/streaming-avatar/get-speech-token`);
-            if (!res.ok) throw new Error("Failed to fetch Azure speech token");
-            const data = await res.json();
-            setCookie("azureToken", data.token, 9);
-            setCookie("azureRegion", data.region, 9);
-            return { authToken: data.token, region: data.region };
-        } catch (err) {
-            console.error("Azure token fetch error:", err);
-            return { authToken: null, region: null };
-        }
+        return { subscriptionKey: azureSpeechKey.value, region: azureSpeechRegion.value };
+    }
+
+    function isAzureConfigured() {
+        return !!azureSpeechKey.value;
     }
 
     // --- TTS (Speech Synthesis) ---
@@ -58,12 +44,12 @@ export function useAzureSpeech(showNotification) {
     }
 
     async function synthesizeToBuffer(sentence) {
-        const tokenObj = await getAzureToken();
-        if (!tokenObj.authToken) throw new Error("No Azure token");
+        const config = getAzureConfig();
+        if (!config.subscriptionKey) throw new Error("Azure Speech key not configured");
 
-        const speechConfig = speechsdk.SpeechConfig.fromAuthorizationToken(
-            tokenObj.authToken,
-            tokenObj.region
+        const speechConfig = speechsdk.SpeechConfig.fromSubscription(
+            config.subscriptionKey,
+            config.region
         );
         return new Promise((resolve, reject) => {
             const pushStream = speechsdk.AudioOutputStream.createPullStream();
@@ -150,18 +136,18 @@ export function useAzureSpeech(showNotification) {
     async function startRecording(sendRecognizedText) {
         if (isRecording.value) return;
         try {
-            const tokenObj = await getAzureToken();
-            if (!tokenObj.authToken) {
-                showNotification?.("❌ Could not get Azure token", "error");
+            const config = getAzureConfig();
+            if (!config.subscriptionKey) {
+                showNotification?.("❌ Azure Speech key not configured", "error");
                 return;
             }
 
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaStreamRef.value = stream;
 
-            const speechConfig = speechsdk.SpeechConfig.fromAuthorizationToken(
-                tokenObj.authToken,
-                tokenObj.region
+            const speechConfig = speechsdk.SpeechConfig.fromSubscription(
+                config.subscriptionKey,
+                config.region
             );
             speechConfig.speechRecognitionLanguage = "en-US";
 
@@ -225,13 +211,16 @@ export function useAzureSpeech(showNotification) {
     };
 
     return {
-        // state
         isRecording,
         isPlaying,
         avatarState,
         avatarGender,
-        // methods
-        getAzureToken,
+        azureSpeechKey,
+        azureSpeechRegion,
+        getAzureConfig,
+        setAzureCredentials,
+        clearAzureCredentials,
+        isAzureConfigured,
         speakReplySequentially,
         toggleRecording,
     };

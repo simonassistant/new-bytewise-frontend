@@ -14,10 +14,15 @@ export default defineConfig({
   ].filter(Boolean),
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@assets': fileURLToPath(new URL('./attached_assets', import.meta.url))
     },
   },
-  // Optimize for production builds
+  server: {
+    host: '0.0.0.0',
+    port: 5000,
+    allowedHosts: true
+  },
   build: {
     target: 'es2015',
     minify: 'terser',
@@ -30,5 +35,4 @@ export default defineConfig({
       }
     }
   },
-
 })
