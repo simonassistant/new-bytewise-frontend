@@ -14,6 +14,7 @@
       </button>
     </div>
 
+    
     <!-- Unified Plain Text Input (toggle visibility) -->
     <div v-if="isAreaVisible" class="bg-white border border-gray-300 rounded-lg p-4 mb-6 shadow-sm">
       <div class="bg-gray-100 border border-gray-300 text-gray-800 rounded-md p-4 mb-4">
